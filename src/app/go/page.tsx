@@ -63,12 +63,20 @@ function RedirectContent() {
     }, [asin, tag, domain, androidIntent, appUrl]);
 
     const handleManualClick = () => {
-        // Just try to open the app. No fallback to web here to avoid conflict with "Leave Facebook" dialogs.
+        // Try to open app
         if (isAndroid) {
             window.location.href = androidIntent;
         } else {
             window.location.href = appUrl;
         }
+
+        // Fallback to web after a safe delay (2.5s) to allow user to handle "Leave Facebook" dialog
+        setTimeout(() => {
+            // Only redirect if document is still visible (user hasn't switched to app)
+            if (!document.hidden) {
+                window.location.href = webUrl;
+            }
+        }, 2500);
     };
 
     if (!asin) {
