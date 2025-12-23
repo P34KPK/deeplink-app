@@ -30,6 +30,13 @@ function RedirectContent() {
         const android = /android/i.test(userAgent);
         setIsAndroid(android);
 
+        // Track Click
+        fetch('/api/track', {
+            method: 'POST',
+            body: JSON.stringify({ asin, userAgent }),
+            headers: { 'Content-Type': 'application/json' }
+        }).catch(err => console.error('Tracking failed', err));
+
         const tryOpen = () => {
             const start = Date.now();
 
@@ -54,6 +61,7 @@ function RedirectContent() {
     }, [asin, tag, domain, androidIntent, appUrl]);
 
     const handleManualClick = () => {
+        // Track manual click as well? Maybe not double count, keep simple.
         if (isAndroid) {
             window.location.href = androidIntent;
         } else {
