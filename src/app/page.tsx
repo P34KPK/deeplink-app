@@ -48,17 +48,42 @@ export default function Home() {
     setLoading(true);
 
     try {
-      if (!inputUrl.includes('amazon') && !inputUrl.includes('amzn.to')) {
+      let targetUrl = inputUrl;
+
+      // Basic validation
+      if (!targetUrl.includes('amazon') && !targetUrl.includes('amzn.to')) {
         throw new Error('Please enter a valid Amazon URL');
       }
 
-      const asinMatch = inputUrl.match(/(?:dp|o|gp\/product)\/([A-Z0-9]{10})/);
+      // Check for short link expansion
+      if (targetUrl.includes('amzn.to')) {
+        try {
+          const res = await fetch('/api/expand', {
+            method: 'POST',
+            body: JSON.stringify({ url: targetUrl }),
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const data = await res.json();
+          if (data.fullUrl) {
+            targetUrl = data.fullUrl;
+          } else {
+            console.warn("Could not expand URL, trying raw parsing");
+          }
+        } catch (e) {
+          console.warn("Expansion API failed", e);
+        }
+      }
+
+      // seek ASIN
+      const asinMatch = targetUrl.match(/(?:dp|o|gp\/product)\/([A-Z0-9]{10})/);
       const asin = asinMatch ? asinMatch[1] : null;
 
-      const tagMatch = inputUrl.match(/[?&]tag=([^&]+)/);
+      // seek Tag
+      const tagMatch = targetUrl.match(/[?&]tag=([^&]+)/);
       const tag = tagMatch ? tagMatch[1] : null;
 
-      const domainMatch = inputUrl.match(/amazon\.([a-z\.]+)/);
+      // seek Domain (amazon.com, amazon.fr, etc)
+      const domainMatch = targetUrl.match(/amazon\.([a-z\.]+)/);
       const domain = domainMatch ? domainMatch[1] : 'com';
 
       if (!asin) {
