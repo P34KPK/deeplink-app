@@ -18,6 +18,8 @@ function RedirectContent() {
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
     const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`;
 
+    const [isAndroid, setIsAndroid] = useState(false);
+
     useEffect(() => {
         if (!asin) {
             setStatus('Invalid Link');
@@ -25,12 +27,13 @@ function RedirectContent() {
         }
 
         const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-        const isAndroid = /android/i.test(userAgent);
+        const android = /android/i.test(userAgent);
+        setIsAndroid(android);
 
         const tryOpen = () => {
             const start = Date.now();
 
-            if (isAndroid) {
+            if (android) {
                 window.location.href = androidIntent;
             } else {
                 window.location.href = appUrl;
@@ -51,7 +54,12 @@ function RedirectContent() {
     }, [asin, tag, domain, androidIntent, appUrl]);
 
     const handleManualClick = () => {
-        window.location.href = appUrl;
+        if (isAndroid) {
+            window.location.href = androidIntent;
+        } else {
+            window.location.href = appUrl;
+        }
+
         setTimeout(() => {
             window.location.href = webUrl;
         }, 500);
