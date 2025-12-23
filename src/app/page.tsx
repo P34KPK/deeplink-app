@@ -105,7 +105,7 @@ export default function Home() {
               src="/logo.png"
               alt="DeepLinker Logo"
               fill
-              className="object-contain mix-blend-screen"
+              className="object-contain"
               priority
             />
           </div>
