@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 
 function RedirectContent() {
     const searchParams = useSearchParams();
@@ -82,10 +83,14 @@ function RedirectContent() {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 space-y-8 animate-fade bg-[#050505]">
             <div className="matte-card p-10 max-w-sm w-full flex flex-col items-center border border-[#222]">
-                <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mb-6 border border-[#222]">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-white">
-                        <path d="M15.903 16.86a4.5 4.5 0 0 1-2.458.74c-1.806 0-3.35-1.05-3.35-2.28 0-1.22 1.544-2.27 3.35-2.27 1.805 0 3.35 1.05 3.35 2.27 0 .3-.095.59-.267.85l-.625-.31zM22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 2 6.477 6.477 2 12 2s10 4.477 10 10z" />
-                    </svg>
+                <div className="relative w-32 h-16 mb-6">
+                    <Image
+                        src="/logo.png"
+                        alt="DeepLinker Logo"
+                        fill
+                        className="object-contain mix-blend-screen"
+                        priority
+                    />
                 </div>
 
                 <h1 className="text-xl font-semibold mb-2 text-white">{status === 'Opening Amazon...' ? 'Redirecting...' : 'View Product'}</h1>
