@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 type ArchivedLink = {
   id: string;
@@ -98,10 +99,16 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center py-12 p-6 bg-[#050505] text-white">
       <div className="matte-card p-8 md:p-12 w-full max-w-xl animate-fade">
-        <div className="mb-10 text-center">
-          <h1 className="text-3xl font-semibold mb-2">
-            DeepLinker
-          </h1>
+        <div className="mb-10 flex flex-col items-center justify-center">
+          <div className="relative w-48 h-24 mb-4">
+            <Image
+              src="/logo.png"
+              alt="DeepLinker Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
           <p className="text-sm text-gray-500">
             Amazon Affiliate Deep Linking Tool
           </p>
