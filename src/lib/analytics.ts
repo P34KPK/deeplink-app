@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
-
-const DB_PATH = path.join(process.cwd(), 'analytics-db.json');
+import { kv } from '@vercel/kv';
 
 type AnalyticsData = {
     totalClicks: number;
@@ -20,29 +17,28 @@ const defaultData: AnalyticsData = {
     topLinks: {},
 };
 
-function getDB(): AnalyticsData {
+const DB_KEY = 'deeplink_analytics_v1';
+
+async function getDB(): Promise<AnalyticsData> {
     try {
-        if (!fs.existsSync(DB_PATH)) {
-            fs.writeFileSync(DB_PATH, JSON.stringify(defaultData, null, 2));
-            return defaultData;
-        }
-        const fileContent = fs.readFileSync(DB_PATH, 'utf-8');
-        return JSON.parse(fileContent);
+        const data = await kv.get<AnalyticsData>(DB_KEY);
+        return data || defaultData;
     } catch (error) {
+        console.warn('Failed to fetch from KV, returning default data', error);
         return defaultData;
     }
 }
 
-function saveDB(data: AnalyticsData) {
+async function saveDB(data: AnalyticsData) {
     try {
-        fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+        await kv.set(DB_KEY, data);
     } catch (error) {
-        console.error('Failed to save analytics', error);
+        console.error('Failed to save to KV', error);
     }
 }
 
 export async function trackClick(asin: string, userAgent: string) {
-    const data = getDB();
+    const data = await getDB();
 
     // 1. Total Clicks
     data.totalClicks += 1;
@@ -65,9 +61,9 @@ export async function trackClick(asin: string, userAgent: string) {
     }
     data.topLinks[asin] += 1;
 
-    saveDB(data);
+    await saveDB(data);
 }
 
 export async function getStats() {
-    return getDB();
+    return await getDB();
 }
