@@ -57,7 +57,7 @@ function RedirectContent() {
 
         const timer = setTimeout(() => {
             tryOpen();
-        }, 50);
+        }, 200);
 
         return () => clearTimeout(timer);
     }, [asin, tag, domain, androidIntent, appUrl]);
