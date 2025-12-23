@@ -14,10 +14,14 @@ function RedirectContent() {
 
     // Construct URLs
     const webUrl = `https://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+    const encodedWebUrl = encodeURIComponent(webUrl);
 
     // URI Schemes
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`;
+
+    // Android Intent with Native Fallback (S.browser_fallback_url)
+    // This tells Android: Open App. If fail, open valid web URL. No JS needed.
+    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
 
     const [isAndroid, setIsAndroid] = useState(false);
 
@@ -31,7 +35,7 @@ function RedirectContent() {
         const android = /android/i.test(userAgent);
         setIsAndroid(android);
 
-        // Track Click with keepalive to prevent cancellation on redirect
+        // Track Click with keepalive
         fetch('/api/track', {
             method: 'POST',
             body: JSON.stringify({ asin, userAgent }),
@@ -40,19 +44,20 @@ function RedirectContent() {
         }).catch(err => console.error('Tracking failed', err));
 
         const tryOpen = () => {
-            const start = Date.now();
-
             if (android) {
+                // Android handles fallback natively via Intent param
                 window.location.href = androidIntent;
             } else {
+                // iOS / Desktop needs JS fallback
+                const start = Date.now();
                 window.location.href = appUrl;
-            }
 
-            setTimeout(() => {
-                if (Date.now() - start < 2000) {
-                    setStatus('Tap below to open');
-                }
-            }, 1500);
+                setTimeout(() => {
+                    if (Date.now() - start < 3000 && !document.hidden) {
+                        window.location.href = webUrl;
+                    }
+                }, 2500);
+            }
         };
 
         const timer = setTimeout(() => {
@@ -60,23 +65,21 @@ function RedirectContent() {
         }, 200);
 
         return () => clearTimeout(timer);
-    }, [asin, tag, domain, androidIntent, appUrl]);
+    }, [asin, tag, domain, androidIntent, appUrl, webUrl]);
 
     const handleManualClick = () => {
-        // Try to open app
         if (isAndroid) {
             window.location.href = androidIntent;
         } else {
             window.location.href = appUrl;
-        }
 
-        // Fallback to web after a safe delay (2.5s) to allow user to handle "Leave Facebook" dialog
-        setTimeout(() => {
-            // Only redirect if document is still visible (user hasn't switched to app)
-            if (!document.hidden) {
-                window.location.href = webUrl;
-            }
-        }, 2500);
+            // iOS Fallback logic
+            setTimeout(() => {
+                if (!document.hidden) {
+                    window.location.href = webUrl;
+                }
+            }, 2500);
+        }
     };
 
     if (!asin) {
