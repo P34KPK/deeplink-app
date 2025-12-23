@@ -1,0 +1,10 @@
+{
+  "totalClicks": 0,
+  "devices": {
+    "android": 0,
+    "ios": 0,
+    "desktop": 0,
+    "other": 0
+  },
+  "topLinks": {}
+}
