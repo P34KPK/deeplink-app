@@ -20,8 +20,8 @@ function RedirectContent() {
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 
     // Android Intent with Native Fallback (S.browser_fallback_url)
-    // This tells Android: Open App. If fail, open valid web URL. No JS needed.
-    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
+    // We use scheme=amzn to force the OS to hand off to the app, avoiding browser capture.
+    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=amzn;S.browser_fallback_url=${encodedWebUrl};end`;
 
     const [isAndroid, setIsAndroid] = useState(false);
 
