@@ -20,8 +20,8 @@ function RedirectContent() {
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 
     // Android Intent with Native Fallback (S.browser_fallback_url)
-    // We use scheme=amzn to force the OS to hand off to the app, avoiding browser capture.
-    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=amzn;S.browser_fallback_url=${encodedWebUrl};end`;
+    // Reverted to scheme=https which is standard for Amazon Deep Links.
+    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
 
     const [isAndroid, setIsAndroid] = useState(false);
 
@@ -60,26 +60,32 @@ function RedirectContent() {
             }
         };
 
+        // Increased delay to 800ms to ensure page is loaded/interactive before attempting redirect
         const timer = setTimeout(() => {
             tryOpen();
-        }, 200);
+        }, 800);
 
         return () => clearTimeout(timer);
     }, [asin, tag, domain, androidIntent, appUrl, webUrl]);
 
-    const handleManualClick = () => {
-        if (isAndroid) {
-            window.location.href = androidIntent;
-        } else {
-            window.location.href = appUrl;
+    // We don't need handleManualClick anymore since we use a real <a> tag now.
+    // But we keep the logic for calculating the target.
+    const manualTarget = isAndroid ? androidIntent : appUrl;
 
-            // iOS Fallback logic
-            setTimeout(() => {
-                if (!document.hidden) {
-                    window.location.href = webUrl;
-                }
-            }, 2500);
-        }
+    // For iOS fallback on manual click, we might still need a click handler if we want JS fallback
+    // But for simplicity/robustness, let's trust the href first.
+    // Actually, for iOS, a simple href to amzn:// is best. If it fails, nothing happens?
+    // Let's keep a Click Handler ONLY for iOS to do the fallback.
+    const handleIOSClick = (e: React.MouseEvent) => {
+        if (isAndroid) return; // Android uses href
+
+        e.preventDefault();
+        window.location.href = appUrl;
+        setTimeout(() => {
+            if (!document.hidden) {
+                window.location.href = webUrl;
+            }
+        }, 2500);
     };
 
     if (!asin) {
@@ -109,12 +115,13 @@ function RedirectContent() {
                     Opening Amazon App...
                 </p>
 
-                <button
-                    onClick={handleManualClick}
-                    className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform w-full max-w-xs"
+                <a
+                    href={manualTarget}
+                    onClick={handleIOSClick}
+                    className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform w-full max-w-xs block select-none cursor-pointer"
                 >
                     Open Amazon App
-                </button>
+                </a>
 
                 <a
                     href={webUrl}
