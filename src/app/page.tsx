@@ -8,11 +8,16 @@ type ArchivedLink = {
   original: string;
   generated: string;
   asin: string;
+  title: string;
+  description: string;
   date: number;
 };
 
 export default function Home() {
   const [inputUrl, setInputUrl] = useState('');
+  const [inputTitle, setInputTitle] = useState('');
+  const [inputDesc, setInputDesc] = useState('');
+
   const [generatedLink, setGeneratedLink] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -103,11 +108,15 @@ export default function Home() {
         original: inputUrl,
         generated: newLink,
         asin: asin,
+        title: inputTitle || 'Untitled Product',
+        description: inputDesc || 'No location specified',
         date: Date.now()
       };
 
       const newHistory = [newEntry, ...history];
       saveHistory(newHistory);
+
+      // Clear inputs optionally? Keep for now in case user wants to edit.
 
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -140,14 +149,39 @@ export default function Home() {
         </div>
 
         <div className="space-y-6">
-          <div className="space-y-2">
-            <input
-              type="text"
-              placeholder="Paste Amazon Product Link..."
-              className="input-minimal"
-              value={inputUrl}
-              onChange={(e) => setInputUrl(e.target.value)}
-            />
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs text-gray-500 ml-1 mb-1 block">Product Title</label>
+              <input
+                type="text"
+                placeholder="e.g. Sony Headphones"
+                className="input-minimal"
+                value={inputTitle}
+                onChange={(e) => setInputTitle(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-500 ml-1 mb-1 block">Posted Location (Description)</label>
+              <input
+                type="text"
+                placeholder="e.g. Instagram Story Jan 24"
+                className="input-minimal"
+                value={inputDesc}
+                onChange={(e) => setInputDesc(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-500 ml-1 mb-1 block">Amazon Link</label>
+              <input
+                type="text"
+                placeholder="Paste Amazon Product Link..."
+                className="input-minimal"
+                value={inputUrl}
+                onChange={(e) => setInputUrl(e.target.value)}
+              />
+            </div>
           </div>
 
           <button
@@ -200,10 +234,10 @@ export default function Home() {
                 <div key={item.id} className="matte-card p-4 flex items-center justify-between gap-4 group hover:border-[#333] transition-colors">
                   <div className="flex-1 overflow-hidden">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-mono text-gray-500 bg-[#111] px-1 rounded border border-[#222]">{item.asin}</span>
-                      <span className="text-xs text-gray-600">{new Date(item.date).toLocaleDateString()}</span>
+                      <span className="text-sm font-semibold text-white">{item.title}</span>
                     </div>
-                    <div className="text-sm text-gray-300 truncate font-mono">{item.generated}</div>
+                    <div className="text-xs text-gray-500 mb-2">{item.description} &bull; {new Date(item.date).toLocaleDateString()}</div>
+                    <div className="text-xs text-gray-600 font-mono truncate">{item.generated}</div>
                   </div>
 
                   <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
