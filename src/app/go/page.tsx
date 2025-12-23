@@ -30,11 +30,12 @@ function RedirectContent() {
         const android = /android/i.test(userAgent);
         setIsAndroid(android);
 
-        // Track Click
+        // Track Click with keepalive to prevent cancellation on redirect
         fetch('/api/track', {
             method: 'POST',
             body: JSON.stringify({ asin, userAgent }),
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true
         }).catch(err => console.error('Tracking failed', err));
 
         const tryOpen = () => {
