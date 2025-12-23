@@ -15,45 +15,34 @@ function RedirectContent() {
     const webUrl = `https://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 
     // URI Schemes
-    // iOS/General fallback
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-
-    // Android Intent (Fallback to browser if app not installed)
     const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`;
 
     useEffect(() => {
         if (!asin) {
-            setStatus('Invalid Link Parameters');
+            setStatus('Invalid Link');
             return;
         }
 
         const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
         const isAndroid = /android/i.test(userAgent);
-        const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
 
-        // Auto-redirect logic
         const tryOpen = () => {
             const start = Date.now();
 
             if (isAndroid) {
                 window.location.href = androidIntent;
             } else {
-                // Try simple scheme
                 window.location.href = appUrl;
             }
 
-            // Fallback check
             setTimeout(() => {
                 if (Date.now() - start < 2000) {
-                    // If we are still here (page didn't hide/change), show button or redirect web
-                    // We won't auto web redirect to keep the user ability to click 'Open App' again
-                    // unless we are sure they don't have the app.
                     setStatus('Tap below to open');
                 }
             }, 1500);
         };
 
-        // Delay slightly to render UI
         const timer = setTimeout(() => {
             tryOpen();
         }, 500);
@@ -62,45 +51,44 @@ function RedirectContent() {
     }, [asin, tag, domain, androidIntent, appUrl]);
 
     const handleManualClick = () => {
-        window.location.href = appUrl; // Try app first
+        window.location.href = appUrl;
         setTimeout(() => {
-            window.location.href = webUrl; // Fallback to web
+            window.location.href = webUrl;
         }, 500);
     };
 
     if (!asin) {
         return (
-            <div className="text-center p-10">
-                <h1 className="text-2xl text-red-400">Invalid Link Code</h1>
-                <p className="text-gray-400">Missing ASIN.</p>
+            <div className="text-center p-10 mt-20">
+                <h1 className="text-xl text-white">Invalid Link</h1>
+                <p className="text-gray-500 mt-2">Missing Product ID.</p>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 space-y-8 animate-entrance">
-            <div className="glass-card p-10 max-w-md w-full flex flex-col items-center">
-                <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6">
-                    {/* Amazon-ish Icon purely CSS/SVG */}
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-12 h-12 text-white">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5c-2.5 0-4.71-1.28-6-3.22.03-.09.11-.16.21-.16l.8-.02c.18 0 .34.11.41.27 1.05 2.11 3.53 2.63 4.58 2.63 2.15 0 3.73-1.09 3.73-2.6 0-1.63-1.89-2.16-4.08-2.16-1.07 0-2.32.22-3.14.58l-.66-3.13c2.41-.75 5.56-.83 6.94-.83 2.76 0 4.63 1.48 4.63 3.99 0 3.19-2.9 4.65-7.42 4.65z" />
+        <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 space-y-8 animate-fade bg-[#050505]">
+            <div className="matte-card p-10 max-w-sm w-full flex flex-col items-center border border-[#222]">
+                <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mb-6 border border-[#222]">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-white">
+                        <path d="M15.903 16.86a4.5 4.5 0 0 1-2.458.74c-1.806 0-3.35-1.05-3.35-2.28 0-1.22 1.544-2.27 3.35-2.27 1.805 0 3.35 1.05 3.35 2.27 0 .3-.095.59-.267.85l-.625-.31zM22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 2 6.477 6.477 2 12 2s10 4.477 10 10z" />
                     </svg>
                 </div>
 
-                <h1 className="text-2xl font-bold mb-2">{status === 'Opening Amazon...' ? 'Opening App...' : 'View Product'}</h1>
-                <p className="text-gray-400 mb-8 max-w-xs mx-auto">
-                    Redirecting you to Amazon...
+                <h1 className="text-xl font-semibold mb-2 text-white">{status === 'Opening Amazon...' ? 'Redirecting...' : 'View Product'}</h1>
+                <p className="text-gray-500 mb-8 max-w-xs mx-auto text-sm">
+                    Opening Amazon App...
                 </p>
 
                 <button
                     onClick={handleManualClick}
-                    className="btn-primary w-full text-lg shadow-xl shadow-purple-900/40"
+                    className="btn-primary w-full"
                 >
-                    Open in Amazon App
+                    Open App
                 </button>
 
-                <a href={webUrl} className="mt-6 text-sm text-gray-500 underline hover:text-white transition-colors">
-                    Continue to Browser instead
+                <a href={webUrl} className="mt-6 text-xs text-gray-600 hover:text-gray-400 transition-colors">
+                    Continue in Browser
                 </a>
             </div>
         </div>
@@ -109,7 +97,7 @@ function RedirectContent() {
 
 export default function RedirectPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-white">Loading...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-white bg-[#050505]">...</div>}>
             <RedirectContent />
         </Suspense>
     );

@@ -1,25 +1,21 @@
 :root {
-  --background: #0f0f12;
-  --foreground: #ededed;
-  --primary: #7c3aed; /* Violet/Purple for a modern feel */
-  --primary-glow: rgba(124, 58, 237, 0.5);
-  --secondary: #2dd4bf; /* Teal accent */
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --card-bg: #18181b;
+  --background: #050505;
+  --foreground: #ffffff;
+  --card-bg: #111111;
+  --border: #222222;
+  --accent: #333333;
+  --primary: #ffffff;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(45, 212, 191, 0.15), transparent 25%);
+  /* Subtle grain or noise could be nice, but let's stick to pure matte */
 }
 
 * {
@@ -27,82 +23,112 @@ body {
 }
 
 /* Typography */
-h1, h2, h3 {
-  font-weight: 700;
-  letter-spacing: -0.02em;
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--primary);
 }
 
-/* Glassmorphism Utilities */
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+p,
+label {
+  color: #888888;
+  letter-spacing: -0.01em;
 }
 
-.glass-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+/* Minimal Utilities */
+.matte-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  /* No heavy shadows for flat matte look */
 }
 
 /* Buttons */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), #9333ea);
-  color: white;
+  background: var(--primary);
+  color: black;
   border: none;
-  padding: 12px 24px;
-  border-radius: 12px;
+  padding: 14px 28px;
+  border-radius: 8px;
   font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px var(--primary-glow);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  text-transform: capitalize;
+  letter-spacing: -0.01em;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px var(--primary-glow);
-  filter: brightness(1.1);
+  background: #e5e5e5;
+  transform: translateY(-1px);
 }
 
 .btn-primary:active {
   transform: translateY(0);
+  background: #cccccc;
+}
+
+.btn-primary:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Inputs */
-.input-premium {
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid var(--glass-border);
+.input-minimal {
+  background: #0a0a0a;
+  border: 1px solid var(--border);
   color: white;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 8px;
   width: 100%;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease;
   outline: none;
+  font-family: inherit;
 }
 
-.input-premium:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+.input-minimal::placeholder {
+  color: #444;
+}
+
+.input-minimal:focus {
+  border-color: #555;
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.animate-entrance {
-  animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+.animate-fade {
+  animation: fadeIn 0.6s ease-out forwards;
 }
 
-.glow-text {
-  text-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+/* Utilities */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.code-block {
+  font-family: 'Geist Mono', monospace;
+  background: #000;
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 8px;
+  color: #ccc;
+  font-size: 0.85rem;
 }
