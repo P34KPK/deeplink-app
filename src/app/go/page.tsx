@@ -62,16 +62,12 @@ function RedirectContent() {
     }, [asin, tag, domain, androidIntent, appUrl]);
 
     const handleManualClick = () => {
-        // Track manual click as well? Maybe not double count, keep simple.
+        // Just try to open the app. No fallback to web here to avoid conflict with "Leave Facebook" dialogs.
         if (isAndroid) {
             window.location.href = androidIntent;
         } else {
             window.location.href = appUrl;
         }
-
-        setTimeout(() => {
-            window.location.href = webUrl;
-        }, 500);
     };
 
     if (!asin) {
@@ -99,13 +95,16 @@ function RedirectContent() {
 
                 <button
                     onClick={handleManualClick}
-                    className="btn-primary w-full"
+                    className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform w-full max-w-xs"
                 >
-                    Open App
+                    Open Amazon App
                 </button>
 
-                <a href={webUrl} className="mt-6 text-xs text-gray-600 hover:text-gray-400 transition-colors">
-                    Continue in Browser
+                <a
+                    href={webUrl}
+                    className="mt-6 text-gray-500 text-sm border-b border-gray-700 pb-0.5 hover:text-white hover:border-white transition-colors"
+                >
+                    Or continue to Website
                 </a>
             </div>
         </div>
