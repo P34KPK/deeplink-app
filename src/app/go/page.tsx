@@ -19,9 +19,9 @@ function RedirectContent() {
     // URI Schemes
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 
-    // Android Intent (Pure Force Mode)
-    // Removed S.browser_fallback_url to prevent Chrome/Facebook from defaulting to web.
-    // This forces the intent to only resolve to the App.
+    // Android Intent (Strict Mode)
+    // We target the Amazon App package specifically using scheme=https inside the Intent.
+    // We DO NOT include S.browser_fallback_url to prevent Chrome taking over.
     const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`;
 
     const [isAndroid, setIsAndroid] = useState(false);
@@ -36,7 +36,7 @@ function RedirectContent() {
         const android = /android/i.test(userAgent);
         setIsAndroid(android);
 
-        // Track Click with keepalive
+        // Track Click
         fetch('/api/track', {
             method: 'POST',
             body: JSON.stringify({ asin, userAgent }),
@@ -45,9 +45,20 @@ function RedirectContent() {
         }).catch(err => console.error('Tracking failed', err));
 
         const tryOpen = () => {
-            // Universal method: Just try to open the app using the custom scheme.
-            // This works on iOS and often reliably on Android when Intents fail.
-            window.location.href = appUrl;
+            if (android) {
+                // Strict Android: Intent only. No JS fallback.
+                window.location.href = androidIntent;
+            } else {
+                // iOS / Desktop needs JS fallback
+                const start = Date.now();
+                window.location.href = appUrl;
+
+                setTimeout(() => {
+                    if (Date.now() - start < 3000 && !document.hidden) {
+                        window.location.href = webUrl;
+                    }
+                }, 2500);
+            }
         };
 
         // Delay to ensure page is interactive
@@ -58,15 +69,17 @@ function RedirectContent() {
         return () => clearTimeout(timer);
     }, [asin, tag, domain, androidIntent, appUrl, webUrl]);
 
-    // We don't need handleManualClick anymore since we use a real <a> tag now.
-    // Simplifying target to just appUrl for everyone.
-    const manualTarget = appUrl;
+    // Manual Target Logic
+    // Android gets the direct Intent. iOS gets the Scheme.
+    const manualTarget = isAndroid ? androidIntent : appUrl;
 
-    // Simple fallback logic for click
+    // Click Handler only needed for iOS fallback. 
+    // Android is handled purely by the href={androidIntent} native behavior.
     const handleLinkClick = (e: React.MouseEvent) => {
-        // e.preventDefault(); // Don't prevent default, let the href work.
+        if (isAndroid) return;
 
-        // Setup fallback in case href fails
+        // iOS Logic
+        // e.preventDefault(); // Let href work
         setTimeout(() => {
             if (!document.hidden) {
                 window.location.href = webUrl;
