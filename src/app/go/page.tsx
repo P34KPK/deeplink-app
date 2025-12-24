@@ -20,8 +20,8 @@ function RedirectContent() {
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 
     // Android Intent with Native Fallback (S.browser_fallback_url)
-    // FORCE PACKAGE LAUNCH: This syntax targets the app package specifically.
-    const androidIntent = `intent://${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;scheme=https;package=com.amazon.mShop.android.shopping;S.browser_fallback_url=${encodedWebUrl};end`;
+    // Fixed host: intent://www.amazon.${domain}/...
+    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
 
     const [isAndroid, setIsAndroid] = useState(false);
 
