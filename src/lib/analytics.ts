@@ -8,7 +8,14 @@ type AnalyticsData = {
         desktop: number;
         other: number;
     };
-    topLinks: Record<string, number>; // ASIN -> count
+    // Upgrade: Store full breakdown per ASIN
+    topLinks: Record<string, {
+        total: number;
+        android: number;
+        ios: number;
+        desktop: number;
+        lastClick: number;
+    }>;
 };
 
 const defaultData: AnalyticsData = {
@@ -17,7 +24,7 @@ const defaultData: AnalyticsData = {
     topLinks: {},
 };
 
-const DB_KEY = 'deeplink_analytics_v1';
+const DB_KEY = 'deeplink_analytics_v2'; // Bump version to start fresh with new structure
 
 async function getDB(): Promise<AnalyticsData> {
     try {
@@ -43,24 +50,39 @@ export async function trackClick(asin: string, userAgent: string) {
     // 1. Total Clicks
     data.totalClicks += 1;
 
-    // 2. Device Type
+    // Determine Device
     const ua = userAgent.toLowerCase();
+    let isAndroid = false;
+    let isIos = false;
+    let isDesktop = false;
+
     if (ua.includes('android')) {
+        isAndroid = true;
         data.devices.android += 1;
     } else if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) {
+        isIos = true;
         data.devices.ios += 1;
     } else if (ua.includes('mac') || ua.includes('windows') || ua.includes('linux')) {
+        isDesktop = true;
         data.devices.desktop += 1;
     } else {
         data.devices.other += 1;
     }
 
-    // 3. Top Links
+    // 2. Per-Link Stats (ASIN)
     if (!data.topLinks[asin]) {
-        data.topLinks[asin] = 0;
+        data.topLinks[asin] = { total: 0, android: 0, ios: 0, desktop: 0, lastClick: 0 };
     }
-    data.topLinks[asin] += 1;
 
+    const linkStats = data.topLinks[asin];
+    linkStats.total += 1;
+    linkStats.lastClick = Date.now();
+
+    if (isAndroid) linkStats.android += 1;
+    else if (isIos) linkStats.ios += 1;
+    else if (isDesktop) linkStats.desktop += 1;
+
+    // Save
     await saveDB(data);
 }
 
