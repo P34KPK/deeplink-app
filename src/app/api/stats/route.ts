@@ -5,10 +5,14 @@ export async function GET() {
     const stats = await getStats();
 
     // Convert topLinks object to sorted array
-    const sortedLinks = Object.entries(stats.topLinks)
-        .map(([asin, count]) => ({ asin, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10); // Top 10
+    // stats.topLinks is Record<string, { total: number, android: number, ... }>
+    const sortedLinks = Object.entries(stats.topLinks || {})
+        .map(([asin, data]) => ({
+            asin,
+            ...data // Spread the detailed stats (total, android, ios, desktop)
+        }))
+        .sort((a, b) => b.total - a.total) // Sort by total clicks
+        .slice(0, 50); // Return top 50
 
     return NextResponse.json({
         ...stats,
