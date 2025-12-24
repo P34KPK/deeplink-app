@@ -237,50 +237,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* History Section */}
-      {history.length > 0 && (
-        <div className="w-full max-w-xl mt-12 animate-fade" style={{ animationDelay: '0.2s' }}>
-          <div className="flex items-center justify-between mb-4 px-2">
-            <h2 className="text-lg font-medium text-gray-400">History ({history.length})</h2>
-            <button onClick={() => setViewHistory(!viewHistory)} className="text-xs text-gray-600 hover:text-gray-400">
-              {viewHistory ? 'Hide' : 'Show'}
-            </button>
-          </div>
-
-          {viewHistory && (
-            <div className="space-y-3">
-              {history.map((item) => (
-                <div key={item.id} className="matte-card p-4 flex items-center justify-between gap-4 group hover:border-[#333] transition-colors">
-                  <div className="flex-1 overflow-hidden">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-semibold text-white">{item.title}</span>
-                    </div>
-                    <div className="text-xs text-gray-500 mb-2">{item.description} &bull; {new Date(item.date).toLocaleDateString()}</div>
-                    <div className="text-xs text-gray-600 font-mono truncate">{item.generated}</div>
-                  </div>
-
-                  <div className="flex items-center gap-2 transition-opacity">
-                    <button
-                      onClick={() => copyLink(item.generated)}
-                      className="p-2 text-gray-400 hover:text-white bg-[#111] hover:bg-[#222] rounded-md border border-[#222]"
-                      title="Copy Link"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    </button>
-                    <button
-                      onClick={() => deleteLink(item.id)}
-                      className="p-2 text-red-900 hover:text-red-500 bg-[#111] hover:bg-[#222] rounded-md border border-[#222]"
-                      title="Delete"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </main>
   );
 }
