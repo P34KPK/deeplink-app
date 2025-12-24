@@ -110,77 +110,65 @@ export default function HistoryPage() {
                                     {/* Action Toolbar */}
                                     <div className="bg-[#111] px-4 py-2 border-t border-[#222] flex items-center justify-between">
                                         {/* Left: Stats Button */}
-                                        <button
-                                            onClick={() => toggleStats(item.id)}
-                                            className={`flex items-center gap-2 text-xs font-medium transition-colors ${expandedStatsId === item.id ? 'text-white' : 'text-gray-400 hover:text-white'}`}
-                                        >
-                                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#222] border border-[#333] hover:border-gray-500 transition-colors">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                                                <span>Stats ({totalClicks})</span>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`ml-1 transition-transform ${expandedStatsId === item.id ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                            </div>
-                                        </button>
-
-                                        {/* Right: Actions */}
-                                        <div className="flex items-center gap-1">
-                                            <button
-                                                onClick={() => copyLink(item.generated)}
-                                                className="p-2 text-gray-400 hover:text-white rounded hover:bg-[#222]"
-                                                title="Copy Link"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                                            </button>
-                                            <button
-                                                onClick={() => deleteLink(item.id)}
-                                                className="p-2 text-red-900 hover:text-red-500 rounded hover:bg-[#222]"
-                                                title="Delete"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                            </button>
-                                            <Link
-                                                href={item.generated.replace(window.location.origin, '')}
-                                                className="p-2 text-gray-400 hover:text-white rounded hover:bg-[#222]"
-                                                title="Test Link"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                            </Link>
-                                        </div>
-                                    </div>
-
-                                    {/* Expanded Stats Panel */}
-                                    {expandedStatsId === item.id && (
-                                        <div className="bg-[#0f0f0f] border-t border-[#222] p-4 animate-in slide-in-from-top-2 fade-in duration-300">
-                                            {linkStats ? (
-                                                <div className="grid grid-cols-3 gap-4">
-                                                    <div className="bg-[#1a1a1a] rounded p-3 text-center border border-[#333]">
-                                                        <span className="block text-2xl font-bold text-white mb-1">{linkStats.android || 0}</span>
-                                                        <span className="text-[10px] tracking-widest uppercase text-gray-500">Android</span>
-                                                    </div>
-                                                    <div className="bg-[#1a1a1a] rounded p-3 text-center border border-[#333]">
-                                                        <span className="block text-2xl font-bold text-white mb-1">{linkStats.ios || 0}</span>
-                                                        <span className="text-[10px] tracking-widest uppercase text-gray-500">iOS</span>
-                                                    </div>
-                                                    <div className="bg-[#1a1a1a] rounded p-3 text-center border border-[#333]">
-                                                        <span className="block text-xl font-bold text-white mb-1">{linkStats.desktop || 0}</span>
-                                                        <span className="text-[10px] tracking-widest uppercase text-gray-500">Desktop</span>
-                                                    </div>
-                                                    <div className="col-span-3 text-right pt-2 border-t border-[#222] mt-2">
-                                                        <span className="text-[10px] text-gray-600 uppercase tracking-widest">Total clicks recorded: {linkStats.total}</span>
-                                                    </div>
+                                        return (
+                                        <div key={item.id} className="matte-card p-4 flex flex-col gap-4 group hover:border-[#333] transition-colors">
+                                            {/* Top Section */}
+                                            <div>
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <h3 className="text-sm font-semibold text-white">{item.title}</h3>
+                                                    <span className="text-xs text-gray-500">{new Date(item.date).toLocaleDateString()}</span>
                                                 </div>
-                                            ) : (
-                                                <div className="text-center py-4 text-sm text-gray-500">
-                                                    No traffic recorded for this specific link yet.
+                                                <div className="bg-[#111] p-2 rounded text-xs font-mono text-gray-400 mb-4 break-all">
+                                                    {item.generated}
+                                                </div>
+                                            </div>
+
+                                            {/* DEBUGGING BAR - HIGH CONTRAST */}
+                                            <div className="flex items-center justify-between border-t border-white/20 pt-4">
+                                                <button
+                                                    onClick={() => toggleStats(item.id)}
+                                                    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-2"
+                                                    style={{ border: '2px solid white' }} // Forced style for visibility
+                                                >
+                                                    📊 VIEW STATS ({totalClicks})
+                                                </button>
+
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => copyLink(item.generated)} className="bg-[#222] px-3 py-2 rounded text-xs">Copy</button>
+                                                    <button onClick={() => deleteLink(item.id)} className="bg-red-900/50 text-red-200 px-3 py-2 rounded text-xs">Delete</button>
+                                                </div>
+                                            </div>
+
+                                            {/* Expanded Stats Panel */}
+                                            {expandedStatsId === item.id && (
+                                                <div className="bg-[#111] border border-[#333] p-4 rounded mt-2">
+                                                    <h4 className="text-white font-bold mb-2">Traffic Breakdown</h4>
+                                                    {linkStats ? (
+                                                        <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                                                            <div className="bg-black p-2 rounded">
+                                                                <div className="text-gray-500 text-xs">ANDROID</div>
+                                                                <div className="text-white font-bold text-lg">{linkStats.android || 0}</div>
+                                                            </div>
+                                                            <div className="bg-black p-2 rounded">
+                                                                <div className="text-gray-500 text-xs">IOS</div>
+                                                                <div className="text-white font-bold text-lg">{linkStats.ios || 0}</div>
+                                                            </div>
+                                                            <div className="bg-black p-2 rounded">
+                                                                <div className="text-gray-500 text-xs">DESKTOP</div>
+                                                                <div className="text-white font-bold text-lg">{linkStats.desktop || 0}</div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-gray-500">No data found.</div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
-                                    )}
-                                </div>
-                            );
+                                        );
                         })}
-                    </div>
+                                    </div>
                 )}
-            </div>
+                                </div>
         </main>
-    );
+                );
 }
