@@ -19,10 +19,10 @@ function RedirectContent() {
     // URI Schemes
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 
-    // Android Intent (Strict Mode)
-    // We target the Amazon App package specifically using scheme=https inside the Intent.
-    // We DO NOT include S.browser_fallback_url to prevent Chrome taking over.
-    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`;
+    // Android Intent (Strict 'amzn' Scheme)
+    // We use scheme=amzn (instead of https) so the browser explicitly REJECTS it and hands it to the OS.
+    // This forces the Amazon App to open because it's the only one registered for 'amzn'.
+    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=amzn;end`;
 
     const [isAndroid, setIsAndroid] = useState(false);
 
