@@ -14,15 +14,10 @@ function RedirectContent() {
 
     // Construct URLs
     const webUrl = `https://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-    const encodedWebUrl = encodeURIComponent(webUrl);
 
     // URI Schemes
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-
-    // Android Intent (Strict 'amzn' Scheme)
-    // We use scheme=amzn (instead of https) so the browser explicitly REJECTS it and hands it to the OS.
-    // This forces the Amazon App to open because it's the only one registered for 'amzn'.
-    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=amzn;end`;
+    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`;
 
     const [isAndroid, setIsAndroid] = useState(false);
 
@@ -36,7 +31,7 @@ function RedirectContent() {
         const android = /android/i.test(userAgent);
         setIsAndroid(android);
 
-        // Track Click
+        // Track Click with keepalive
         fetch('/api/track', {
             method: 'POST',
             body: JSON.stringify({ asin, userAgent }),
@@ -45,52 +40,39 @@ function RedirectContent() {
         }).catch(err => console.error('Tracking failed', err));
 
         const tryOpen = () => {
+            const start = Date.now();
+
             if (android) {
-                // Strict Android: Intent only. No JS fallback.
                 window.location.href = androidIntent;
             } else {
-                // iOS / Desktop needs JS fallback
-                const start = Date.now();
                 window.location.href = appUrl;
-
-                setTimeout(() => {
-                    if (Date.now() - start < 3000 && !document.hidden) {
-                        window.location.href = webUrl;
-                    }
-                }, 2500);
             }
+
+            setTimeout(() => {
+                if (Date.now() - start < 2000) {
+                    setStatus('Tap below to open');
+                }
+            }, 1500);
         };
 
-        // AUTO-REDIRECT DISABLED EXPERIMENTALLY
-        // Often, auto-redirects are blocked by Facebook/Chrome as "popups".
-        // By relying purely on the manual click below, we gain "User Trust" from the browser.
-        // Let's see if the manual button works alone first.
-
-        /* 
         const timer = setTimeout(() => {
             tryOpen();
         }, 500);
 
         return () => clearTimeout(timer);
-        */
-    }, [asin, tag, domain, androidIntent, appUrl, webUrl]);
+    }, [asin, tag, domain, androidIntent, appUrl]);
 
-    // Manual Target Logic
-    // Android gets the direct Intent. iOS gets the Scheme.
-    const manualTarget = isAndroid ? androidIntent : appUrl;
+    const handleManualClick = () => {
+        // Track manual click as well? Maybe not double count, keep simple.
+        if (isAndroid) {
+            window.location.href = androidIntent;
+        } else {
+            window.location.href = appUrl;
+        }
 
-    // Click Handler only needed for iOS fallback. 
-    // Android is handled purely by the href={androidIntent} native behavior.
-    const handleLinkClick = (e: React.MouseEvent) => {
-        if (isAndroid) return;
-
-        // iOS Logic
-        // e.preventDefault(); // Let href work
         setTimeout(() => {
-            if (!document.hidden) {
-                window.location.href = webUrl;
-            }
-        }, 2500);
+            window.location.href = webUrl;
+        }, 500);
     };
 
     if (!asin) {
@@ -120,18 +102,14 @@ function RedirectContent() {
                     Opening Amazon App...
                 </p>
 
-                <a
-                    href={manualTarget}
-                    onClick={handleLinkClick}
-                    className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform w-full max-w-xs block select-none cursor-pointer"
+                <button
+                    onClick={handleManualClick}
+                    className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform w-full max-w-xs"
                 >
                     Open Amazon App
-                </a>
+                </button>
 
-                <a
-                    href={webUrl}
-                    className="mt-6 text-gray-500 text-sm border-b border-gray-700 pb-0.5 hover:text-white hover:border-white transition-colors"
-                >
+                <a href={webUrl} className="mt-6 text-gray-500 text-sm border-b border-gray-700 pb-0.5 hover:text-white hover:border-white transition-colors">
                     Or continue to Website
                 </a>
             </div>
