@@ -251,7 +251,7 @@ export default function Home() {
                     <div className="text-xs text-gray-600 font-mono truncate">{item.generated}</div>
                   </div>
 
-                  <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-2 transition-opacity">
                     <button
                       onClick={() => copyLink(item.generated)}
                       className="p-2 text-gray-400 hover:text-white bg-[#111] hover:bg-[#222] rounded-md border border-[#222]"
