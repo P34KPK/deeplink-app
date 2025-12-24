@@ -19,9 +19,10 @@ function RedirectContent() {
     // URI Schemes
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 
-    // Android Intent with Native Fallback (S.browser_fallback_url)
-    // Fixed host: intent://www.amazon.${domain}/...
-    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
+    // Android Intent (Pure Force Mode)
+    // Removed S.browser_fallback_url to prevent Chrome/Facebook from defaulting to web.
+    // This forces the intent to only resolve to the App.
+    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`;
 
     const [isAndroid, setIsAndroid] = useState(false);
 
