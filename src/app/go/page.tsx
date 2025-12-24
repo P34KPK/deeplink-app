@@ -45,43 +45,28 @@ function RedirectContent() {
         }).catch(err => console.error('Tracking failed', err));
 
         const tryOpen = () => {
-            if (android) {
-                // Android handles fallback natively via Intent param
-                window.location.href = androidIntent;
-            } else {
-                // iOS / Desktop needs JS fallback
-                const start = Date.now();
-                window.location.href = appUrl;
-
-                setTimeout(() => {
-                    if (Date.now() - start < 3000 && !document.hidden) {
-                        window.location.href = webUrl;
-                    }
-                }, 2500);
-            }
+            // Universal method: Just try to open the app using the custom scheme.
+            // This works on iOS and often reliably on Android when Intents fail.
+            window.location.href = appUrl;
         };
 
-        // Increased delay to 800ms to ensure page is loaded/interactive before attempting redirect
+        // Delay to ensure page is interactive
         const timer = setTimeout(() => {
             tryOpen();
-        }, 800);
+        }, 500);
 
         return () => clearTimeout(timer);
     }, [asin, tag, domain, androidIntent, appUrl, webUrl]);
 
     // We don't need handleManualClick anymore since we use a real <a> tag now.
-    // But we keep the logic for calculating the target.
-    const manualTarget = isAndroid ? androidIntent : appUrl;
+    // Simplifying target to just appUrl for everyone.
+    const manualTarget = appUrl;
 
-    // For iOS fallback on manual click, we might still need a click handler if we want JS fallback
-    // But for simplicity/robustness, let's trust the href first.
-    // Actually, for iOS, a simple href to amzn:// is best. If it fails, nothing happens?
-    // Let's keep a Click Handler ONLY for iOS to do the fallback.
-    const handleIOSClick = (e: React.MouseEvent) => {
-        if (isAndroid) return; // Android uses href
+    // Simple fallback logic for click
+    const handleLinkClick = (e: React.MouseEvent) => {
+        // e.preventDefault(); // Don't prevent default, let the href work.
 
-        e.preventDefault();
-        window.location.href = appUrl;
+        // Setup fallback in case href fails
         setTimeout(() => {
             if (!document.hidden) {
                 window.location.href = webUrl;
@@ -118,7 +103,7 @@ function RedirectContent() {
 
                 <a
                     href={manualTarget}
-                    onClick={handleIOSClick}
+                    onClick={handleLinkClick}
                     className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform w-full max-w-xs block select-none cursor-pointer"
                 >
                     Open Amazon App
