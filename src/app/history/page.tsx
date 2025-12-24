@@ -18,7 +18,7 @@ export default function HistoryPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const saved = localStorage.getItem('deepLinkHistory');
+        const saved = localStorage.getItem('deeplink_history');
         if (saved) {
             try {
                 setHistory(JSON.parse(saved));
@@ -32,7 +32,7 @@ export default function HistoryPage() {
     const deleteLink = (id: string) => {
         const newHistory = history.filter(link => link.id !== id);
         setHistory(newHistory);
-        localStorage.setItem('deepLinkHistory', JSON.stringify(newHistory));
+        localStorage.setItem('deeplink_history', JSON.stringify(newHistory));
     };
 
     const copyLink = (link: string) => {
