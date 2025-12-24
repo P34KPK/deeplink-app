@@ -61,12 +61,18 @@ function RedirectContent() {
             }
         };
 
-        // Delay to ensure page is interactive
+        // AUTO-REDIRECT DISABLED EXPERIMENTALLY
+        // Often, auto-redirects are blocked by Facebook/Chrome as "popups".
+        // By relying purely on the manual click below, we gain "User Trust" from the browser.
+        // Let's see if the manual button works alone first.
+
+        /* 
         const timer = setTimeout(() => {
             tryOpen();
         }, 500);
 
         return () => clearTimeout(timer);
+        */
     }, [asin, tag, domain, androidIntent, appUrl, webUrl]);
 
     // Manual Target Logic
