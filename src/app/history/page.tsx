@@ -66,43 +66,38 @@ export default function HistoryPage() {
                 ) : (
                     <div className="space-y-4">
                         {history.map((item) => (
-                            <div key={item.id} className="matte-card p-5 flex flex-col gap-4">
-
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h3 className="font-semibold text-lg text-white">{item.title}</h3>
-                                        <p className="text-sm text-gray-500">{item.description}</p>
-                                        <p className="text-xs text-gray-600 mt-1">{new Date(item.date).toLocaleDateString()} &bull; {new Date(item.date).toLocaleTimeString()}</p>
+                            <div key={item.id} className="matte-card p-4 flex items-center justify-between gap-4 group hover:border-[#333] transition-colors">
+                                <div className="flex-1 overflow-hidden">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-sm font-semibold text-white">{item.title}</span>
                                     </div>
+                                    <div className="text-xs text-gray-500 mb-2">{item.description} &bull; {new Date(item.date).toLocaleDateString()}</div>
+                                    <div className="text-xs text-gray-600 font-mono truncate">{item.generated}</div>
                                 </div>
 
-                                <div className="bg-black/50 p-3 rounded border border-[#222] font-mono text-xs text-green-500 break-all select-all">
-                                    {item.generated}
-                                </div>
-
-                                <div className="flex gap-3 mt-2">
+                                <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => copyLink(item.generated)}
-                                        className="flex-1 bg-white text-black font-bold py-3 rounded-lg text-sm hover:bg-gray-200 transition-colors"
+                                        className="p-2 text-gray-400 hover:text-white bg-[#111] hover:bg-[#222] rounded-md border border-[#222]"
+                                        title="Copy Link"
                                     >
-                                        Copy Link
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                                     </button>
                                     <button
                                         onClick={() => deleteLink(item.id)}
-                                        className="bg-[#111] text-red-500 border border-[#222] px-4 py-3 rounded-lg hover:bg-red-900/10 transition-colors"
+                                        className="p-2 text-red-900 hover:text-red-500 bg-[#111] hover:bg-[#222] rounded-md border border-[#222]"
                                         title="Delete"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                     </button>
                                     <Link
                                         href={item.generated.replace(window.location.origin, '')}
-                                        className="bg-[#111] text-gray-300 border border-[#222] px-4 py-3 rounded-lg hover:bg-[#222] transition-colors flex items-center justify-center"
+                                        className="p-2 text-gray-400 hover:text-white bg-[#111] hover:bg-[#222] rounded-md border border-[#222]"
                                         title="Test Link"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                                     </Link>
                                 </div>
-
                             </div>
                         ))}
                     </div>
