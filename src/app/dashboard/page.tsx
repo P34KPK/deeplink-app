@@ -11,7 +11,13 @@ type Stats = {
         desktop: number;
         other: number;
     };
-    topLinks: { asin: string; count: number }[];
+    topLinks: {
+        asin: string;
+        total: number;
+        android: number;
+        ios: number;
+        desktop: number;
+    }[];
 };
 
 export default function Dashboard() {
@@ -105,6 +111,7 @@ export default function Dashboard() {
                                         <th className="px-6 py-4 font-medium">Rank</th>
                                         <th className="px-6 py-4 font-medium">Product ASIN</th>
                                         <th className="px-6 py-4 font-medium text-right">Total Hits</th>
+                                        <th className="px-6 py-4 font-medium text-center">Breakdown</th>
                                         <th className="px-6 py-4 w-1/3">Activity</th>
                                     </tr>
                                 </thead>
@@ -113,11 +120,18 @@ export default function Dashboard() {
                                         <tr key={link.asin} className="hover:bg-[#111] transition-colors">
                                             <td className="px-6 py-4 text-gray-500 font-medium">#{index + 1}</td>
                                             <td className="px-6 py-4 text-white font-mono text-xs">{link.asin}</td>
-                                            <td className="px-6 py-4 text-right text-gray-300 font-semibold">{link.count}</td>
+                                            <td className="px-6 py-4 text-right text-gray-300 font-semibold">{link.total}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex justify-center gap-3 text-xs text-gray-400">
+                                                    <span title="Android" className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-white"></div>{link.android}</span>
+                                                    <span title="iOS" className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-gray-500"></div>{link.ios}</span>
+                                                    <span title="Desktop" className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-gray-700"></div>{link.desktop}</span>
+                                                </div>
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <div className="w-full bg-[#111] h-1.5 rounded-full overflow-hidden">
                                                     <div
-                                                        style={{ width: `${Math.min((link.count / (stats.topLinks[0].count || 1)) * 100, 100)}%` }}
+                                                        style={{ width: `${Math.min((link.total / (stats.topLinks[0].total || 1)) * 100, 100)}%` }}
                                                         className="h-full bg-white transition-all duration-500"
                                                     ></div>
                                                 </div>
