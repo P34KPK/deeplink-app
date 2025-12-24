@@ -234,9 +234,14 @@ export default function Home() {
         <div className="w-full max-w-xl mt-12 animate-fade" style={{ animationDelay: '0.2s' }}>
           <div className="flex items-center justify-between mb-4 px-2">
             <h2 className="text-lg font-medium text-gray-400">History ({history.length})</h2>
-            <button onClick={() => setViewHistory(!viewHistory)} className="text-xs text-gray-600 hover:text-gray-400">
-              {viewHistory ? 'Hide' : 'Show'}
-            </button>
+            <div className="flex gap-4">
+              <Link href="/history" className="text-xs text-green-600 hover:text-green-500 font-bold uppercase tracking-wider">
+                View All
+              </Link>
+              <button onClick={() => setViewHistory(!viewHistory)} className="text-xs text-gray-600 hover:text-gray-400">
+                {viewHistory ? 'Hide' : 'Show'}
+              </button>
+            </div>
           </div>
 
           {viewHistory && (
