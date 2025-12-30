@@ -178,22 +178,13 @@ export default function Home() {
       <div className="matte-card p-8 md:p-12 w-full max-w-xl animate-fade shadow-xl">
         <div className="mb-10 flex flex-col items-center justify-center">
           <div className="relative w-48 h-24 mb-4">
-            {/* Light Mode Logo */}
-            <Image
-              src="/logo-black.png"
-              alt="DeepLinker Logo"
-              width={192}
-              height={96}
-              className="object-contain block dark:hidden"
-              priority
-            />
-            {/* Dark Mode Logo */}
             <Image
               src="/logo.png"
               alt="DeepLinker Logo"
               width={192}
               height={96}
-              className="object-contain hidden dark:block"
+              className="object-contain"
+              style={{ filter: 'var(--logo-filter)' }}
               priority
             />
           </div>

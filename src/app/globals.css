@@ -35,6 +35,8 @@
   --foreground: #09090b;
   /* zinc-950 */
 
+  --logo-filter: brightness(0);
+
   --card-bg: #ffffff;
   --card-foreground: #09090b;
 
