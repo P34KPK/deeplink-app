@@ -178,14 +178,28 @@ export default function Home() {
       <div className="matte-card p-8 md:p-12 w-full max-w-xl animate-fade shadow-xl">
         <div className="mb-10 flex flex-col items-center justify-center">
           <div className="relative w-48 h-24 mb-4">
-            <Image
-              src="/logo.png"
-              alt="DeepLinker Logo"
-              width={192}
-              height={96}
-              className="object-contain dark:mix-blend-screen mix-blend-multiply"
-              priority
-            />
+            {/* Dark Mode Logo (White) */}
+            <div className="hidden dark:block">
+              <Image
+                src="/logo.png"
+                alt="DeepLinker Logo"
+                width={192}
+                height={96}
+                className="object-contain"
+                priority
+              />
+            </div>
+            {/* Light Mode Logo (Black) */}
+            <div className="block dark:hidden">
+              <Image
+                src="/logo-black.png"
+                alt="DeepLinker Logo"
+                width={192}
+                height={96}
+                className="object-contain"
+                priority
+              />
+            </div>
           </div>
           <p className="text-sm text-muted-foreground">
             Amazon Affiliate Deep Linking Tool
