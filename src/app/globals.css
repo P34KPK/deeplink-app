@@ -99,6 +99,8 @@
   --border: #222222;
   --input: #222222;
   --ring: #d4d4d8;
+
+  --logo-filter: brightness(0) invert(1);
 }
 
 body {
