@@ -2,12 +2,15 @@ import { kv } from '@vercel/kv';
 
 type AnalyticsData = {
     totalClicks: number;
+    globalLastClick: number; // For "Last Activity" KPI
     devices: {
         android: number;
         ios: number;
         desktop: number;
         other: number;
     };
+    // Agent A: Time Series (YYYY-MM-DD -> Count)
+    dailyClicks: Record<string, number>;
     // Upgrade: Store full breakdown per ASIN
     topLinks: Record<string, {
         total: number;
@@ -20,16 +23,26 @@ type AnalyticsData = {
 
 const defaultData: AnalyticsData = {
     totalClicks: 0,
+    globalLastClick: 0,
     devices: { android: 0, ios: 0, desktop: 0, other: 0 },
+    dailyClicks: {},
     topLinks: {},
 };
 
-const DB_KEY = 'deeplink_analytics_v2'; // Bump version to start fresh with new structure
+const DB_KEY = 'deeplink_analytics_v3'; // Bump version for new schema
 
 async function getDB(): Promise<AnalyticsData> {
     try {
         const data = await kv.get<AnalyticsData>(DB_KEY);
-        return data || defaultData;
+        // Merge with defaultData to ensure new fields exist if migrating
+        if (data) {
+            return {
+                ...defaultData,
+                ...data,
+                dailyClicks: data.dailyClicks || {}, // Ensure safety
+            };
+        }
+        return defaultData;
     } catch (error) {
         console.warn('Failed to fetch from KV, returning default data', error);
         return defaultData;
@@ -47,10 +60,15 @@ async function saveDB(data: AnalyticsData) {
 export async function trackClick(asin: string, userAgent: string) {
     const data = await getDB();
 
-    // 1. Total Clicks
+    // 1. Total Clicks & Global Timestamp
     data.totalClicks += 1;
+    data.globalLastClick = Date.now();
 
-    // Determine Device
+    // 2. Daily Clicks (Agent A)
+    const today = new Date().toISOString().split('T')[0];
+    data.dailyClicks[today] = (data.dailyClicks[today] || 0) + 1;
+
+    // 3. Determine Device
     const ua = userAgent.toLowerCase();
     let isAndroid = false;
     let isIos = false;
@@ -69,7 +87,7 @@ export async function trackClick(asin: string, userAgent: string) {
         data.devices.other += 1;
     }
 
-    // 2. Per-Link Stats (ASIN)
+    // 4. Per-Link Stats (ASIN)
     if (!data.topLinks[asin]) {
         data.topLinks[asin] = { total: 0, android: 0, ios: 0, desktop: 0, lastClick: 0 };
     }
