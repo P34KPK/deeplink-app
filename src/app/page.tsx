@@ -182,7 +182,7 @@ export default function Home() {
             alt="DeepLinker Logo"
             width={192}
             height={96}
-            className="object-contain invert dark:invert-0"
+            className="object-contain brightness-0 dark:invert"
             priority
           />
         </div>
