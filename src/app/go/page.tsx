@@ -14,12 +14,14 @@ function RedirectContent() {
 
     // Construct URLs
     const webUrl = `https://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+    const encodedWebUrl = encodeURIComponent(webUrl);
 
     // URI Schemes
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`;
+    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
 
     const [isAndroid, setIsAndroid] = useState(false);
+    const [isIOS, setIsIOS] = useState(false);
 
     useEffect(() => {
         if (!asin) {
@@ -29,7 +31,10 @@ function RedirectContent() {
 
         const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
         const android = /android/i.test(userAgent);
+        const ios = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+
         setIsAndroid(android);
+        setIsIOS(ios);
 
         // Track Click with keepalive
         fetch('/api/track', {
@@ -39,40 +44,64 @@ function RedirectContent() {
             keepalive: true
         }).catch(err => console.error('Tracking failed', err));
 
+        // Auto-redirect attempt
         const tryOpen = () => {
-            const start = Date.now();
-
             if (android) {
                 window.location.href = androidIntent;
-            } else {
+            } else if (ios) {
                 window.location.href = appUrl;
-            }
 
-            setTimeout(() => {
-                if (Date.now() - start < 2000) {
-                    setStatus('Tap below to open');
-                }
-            }, 1500);
+                // Fallback for iOS if app not installed (delayed)
+                const fallbackTimer = setTimeout(() => {
+                    // Only redirect if page is visible (user is still here, meaning app didn't open)
+                    if (!document.hidden) {
+                        window.location.href = webUrl;
+                    }
+                }, 2500);
+
+                // If page becomes hidden (app opened), cancel the fallback
+                const onVisibilityChange = () => {
+                    if (document.hidden) {
+                        clearTimeout(fallbackTimer);
+                        document.removeEventListener('visibilitychange', onVisibilityChange);
+                    }
+                };
+                document.addEventListener('visibilitychange', onVisibilityChange);
+            } else {
+                // Desktop or other
+                window.location.href = webUrl;
+            }
         };
 
+        // Try immediately if possible, or small delay
         const timer = setTimeout(() => {
             tryOpen();
-        }, 500);
+        }, 100);
 
         return () => clearTimeout(timer);
-    }, [asin, tag, domain, androidIntent, appUrl]);
+    }, [asin, tag, domain, androidIntent, appUrl, webUrl]);
 
     const handleManualClick = () => {
-        // Track manual click as well? Maybe not double count, keep simple.
         if (isAndroid) {
             window.location.href = androidIntent;
         } else {
             window.location.href = appUrl;
-        }
 
-        setTimeout(() => {
-            window.location.href = webUrl;
-        }, 500);
+            // Smart fallback for manual click too
+            const fallbackTimer = setTimeout(() => {
+                if (!document.hidden) {
+                    window.location.href = webUrl;
+                }
+            }, 2500);
+
+            const onVisibilityChange = () => {
+                if (document.hidden) {
+                    clearTimeout(fallbackTimer);
+                    document.removeEventListener('visibilitychange', onVisibilityChange);
+                }
+            };
+            document.addEventListener('visibilitychange', onVisibilityChange);
+        }
     };
 
     if (!asin) {

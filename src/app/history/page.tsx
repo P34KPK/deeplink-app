@@ -21,14 +21,14 @@ export default function HistoryPage() {
 
     useEffect(() => {
         // Load History
-        const saved = localStorage.getItem('deeplink_history');
-        if (saved) {
-            try {
-                setHistory(JSON.parse(saved));
-            } catch (e) {
-                console.error('Failed to parse history', e);
-            }
-        }
+        fetch('/api/links')
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setHistory(data);
+                }
+            })
+            .catch(err => console.error('Failed to parse history', err));
 
         // Load Stats from API
         fetch('/api/stats')
@@ -43,10 +43,16 @@ export default function HistoryPage() {
             });
     }, []);
 
-    const deleteLink = (id: string) => {
-        const newHistory = history.filter(link => link.id !== id);
-        setHistory(newHistory);
-        localStorage.setItem('deeplink_history', JSON.stringify(newHistory));
+    const deleteLink = async (id: string) => {
+        try {
+            const res = await fetch(`/api/links?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                const updatedHistory = await res.json();
+                setHistory(updatedHistory);
+            }
+        } catch (e) {
+            console.error('Failed to delete link', e);
+        }
     };
 
     const copyLink = (link: string) => {

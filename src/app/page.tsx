@@ -27,26 +27,45 @@ export default function Home() {
 
   // Load history on mount
   useEffect(() => {
-    const saved = localStorage.getItem('deeplink_history');
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse history", e);
-      }
-    }
+    fetch('/api/links')
+      .then(res => res.json())
+      .then(serverData => {
+        if (Array.isArray(serverData)) {
+          // Check for local migration
+          const localSaved = localStorage.getItem('deeplink_history');
+          if (localSaved) {
+            try {
+              const localHistory = JSON.parse(localSaved);
+              if (Array.isArray(localHistory) && localHistory.length > 0) {
+                // Sync local to server
+                fetch('/api/links', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(localHistory)
+                })
+                  .then(res => res.json())
+                  .then(mergedData => {
+                    setHistory(mergedData);
+                    localStorage.removeItem('deeplink_history'); // Clear local after sync
+                    console.log("Migrated local history to server");
+                  })
+                  .catch(e => {
+                    console.error("Failed to sync local history", e);
+                    setHistory(serverData); // Fallback
+                  });
+              } else {
+                setHistory(serverData);
+              }
+            } catch (e) {
+              setHistory(serverData);
+            }
+          } else {
+            setHistory(serverData);
+          }
+        }
+      })
+      .catch(err => console.error("Failed to load history", err));
   }, []);
-
-  // Save history helper
-  const saveHistory = (newHistory: ArchivedLink[]) => {
-    setHistory(newHistory);
-    localStorage.setItem('deeplink_history', JSON.stringify(newHistory));
-  };
-
-  const deleteLink = (id: string) => {
-    const newHistory = history.filter(h => h.id !== id);
-    saveHistory(newHistory);
-  };
 
   const generateLink = async () => {
     setError('');
@@ -114,8 +133,17 @@ export default function Home() {
         date: Date.now()
       };
 
-      const newHistory = [newEntry, ...history];
-      saveHistory(newHistory);
+      // Save to server
+      const saveRes = await fetch('/api/links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEntry)
+      });
+
+      if (saveRes.ok) {
+        const updatedHistory = await saveRes.json();
+        setHistory(updatedHistory);
+      }
 
       // Clear inputs optionally? Keep for now in case user wants to edit.
 
