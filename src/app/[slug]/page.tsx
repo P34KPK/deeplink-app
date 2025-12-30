@@ -15,6 +15,7 @@ export default async function ShortLinkPage({ params }: { params: Promise<{ slug
             asin={data.asin}
             tag={data.tag}
             domain={data.domain}
+            slug={slug}
         />
     );
 }

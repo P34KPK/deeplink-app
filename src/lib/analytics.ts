@@ -11,6 +11,8 @@ type AnalyticsData = {
     };
     // Agent A: Time Series (YYYY-MM-DD -> Count)
     dailyClicks: Record<string, number>;
+    // Upgrade: Store stats per unique Slug (for independent link tracking)
+    statsBySlug: Record<string, number>;
     // Upgrade: Store full breakdown per ASIN
     topLinks: Record<string, {
         total: number;
@@ -26,6 +28,7 @@ const defaultData: AnalyticsData = {
     globalLastClick: 0,
     devices: { android: 0, ios: 0, desktop: 0, other: 0 },
     dailyClicks: {},
+    statsBySlug: {},
     topLinks: {},
 };
 
@@ -40,6 +43,7 @@ async function getDB(): Promise<AnalyticsData> {
                 ...defaultData,
                 ...data,
                 dailyClicks: data.dailyClicks || {}, // Ensure safety
+                statsBySlug: data.statsBySlug || {},
             };
         }
         return defaultData;
@@ -57,7 +61,7 @@ async function saveDB(data: AnalyticsData) {
     }
 }
 
-export async function trackClick(asin: string, userAgent: string) {
+export async function trackClick(asin: string, userAgent: string, slug?: string) {
     const data = await getDB();
 
     // 1. Total Clicks & Global Timestamp
@@ -68,7 +72,12 @@ export async function trackClick(asin: string, userAgent: string) {
     const today = new Date().toISOString().split('T')[0];
     data.dailyClicks[today] = (data.dailyClicks[today] || 0) + 1;
 
-    // 3. Determine Device
+    // 3. Stats by Slug (Independent Link Tracking)
+    if (slug) {
+        data.statsBySlug[slug] = (data.statsBySlug[slug] || 0) + 1;
+    }
+
+    // 4. Determine Device
     const ua = userAgent.toLowerCase();
     let isAndroid = false;
     let isIos = false;
@@ -87,7 +96,7 @@ export async function trackClick(asin: string, userAgent: string) {
         data.devices.other += 1;
     }
 
-    // 4. Per-Link Stats (ASIN)
+    // 5. Per-Link Stats (ASIN)
     if (!data.topLinks[asin]) {
         data.topLinks[asin] = { total: 0, android: 0, ios: 0, desktop: 0, lastClick: 0 };
     }

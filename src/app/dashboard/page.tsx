@@ -17,6 +17,7 @@ type Stats = {
         other: number;
     };
     dailyClicks: Record<string, number>;
+    statsBySlug: Record<string, number>;
     topLinks: {
         asin: string;
         total: number;
@@ -201,79 +202,72 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Top Links Table */}
+                {/* My Links Performance Table */}
                 <div className="matte-card overflow-hidden">
                     <div className="p-6 border-b border-border flex justify-between items-center bg-card/50">
-                        <h3 className="text-lg font-semibold">Top Performing Products</h3>
+                        <h3 className="text-lg font-semibold">My Links Performance</h3>
                     </div>
 
-                    {stats.topLinks.length === 0 ? (
+                    {history.length === 0 ? (
                         <div className="p-12 text-center text-muted-foreground">
-                            No click data available yet. Start sharing links!
+                            No links generated yet.
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-secondary/30 text-xs text-muted-foreground uppercase tracking-wider">
                                     <tr>
-                                        <th className="px-6 py-4 font-medium">Rank</th>
+                                        <th className="px-6 py-4 font-medium">Date</th>
+                                        <th className="px-6 py-4 font-medium">Link Alias</th>
                                         <th className="px-6 py-4 font-medium">Product</th>
                                         <th className="px-6 py-4 font-medium text-right">Total Hits</th>
-                                        <th className="px-6 py-4 font-medium text-center">Breakdown</th>
                                         <th className="px-6 py-4 w-1/4">Activity</th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-sm divide-y divide-border">
-                                    {stats.topLinks.map((link, index) => (
-                                        <tr key={link.asin} className="hover:bg-secondary/20 transition-colors group">
-                                            <td className="px-6 py-4 text-muted-foreground font-mono">#{index + 1}</td>
-                                            <td className="px-6 py-4">
-                                                {/* AGENT C: Product Title */}
-                                                <div className="font-medium text-foreground text-base mb-0.5">
-                                                    {getProductTitle(link.asin)}
-                                                </div>
-                                                <div className="text-xs text-muted-foreground font-mono opacity-50 group-hover:opacity-100 transition-opacity">
-                                                    ASIN: {link.asin}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <span className="inline-block bg-white text-black px-2 py-1 rounded font-bold text-xs min-w-[30px] text-center">
-                                                    {link.total}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex justify-center gap-4 text-xs text-muted-foreground">
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="font-bold text-foreground">{link.android}</span>
-                                                        <span className="scale-75 opacity-70">AND</span>
+                                    {[...history].reverse().map((link) => {
+                                        // Extract slug from generated URL (last part)
+                                        const slug = link.generated.split('/').pop() || '';
+                                        const hits = stats.statsBySlug[slug] || 0;
+                                        const maxHits = Math.max(...Object.values(stats.statsBySlug), 1);
+
+                                        return (
+                                            <tr key={link.id} className="hover:bg-secondary/20 transition-colors group">
+                                                <td className="px-6 py-4 text-muted-foreground font-mono text-xs">
+                                                    {new Date(link.date).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <a href={link.generated} target="_blank" className="text-primary hover:underline font-medium">
+                                                        /{slug}
+                                                    </a>
+                                                    {link.description && (
+                                                        <div className="text-xs text-muted-foreground mt-0.5">{link.description}</div>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-medium text-foreground text-base mb-0.5">
+                                                        {link.title}
                                                     </div>
-                                                    <div className="w-px bg-border h-8"></div>
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="font-bold text-foreground">{link.ios}</span>
-                                                        <span className="scale-75 opacity-70">IOS</span>
+                                                    <div className="text-xs text-muted-foreground font-mono opacity-50">
+                                                        ASIN: {link.asin}
                                                     </div>
-                                                    <div className="w-px bg-border h-8"></div>
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="font-bold text-foreground">{link.desktop}</span>
-                                                        <span className="scale-75 opacity-70">DSK</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-col gap-1">
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <span className={`inline-block px-2 py-1 rounded font-bold text-xs min-w-[30px] text-center ${hits > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
+                                                        {hits}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
                                                     <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden">
                                                         <div
-                                                            style={{ width: `${Math.min((link.total / (stats.topLinks[0].total || 1)) * 100, 100)}%` }}
-                                                            className="h-full bg-white transition-all duration-500"
+                                                            style={{ width: `${Math.min((hits / maxHits) * 100, 100)}%` }}
+                                                            className="h-full bg-primary transition-all duration-500"
                                                         ></div>
                                                     </div>
-                                                    <span className="text-[10px] text-muted-foreground text-right block">
-                                                        Last click: {link.lastClick ? new Date(link.lastClick).toLocaleString() : 'N/A'}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>

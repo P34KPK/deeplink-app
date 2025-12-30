@@ -7,9 +7,10 @@ interface DeepLinkRedirectProps {
     asin: string;
     tag?: string | null;
     domain?: string | null;
+    slug: string;
 }
 
-export default function DeepLinkRedirect({ asin, tag, domain = 'com' }: DeepLinkRedirectProps) {
+export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: DeepLinkRedirectProps) {
     const [status, setStatus] = useState('Opening Amazon...');
     const [isAndroid, setIsAndroid] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
@@ -38,7 +39,7 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com' }: DeepLink
         // Track Click
         fetch('/api/track', {
             method: 'POST',
-            body: JSON.stringify({ asin, userAgent }),
+            body: JSON.stringify({ asin, userAgent, slug }),
             headers: { 'Content-Type': 'application/json' },
             keepalive: true
         }).catch(err => console.error('Tracking failed', err));
