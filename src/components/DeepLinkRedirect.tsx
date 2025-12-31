@@ -110,7 +110,7 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
                     />
                 </div>
 
-                <h1 className="text-xl font-semibold mb-2 text-white">{status === 'Opening Amazon...' ? 'Redirecting...' : 'View Product'}</h1>
+                <h1 className="text-xl font-semibold mb-2 text-foreground">{status === 'Opening Amazon...' ? 'Opening App...' : 'View Product'}</h1>
                 <p className="text-gray-500 mb-8 max-w-xs mx-auto text-sm">
                     Opening Amazon App...
                 </p>
