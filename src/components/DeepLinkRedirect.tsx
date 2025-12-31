@@ -51,12 +51,23 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
             if (android) {
                 window.location.href = androidIntent;
             } else if (ios) {
-                window.location.href = appUrl;
-                // NO setTimeout fallback here. 
-                // We rely on the user staying on this page if the app doesn't open.
+                // Try App Scheme
+                window.location.replace(appUrl);
+
+                // FALLBACK: If app doesn't open within 2.5s, go to web
+                // Note: If app opens, the browser enters background and this timer usually pauses
+                // But modern iOS might behave differently. 
+                // The "Continue to Website" button is the safest backup, but auto-fallback helps.
+                setTimeout(() => {
+                    // Check if page is still visible (user didn't leave)
+                    if (!document.hidden) {
+                        window.location.href = webUrl;
+                    }
+                }, 2500);
+
             } else {
-                // Desktop - Only here do we fallback immediately because there is no "App"
-                window.location.href = webUrl;
+                // Desktop
+                window.location.replace(webUrl);
             }
         };
 
@@ -68,37 +79,33 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
     const handleManualClick = () => {
         if (isAndroid) {
             window.location.href = androidIntent;
-        } else {
-            // iOS & Others - Force App Scheme only
+        } else if (isIOS) {
             window.location.href = appUrl;
+            setTimeout(() => { window.location.href = webUrl; }, 2000); // Manual fallback too
+        } else {
+            window.location.href = webUrl;
         }
     };
 
     if (!asin) {
         return (
             <div className="text-center p-10 mt-20">
-                <h1 className="text-xl text-white">Invalid Link</h1>
-                <p className="text-gray-500 mt-2">Missing Product ID.</p>
+                <h1 className="text-xl text-foreground">Invalid Link</h1>
+                <p className="text-muted-foreground mt-2">Missing Product ID.</p>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 space-y-8 animate-fade bg-[#050505]">
-            <div className="matte-card p-10 max-w-sm w-full flex flex-col items-center border border-[#222]">
+        <div className="flex flex-col items-center justify-center min-h-screen text-center p-6 space-y-8 animate-fade bg-background text-foreground">
+            <div className="matte-card p-10 max-w-sm w-full flex flex-col items-center">
                 <div className="relative w-32 h-16 mb-6">
-                    <Image
-                        src="/logo-black.png"
-                        alt="DeepLinkrs Logo"
-                        fill
-                        className="object-contain dark:hidden"
-                        priority
-                    />
+                    {/* Dynamic Logo Strategy */}
                     <Image
                         src="/logo.png"
                         alt="DeepLinkrs Logo"
                         fill
-                        className="object-contain hidden dark:block"
+                        className="object-contain logo-dynamic"
                         priority
                     />
                 </div>

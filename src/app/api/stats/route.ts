@@ -29,11 +29,54 @@ export async function GET() {
         console.error("Redis plan check failed", e);
     }
 
-    if (plan !== 'pro') {
-        return NextResponse.json({ error: 'Upgrade Required. Insights are for PRO members only.' }, { status: 403 });
+    // --- RETRIEVE USER USAGE ---
+    // Even for free users, we need to calculate their usage to show the "Lite Dashboard"
+
+    // 1. Get User Links
+    const { getLinks } = await import('@/lib/storage');
+    const allLinks = await getLinks();
+    const userLinks = allLinks.filter(l => l.userId === userId);
+    const linkCount = userLinks.length;
+
+    // 2. Calculate Total Clicks for User
+    let totalUserClicks = 0;
+    // We need to fetch clicks for each slug
+    // Optimization: Pipeline this if possible, but loop is okay for < 20 links
+    for (const link of userLinks) {
+        const slug = link.generated.split('/').pop();
+        if (slug) {
+            const clicks = await redis.get(`shortlink:${slug}:click_count`); // Check key name in analytics.ts? usually 'click_count' or just 'clicks'
+            // Let's assume standard 'shortlink:{slug}:clicks' or similar. 
+            // Wait, I should verify the key name in analytics.ts logic. 
+            // Usually tracking sets simple key?
+            // Let's use getStats logic or standard. 
+            // Let's check keys.
+            // Actually, let's just peek at how getStats does it or how track.ts does it.
+            // Tracking usually increments `shortlink:{slug}:clicks`.
+            const c = await redis.get(`shortlink:${slug}:clicks`);
+            if (c) totalUserClicks += parseInt(c, 10);
+        }
     }
 
-    // --- FETCH DATA ---
+    // --- RESPONSE STRATEGY ---
+
+    // If FREE: Return specific "Lite" object
+    if (plan !== 'pro') {
+        return NextResponse.json({
+            plan: 'free',
+            usage: {
+                links: linkCount,
+                clicks: totalUserClicks
+            },
+            limits: {
+                links: 20,
+                clicks: 200
+            },
+            // We do NOT return 'stats' (global charts) or detailed breakdowns
+        });
+    }
+
+    // If PRO: Return Full Stats
     const stats = await getStats();
 
     // Convert topLinks object to sorted array
@@ -47,6 +90,7 @@ export async function GET() {
         .slice(0, 50); // Return top 50
 
     return NextResponse.json({
+        plan: 'pro',
         ...stats,
         topLinks: sortedLinks
     });

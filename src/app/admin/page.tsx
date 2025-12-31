@@ -74,6 +74,23 @@ export default function AdminDashboard() {
                 throw new Error('Please enter a valid Amazon URL');
             }
 
+            // EXPANSION LOGIC: Handle amzn.to short links
+            if (targetUrl.includes('amzn.to')) {
+                try {
+                    const res = await fetch('/api/expand', {
+                        method: 'POST',
+                        body: JSON.stringify({ url: targetUrl }),
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                    const data = await res.json();
+                    if (data.fullUrl) {
+                        targetUrl = data.fullUrl;
+                    }
+                } catch (e) {
+                    console.warn("Expansion failed", e);
+                }
+            }
+
             // Seek ASIN
             const asinMatch = targetUrl.match(/(?:dp|o|gp\/product)\/([A-Z0-9]{10})/);
             const asin = asinMatch ? asinMatch[1] : null;
@@ -148,6 +165,20 @@ export default function AdminDashboard() {
                     <div>
                         <h1 className="text-3xl font-bold">Command Center</h1>
                         <p className="text-muted-foreground text-sm">System Status: <span className="text-green-500">Operational</span></p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => {
+                                localStorage.removeItem('admin_session');
+                                window.location.reload();
+                            }}
+                            className="text-xs px-3 py-1.5 border border-red-900/30 text-red-500 rounded hover:bg-red-900/10 transition-colors uppercase tracking-wider font-mono"
+                        >
+                            Lock Session
+                        </button>
+                        <Link href="/" className="text-sm px-4 py-2 rounded bg-secondary hover:bg-secondary/80 transition-colors">
+                            View App
+                        </Link>
                     </div>
                     <div className="flex items-center gap-4">
                         <button onClick={handleLogout} className="text-sm text-red-400 hover:text-red-300 transition-colors">

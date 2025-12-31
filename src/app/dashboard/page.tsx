@@ -6,6 +6,7 @@ import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, Legend
 } from 'recharts';
+import { BarChart3, Activity, Link as LinkIcon } from 'lucide-react';
 
 type Stats = {
     totalClicks: number;
@@ -26,12 +27,24 @@ type Stats = {
         desktop: number;
         lastClick: number;
     }[];
+    plan?: 'free' | 'pro'; // Added for plan type
+    limits?: {
+        clicks: number;
+        links: number;
+    };
+    usage?: {
+        clicks: number;
+        links: number;
+    };
 };
 
 type ArchivedLink = {
     id: string;
     asin: string;
     title: string;
+    generated?: string; // Added for free plan table
+    description?: string; // Added for free plan table
+    date: string; // Added for free plan table
 };
 
 // Colors for Pie Chart
@@ -42,10 +55,10 @@ import { useAuth } from "@clerk/nextjs";
 
 export default function Dashboard() {
     const { isSignedIn, isLoaded } = useAuth();
-    const [stats, setStats] = useState<Stats | null>(null);
+    const [stats, setStats] = useState<any | null>(null); // Relaxed type for free/pro structure
     const [history, setHistory] = useState<ArchivedLink[]>([]);
     const [loading, setLoading] = useState(true);
-    const [upgradeRequired, setUpgradeRequired] = useState(false);
+    // Remove upgradeRequired state as we now handle "free" plan gracefully
 
     useEffect(() => {
         if (!isLoaded || !isSignedIn) return;
@@ -58,12 +71,7 @@ export default function Dashboard() {
                     fetch('/api/links')
                 ]);
 
-                if (statsRes.status === 403) {
-                    setUpgradeRequired(true);
-                    setLoading(false);
-                    return;
-                }
-
+                // We no longer block 403 on stats, as it returns Free Plan data now
                 if (!statsRes.ok) throw new Error("Failed to fetch stats");
                 if (!historyRes.ok) throw new Error("Failed to fetch links");
 
@@ -88,55 +96,181 @@ export default function Dashboard() {
         return <div className="min-h-screen flex items-center justify-center bg-background text-foreground animate-pulse">Loading analytics...</div>;
     }
 
-    if (upgradeRequired) {
+    if (!stats) {
+        return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Failed to load analytics.</div>;
+    }
+
+    // --- FREE PLAN DASHBOARD ---
+    if (stats.plan === 'free') {
+        const { limits, usage } = stats;
+        const clicksPercent = Math.min((usage.clicks / limits.clicks) * 100, 100);
+        const linksPercent = Math.min((usage.links / limits.links) * 100, 100);
+
         return (
-            <main className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-6">
-                <div className="matte-card p-10 max-w-2xl w-full text-center border-primary/20 bg-gradient-to-br from-background to-secondary/30 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-purple-500 to-blue-500"></div>
+            <main className="min-h-screen bg-background text-foreground p-6 md:p-12">
+                <div className="max-w-4xl mx-auto space-y-8 animate-fade">
 
-                    <div className="mb-6 flex justify-center">
-                        <div className="bg-primary/10 p-4 rounded-full">
-                            <BarChart3 className="w-12 h-12 text-primary" />
+                    {/* Header with Upgrade CTA */}
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-border pb-6">
+                        <div>
+                            <h1 className="text-3xl font-bold tracking-tight">My Dashboard</h1>
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className="bg-secondary text-muted-foreground text-xs px-2 py-1 rounded font-mono uppercase tracking-wider">Free Plan</span>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <Link href="/" className="btn-primary bg-secondary text-foreground hover:bg-secondary/80 text-sm px-4 py-2 border border-border shadow-none">
+                                Generate Link
+                            </Link>
+                            <button className="btn-primary bg-primary text-primary-foreground text-sm px-4 py-2 shadow-lg hover:shadow-primary/20">
+                                Upgrade to PRO
+                            </button>
                         </div>
                     </div>
 
-                    <h1 className="text-3xl font-bold mb-4">Unlock Professional Analytics</h1>
-                    <p className="text-muted-foreground mb-8 text-lg">
-                        Gain deep insights into your audience with real-time tracking, device breakdown, and unlimited history.
-                    </p>
+                    {/* Usage Limits Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Clicks Usage */}
+                        <div className="matte-card p-6">
+                            <div className="flex justify-between items-end mb-4">
+                                <div>
+                                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Monthly Clicks</h3>
+                                    <div className="text-2xl font-bold mt-1">{usage.clicks} <span className="text-muted-foreground text-lg font-normal">/ {limits.clicks}</span></div>
+                                </div>
+                                <Activity className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                            <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full transition-all duration-500 ${usage.clicks >= limits.clicks ? 'bg-red-500' : 'bg-primary'}`}
+                                    style={{ width: `${clicksPercent}%` }}
+                                ></div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-3">
+                                {usage.clicks >= limits.clicks ? 'Limit reached! Links may stop redirecting.' : 'Resets next month.'}
+                            </p>
+                        </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-left">
-                        <div className="p-4 rounded bg-secondary/50 border border-border">
-                            <span className="block text-primary font-bold mb-1">Unlimited Links</span>
-                            <span className="text-xs text-muted-foreground">Remove the 20-link limit.</span>
-                        </div>
-                        <div className="p-4 rounded bg-secondary/50 border border-border">
-                            <span className="block text-primary font-bold mb-1">Full History</span>
-                            <span className="text-xs text-muted-foreground">Access your entire archive.</span>
-                        </div>
-                        <div className="p-4 rounded bg-secondary/50 border border-border">
-                            <span className="block text-primary font-bold mb-1">Device Stats</span>
-                            <span className="text-xs text-muted-foreground">Know where clicks come from.</span>
+                        {/* Links Usage */}
+                        <div className="matte-card p-6">
+                            <div className="flex justify-between items-end mb-4">
+                                <div>
+                                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Active Links</h3>
+                                    <div className="text-2xl font-bold mt-1">{usage.links} <span className="text-muted-foreground text-lg font-normal">/ {limits.links}</span></div>
+                                </div>
+                                <LinkIcon className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                            <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full transition-all duration-500 ${usage.links >= limits.links ? 'bg-orange-500' : 'bg-primary'}`}
+                                    style={{ width: `${linksPercent}%` }}
+                                ></div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-3">
+                                {usage.links >= limits.links ? 'Limit reached. Create space or upgrade.' : 'Create more links freely.'}
+                            </p>
                         </div>
                     </div>
 
-                    <button className="btn-primary w-full md:w-auto text-lg px-8 py-3 shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all">
-                        Upgrade to PRO - $15/mo
-                    </button>
-
-                    <div className="mt-6">
-                        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-                            Back to Home
-                        </Link>
+                    {/* Simple Link List (No Stats) */}
+                    <div className="matte-card overflow-hidden">
+                        <div className="p-6 border-b border-border bg-card/50">
+                            <h3 className="text-lg font-semibold">My Links</h3>
+                        </div>
+                        {history.length === 0 ? (
+                            <div className="p-12 text-center text-muted-foreground">
+                                No links yet. Go create one!
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-secondary/30 text-xs text-muted-foreground uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4 font-medium">Date</th>
+                                            <th className="px-6 py-4 font-medium">Product</th>
+                                            <th className="px-6 py-4 font-medium text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-sm divide-y divide-border">
+                                        {[...history].reverse().map((link) => (
+                                            <tr key={link.id} className="hover:bg-secondary/20 transition-colors">
+                                                <td className="px-6 py-4 text-muted-foreground font-mono text-xs whitespace-nowrap">
+                                                    {new Date(link.date).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-medium text-foreground text-base mb-1 truncate max-w-xs md:max-w-md">
+                                                        {link.title}
+                                                    </div>
+                                                    <a href={link.generated} target="_blank" className="text-primary hover:underline text-xs font-mono bg-secondary/50 px-2 py-1 rounded inline-block">
+                                                        {link.generated}
+                                                    </a>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => navigator.clipboard.writeText(link.generated)}
+                                                        className="text-xs border border-border bg-background hover:bg-secondary px-3 py-1.5 rounded transition-colors"
+                                                    >
+                                                        Copy
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                        <div className="p-4 bg-secondary/20 text-center border-t border-border">
+                            <span className="text-xs text-muted-foreground mr-2">Want to see who is clicking?</span>
+                            <button className="text-xs text-primary font-bold hover:underline">Go PRO</button>
+                        </div>
                     </div>
                 </div>
             </main>
         );
     }
 
-    if (!stats) {
-        return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Failed to load analytics.</div>;
-    }
+    // --- PRO DASHBOARD (Existing Logic) ---
+    // --- AGENT A: Prepare Time Series Data ---
+    // Fill in missing days for the last 7 days to have a nice chart
+    const getLast7Days = () => {
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            days.push(date.toISOString().split('T')[0]);
+        }
+        return days;
+    };
+
+    const chartData = getLast7Days().map(date => ({
+        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        clicks: stats.dailyClicks[date] || 0
+    }));
+
+    // --- AGENT B: Prepare Device Data ---
+    const deviceData = [
+        { name: 'Android', value: stats.devices.android },
+        { name: 'iOS', value: stats.devices.ios },
+        { name: 'Desktop', value: stats.devices.desktop },
+        { name: 'Other', value: stats.devices.other },
+    ].filter(d => d.value > 0);
+
+    // --- AGENT C: Helper to find title ---
+    const getProductTitle = (asin: string) => {
+        const match = history.find(h => h.asin === asin);
+        return match ? match.title : `ASIN: ${asin}`;
+    };
+
+    // --- AGENT D: Format Last Activity ---
+    const getLastActivity = () => {
+        if (!stats.globalLastClick) return 'Never';
+        const diff = Date.now() - stats.globalLastClick;
+        const minutes = Math.floor(diff / 60000);
+        if (minutes < 1) return 'Just now';
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        return `${Math.floor(hours / 24)}d ago`;
+    };
 
     return (
         <main className="min-h-screen bg-background text-foreground p-6 md:p-12">
