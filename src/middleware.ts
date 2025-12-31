@@ -1,48 +1,48 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export function middleware(request: NextRequest) {
-    const path = request.nextUrl.pathname;
+// Define public routes that don't require authentication
+// 1. /api/track (Analytics)
+// 2. /api/links (If needed public, but usually protected. Keeping protected for now)
+// 3. /go/... (If you used 'go' prefix)
+// 4. /sign-in, /sign-up
+// 5. Short links: We need to allow access to /[slug] which are short links.
+//    However, usually short links are at root.
+//    We can make the dashboard and root protected, but we must be careful not to block dynamic short links.
+//    STRATEGY: Protect specific routes (dashboard, admin, root generator) and leave others public, OR protect everything and exclude short links.
+//    Let's protect critical paths.
 
-    // Debug log to verify middleware is running
-    console.log(`[Middleware] Checking path: ${path}`);
+const isProtectedRoute = createRouteMatcher([
+    '/dashboard(.*)',
+    '/admin(.*)',
+    '/api/links(.*)', // Protect link management API
+]);
 
-    // Define paths that MUST be protected (Admin only)
-    // We use specific checks to avoid blocking public links by accident
-    const isProtectedRoute =
-        path === '/' ||                       // The main generator page
-        path.startsWith('/dashboard') ||      // The analytics dashboard
-        path.startsWith('/history');          // The history page
+// Note: We leave the root '/' public -> Private later? 
+// The user wants a SaaS, so usually the landing page is public, but the "App" is private.
+// For now, let's protect the Dashboard and Admin, but keep the Generator public OR protect it to require login to CREATE links.
+// User said "membership", so creating links should be protected.
 
-    const token = request.cookies.get('deeplink_secure_session')?.value;
+const isPublicRoute = createRouteMatcher([
+    '/api/track',
+    '/sign-in(.*)',
+    '/sign-up(.*)',
+    '/api/webhooks(.*)',
+    // We assume any other route like /AbC12 is a public short link
+]);
 
-    // If trying to access a protected route without being logged in
-    if (isProtectedRoute && !token) {
-        console.log(`[Middleware] Access denied to ${path}, redirecting to login`);
-        return NextResponse.redirect(new URL('/login', request.url));
+export default clerkMiddleware(async (auth, req) => {
+    if (isProtectedRoute(req)) {
+        await auth.protect();
     }
-
-    // If already logged in and trying to go to login, send to home
-    if (path === '/login' && token) {
-        return NextResponse.redirect(new URL('/', request.url));
-    }
-
-    return NextResponse.next();
-}
+    // Optional: Protect root '/' if you want only members to create links
+    // if (req.nextUrl.pathname === '/') await auth.protect();
+});
 
 export const config = {
-    // Exclude static files and API routes that don't need protection
-    // But INCLUDE the root / and other pages
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - api/track (public tracking)
-         * - go (public redirects)
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - logo.png (public logo)
-         */
-        '/((?!api/track|go|_next/static|_next/image|favicon.ico|logo.png).*)',
+        // Skip Next.js internals and all static files, unless found in search params
+        '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+        // Always run for API routes
+        '/(api|trpc)(.*)',
     ],
 };
