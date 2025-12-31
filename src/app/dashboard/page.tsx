@@ -37,12 +37,18 @@ type ArchivedLink = {
 // Colors for Pie Chart
 const COLORS = ['#FFFFFF', '#666666', '#333333', '#999999'];
 
+import { useAuth } from "@clerk/nextjs";
+// ... imports
+
 export default function Dashboard() {
+    const { isSignedIn, isLoaded } = useAuth();
     const [stats, setStats] = useState<Stats | null>(null);
     const [history, setHistory] = useState<ArchivedLink[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!isLoaded || !isSignedIn) return;
+
         const fetchData = async () => {
             try {
                 // Fetch Stats and Link History in parallel
@@ -50,6 +56,9 @@ export default function Dashboard() {
                     fetch('/api/stats'),
                     fetch('/api/links')
                 ]);
+
+                if (!statsRes.ok) throw new Error("Failed to fetch stats");
+                if (!historyRes.ok) throw new Error("Failed to fetch links");
 
                 const statsData = await statsRes.json();
                 const historyData = await historyRes.json();
@@ -66,7 +75,7 @@ export default function Dashboard() {
         };
 
         fetchData();
-    }, []);
+    }, [isLoaded, isSignedIn]);
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Loading analytics...</div>;

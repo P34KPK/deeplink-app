@@ -20,14 +20,16 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
     const encodedWebUrl = encodeURIComponent(webUrl);
 
     // URI Schemes
+    // Standard App Scheme
     const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+
+    // Android Intent
+    // Note: We remove the browser_fallback_url to prevent auto-fallback to browser if we want to force app.
+    // However, intents usually need a fallback. Keeping it but relying on Logic to prefer app.
     const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
 
     useEffect(() => {
-        if (!asin) {
-            setStatus('Invalid Link');
-            return;
-        }
+        if (!asin) return;
 
         const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
         const android = /android/i.test(userAgent);
@@ -36,7 +38,7 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
         setIsAndroid(android);
         setIsIOS(ios);
 
-        // Track Click
+        // Track Click (Background)
         fetch('/api/track', {
             method: 'POST',
             body: JSON.stringify({ asin, userAgent, slug }),
@@ -44,59 +46,31 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
             keepalive: true
         }).catch(err => console.error('Tracking failed', err));
 
-        // Auto-redirect attempt
+        // Aggressive Auto-Redirect (APP ONLY on Mobile)
         const tryOpen = () => {
             if (android) {
                 window.location.href = androidIntent;
             } else if (ios) {
                 window.location.href = appUrl;
-
-                // Fallback for iOS if app not installed (delayed)
-                const fallbackTimer = setTimeout(() => {
-                    if (!document.hidden) {
-                        window.location.href = webUrl;
-                    }
-                }, 2500);
-
-                const onVisibilityChange = () => {
-                    if (document.hidden) {
-                        clearTimeout(fallbackTimer);
-                        document.removeEventListener('visibilitychange', onVisibilityChange);
-                    }
-                };
-                document.addEventListener('visibilitychange', onVisibilityChange);
+                // NO setTimeout fallback here. 
+                // We rely on the user staying on this page if the app doesn't open.
             } else {
-                // Desktop or other
+                // Desktop - Only here do we fallback immediately because there is no "App"
                 window.location.href = webUrl;
             }
         };
 
-        const timer = setTimeout(() => {
-            tryOpen();
-        }, 100);
+        // Fire immediately
+        tryOpen();
 
-        return () => clearTimeout(timer);
-    }, [asin, tag, domain, androidIntent, appUrl, webUrl]);
+    }, [asin, tag, domain, androidIntent, appUrl, webUrl, slug]);
 
     const handleManualClick = () => {
         if (isAndroid) {
             window.location.href = androidIntent;
         } else {
+            // iOS & Others - Force App Scheme only
             window.location.href = appUrl;
-
-            const fallbackTimer = setTimeout(() => {
-                if (!document.hidden) {
-                    window.location.href = webUrl;
-                }
-            }, 2500);
-
-            const onVisibilityChange = () => {
-                if (document.hidden) {
-                    clearTimeout(fallbackTimer);
-                    document.removeEventListener('visibilitychange', onVisibilityChange);
-                }
-            };
-            document.addEventListener('visibilitychange', onVisibilityChange);
         }
     };
 
@@ -114,10 +88,17 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
             <div className="matte-card p-10 max-w-sm w-full flex flex-col items-center border border-[#222]">
                 <div className="relative w-32 h-16 mb-6">
                     <Image
-                        src="/logo.png"
-                        alt="DeepLinker Logo"
+                        src="/logo-black.png"
+                        alt="DeepLinkrs Logo"
                         fill
-                        className="object-contain mix-blend-screen"
+                        className="object-contain dark:hidden"
+                        priority
+                    />
+                    <Image
+                        src="/logo.png"
+                        alt="DeepLinkrs Logo"
+                        fill
+                        className="object-contain hidden dark:block"
                         priority
                     />
                 </div>

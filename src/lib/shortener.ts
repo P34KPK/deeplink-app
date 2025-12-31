@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL || '');
 
 export type ShortLinkData = {
     asin: string;
@@ -6,6 +8,7 @@ export type ShortLinkData = {
     tag?: string;
     createdAt: number;
     title?: string;
+    slug?: string;
 };
 
 // 6-character random slug
@@ -26,7 +29,7 @@ export async function createShortLink(data: Omit<ShortLinkData, 'createdAt'>, cu
         let attempts = 0;
         while (attempts < 5) {
             const potentialSlug = generateSlug();
-            const exists = await kv.exists(`shortlink:${potentialSlug}`);
+            const exists = await redis.exists(`shortlink:${potentialSlug}`);
             if (!exists) {
                 slug = potentialSlug;
                 break;
@@ -40,7 +43,7 @@ export async function createShortLink(data: Omit<ShortLinkData, 'createdAt'>, cu
             throw new Error('Invalid characters in slug');
         }
 
-        const exists = await kv.exists(`shortlink:${slug}`);
+        const exists = await redis.exists(`shortlink:${slug}`);
         if (exists) {
             throw new Error('Slug already taken');
         }
@@ -51,10 +54,11 @@ export async function createShortLink(data: Omit<ShortLinkData, 'createdAt'>, cu
         createdAt: Date.now()
     };
 
-    await kv.set(`shortlink:${slug}`, record);
+    await redis.set(`shortlink:${slug}`, JSON.stringify(record));
     return slug;
 }
 
 export async function getShortLink(slug: string): Promise<ShortLinkData | null> {
-    return await kv.get<ShortLinkData>(`shortlink:${slug}`);
+    const data = await redis.get(`shortlink:${slug}`);
+    return data ? JSON.parse(data) : null;
 }

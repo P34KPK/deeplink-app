@@ -1,7 +1,11 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL || '');
 
 export type ArchivedLink = {
     id: string;
+    userId?: string; // New: Owner ID
+    userEmail?: string; // New: Owner Email for display
     original: string;
     generated: string;
     asin: string;
@@ -14,19 +18,19 @@ const DB_KEY = 'deeplink_history_v1';
 
 async function getDB(): Promise<ArchivedLink[]> {
     try {
-        const data = await kv.get<ArchivedLink[]>(DB_KEY);
-        return data || [];
+        const data = await redis.get(DB_KEY);
+        return data ? JSON.parse(data) : [];
     } catch (error) {
-        console.warn('Failed to fetch history from KV, returning empty', error);
+        console.warn('Failed to fetch history from Redis, returning empty', error);
         return [];
     }
 }
 
 async function saveDB(data: ArchivedLink[]) {
     try {
-        await kv.set(DB_KEY, data);
+        await redis.set(DB_KEY, JSON.stringify(data));
     } catch (error) {
-        console.error('Failed to save history to KV', error);
+        console.error('Failed to save history to Redis', error);
     }
 }
 

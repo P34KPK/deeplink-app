@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv';
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL || '');
 
 type AnalyticsData = {
     totalClicks: number;
@@ -36,28 +38,29 @@ const DB_KEY = 'deeplink_analytics_v3'; // Bump version for new schema
 
 async function getDB(): Promise<AnalyticsData> {
     try {
-        const data = await kv.get<AnalyticsData>(DB_KEY);
+        const data = await redis.get(DB_KEY);
         // Merge with defaultData to ensure new fields exist if migrating
         if (data) {
+            const parsed = JSON.parse(data);
             return {
                 ...defaultData,
-                ...data,
-                dailyClicks: data.dailyClicks || {}, // Ensure safety
-                statsBySlug: data.statsBySlug || {},
+                ...parsed,
+                dailyClicks: parsed.dailyClicks || {}, // Ensure safety
+                statsBySlug: parsed.statsBySlug || {},
             };
         }
         return defaultData;
     } catch (error) {
-        console.warn('Failed to fetch from KV, returning default data', error);
+        console.warn('Failed to fetch from Redis, returning default data', error);
         return defaultData;
     }
 }
 
 async function saveDB(data: AnalyticsData) {
     try {
-        await kv.set(DB_KEY, data);
+        await redis.set(DB_KEY, JSON.stringify(data));
     } catch (error) {
-        console.error('Failed to save to KV', error);
+        console.error('Failed to save to Redis', error);
     }
 }
 

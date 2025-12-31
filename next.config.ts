@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             // Allow scripts from 'self' and 'unsafe-inline' (needed for Next.js in some cases) and 'unsafe-eval' (for dev)
             // Ideally, strict CSP is better, but can break apps easily.
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self' https://*.vercel.app;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://img.clerk.com; font-src 'self'; connect-src 'self' https://*.vercel.app https://*.clerk.accounts.dev https://*.clerk.com; worker-src 'self' blob:;",
           }
         ],
       },

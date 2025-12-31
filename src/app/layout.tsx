@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Amazon Deep Link Generator",
+  title: "DeepLinkrs - Smart Amazon Deep Links",
   description: "Create smart deep links for Amazon affiliate marketing",
 };
 

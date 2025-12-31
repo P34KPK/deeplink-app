@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowRight, Link as LinkIcon, Copy, Check, BarChart3, LayoutDashboard } from "lucide-react";
 import { ThemeToggle } from '@/components/theme-toggle';
 
 type ArchivedLink = {
@@ -15,8 +16,12 @@ type ArchivedLink = {
   date: number;
 };
 
+import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
+
 export default function Home() {
+  const { isSignedIn, isLoaded } = useAuth();
   const [inputUrl, setInputUrl] = useState('');
+  // ... (keep usage of state)
   const [inputTitle, setInputTitle] = useState('');
   const [inputDesc, setInputDesc] = useState('');
   const [inputSlug, setInputSlug] = useState(''); // Custom Alias
@@ -26,10 +31,15 @@ export default function Home() {
   const [error, setError] = useState('');
   const [history, setHistory] = useState<ArchivedLink[]>([]);
 
-  // Load history on mount
+  // Load history on mount (ONLY if signed in)
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+
     fetch('/api/links')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Not authenticated");
+        return res.json();
+      })
       .then(serverData => {
         if (Array.isArray(serverData)) {
           // Check for local migration
@@ -66,7 +76,7 @@ export default function Home() {
         }
       })
       .catch(err => console.error("Failed to load history", err));
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   const generateLink = async () => {
     setError('');
@@ -173,22 +183,62 @@ export default function Home() {
     alert('Link copied!');
   };
 
+
   return (
     <main className="flex min-h-screen flex-col items-center py-12 p-6 bg-background text-foreground transition-colors duration-300">
+
+      {/* Authentication & Navigation */}
+      <div className="absolute top-4 left-4 z-50 flex items-center gap-4">
+        <SignedOut>
+          <Link
+            href="/sign-in"
+            className="text-sm font-medium hover:underline text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Sign In
+          </Link>
+        </SignedOut>
+        <SignedIn>
+          <Link
+            href="/admin"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors mr-4"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Admin
+          </Link>
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors mr-4"
+          >
+            <BarChart3 className="w-4 h-4" />
+            My Links
+          </Link>
+          <UserButton afterSignOutUrl="/" />
+        </SignedIn>
+      </div>
+
       <div className="matte-card p-8 md:p-12 w-full max-w-xl animate-fade shadow-xl">
         <div className="mb-10 flex flex-col items-center justify-center">
-          <div className="relative w-48 h-24 mb-4">
+          <div className="relative w-48 h-24 mb-8">
+            {/* Light Mode Logo */}
             <Image
-              src="/logo.png"
-              alt="DeepLinker Logo"
+              src="/logo-black.png"
+              alt="DeepLinkrs Logo"
               width={192}
               height={96}
-              className="object-contain"
-              style={{ filter: 'var(--logo-filter)' }}
+              className="object-contain dark:hidden"
+              priority
+            />
+            {/* Dark Mode Logo */}
+            <Image
+              src="/logo.png"
+              alt="DeepLinkrs Logo"
+              width={192}
+              height={96}
+              className="object-contain hidden dark:block"
               priority
             />
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-2">
             Amazon Affiliate Deep Linking Tool
           </p>
         </div>
