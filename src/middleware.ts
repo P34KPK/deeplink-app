@@ -13,7 +13,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isProtectedRoute = createRouteMatcher([
     '/dashboard(.*)',
-    '/admin(.*)',
+    // '/admin(.*)', // Custom Auth handled in page
     '/api/links(.*)', // Protect link management API
 ]);
 

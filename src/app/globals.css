@@ -35,7 +35,7 @@
   --foreground: #09090b;
   /* zinc-950 */
 
-  --logo-filter: brightness(0);
+  --logo-filter: invert(1);
 
   --card-bg: #ffffff;
   --card-foreground: #09090b;
@@ -100,7 +100,15 @@
   --input: #222222;
   --ring: #d4d4d8;
 
-  --logo-filter: brightness(0) invert(1);
+  /* Logo Filter Strategy: Assume logo.png is WHITE */
+  /* Light Mode (White BG): Invert to Black */
+  --logo-filter: invert(1);
+}
+
+.dark {
+  /* ... */
+  /* Dark Mode (Black BG): Keep White */
+  --logo-filter: none;
 }
 
 body {

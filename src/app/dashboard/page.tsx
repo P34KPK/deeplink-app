@@ -45,6 +45,7 @@ export default function Dashboard() {
     const [stats, setStats] = useState<Stats | null>(null);
     const [history, setHistory] = useState<ArchivedLink[]>([]);
     const [loading, setLoading] = useState(true);
+    const [upgradeRequired, setUpgradeRequired] = useState(false);
 
     useEffect(() => {
         if (!isLoaded || !isSignedIn) return;
@@ -56,6 +57,12 @@ export default function Dashboard() {
                     fetch('/api/stats'),
                     fetch('/api/links')
                 ]);
+
+                if (statsRes.status === 403) {
+                    setUpgradeRequired(true);
+                    setLoading(false);
+                    return;
+                }
 
                 if (!statsRes.ok) throw new Error("Failed to fetch stats");
                 if (!historyRes.ok) throw new Error("Failed to fetch links");
@@ -78,55 +85,58 @@ export default function Dashboard() {
     }, [isLoaded, isSignedIn]);
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Loading analytics...</div>;
+        return <div className="min-h-screen flex items-center justify-center bg-background text-foreground animate-pulse">Loading analytics...</div>;
+    }
+
+    if (upgradeRequired) {
+        return (
+            <main className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-6">
+                <div className="matte-card p-10 max-w-2xl w-full text-center border-primary/20 bg-gradient-to-br from-background to-secondary/30 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-purple-500 to-blue-500"></div>
+
+                    <div className="mb-6 flex justify-center">
+                        <div className="bg-primary/10 p-4 rounded-full">
+                            <BarChart3 className="w-12 h-12 text-primary" />
+                        </div>
+                    </div>
+
+                    <h1 className="text-3xl font-bold mb-4">Unlock Professional Analytics</h1>
+                    <p className="text-muted-foreground mb-8 text-lg">
+                        Gain deep insights into your audience with real-time tracking, device breakdown, and unlimited history.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-left">
+                        <div className="p-4 rounded bg-secondary/50 border border-border">
+                            <span className="block text-primary font-bold mb-1">Unlimited Links</span>
+                            <span className="text-xs text-muted-foreground">Remove the 20-link limit.</span>
+                        </div>
+                        <div className="p-4 rounded bg-secondary/50 border border-border">
+                            <span className="block text-primary font-bold mb-1">Full History</span>
+                            <span className="text-xs text-muted-foreground">Access your entire archive.</span>
+                        </div>
+                        <div className="p-4 rounded bg-secondary/50 border border-border">
+                            <span className="block text-primary font-bold mb-1">Device Stats</span>
+                            <span className="text-xs text-muted-foreground">Know where clicks come from.</span>
+                        </div>
+                    </div>
+
+                    <button className="btn-primary w-full md:w-auto text-lg px-8 py-3 shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all">
+                        Upgrade to PRO - $15/mo
+                    </button>
+
+                    <div className="mt-6">
+                        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+                            Back to Home
+                        </Link>
+                    </div>
+                </div>
+            </main>
+        );
     }
 
     if (!stats) {
         return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Failed to load analytics.</div>;
     }
-
-    // --- AGENT A: Prepare Time Series Data ---
-    // Fill in missing days for the last 7 days to have a nice chart
-    const getLast7Days = () => {
-        const days = [];
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            days.push(date.toISOString().split('T')[0]);
-        }
-        return days;
-    };
-
-    const chartData = getLast7Days().map(date => ({
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        clicks: stats.dailyClicks[date] || 0
-    }));
-
-    // --- AGENT B: Prepare Device Data ---
-    const deviceData = [
-        { name: 'Android', value: stats.devices.android },
-        { name: 'iOS', value: stats.devices.ios },
-        { name: 'Desktop', value: stats.devices.desktop },
-        { name: 'Other', value: stats.devices.other },
-    ].filter(d => d.value > 0);
-
-    // --- AGENT C: Helper to find title ---
-    const getProductTitle = (asin: string) => {
-        const match = history.find(h => h.asin === asin);
-        return match ? match.title : `ASIN: ${asin}`;
-    };
-
-    // --- AGENT D: Format Last Activity ---
-    const getLastActivity = () => {
-        if (!stats.globalLastClick) return 'Never';
-        const diff = Date.now() - stats.globalLastClick;
-        const minutes = Math.floor(diff / 60000);
-        if (minutes < 1) return 'Just now';
-        if (minutes < 60) return `${minutes}m ago`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours}h ago`;
-        return `${Math.floor(hours / 24)}d ago`;
-    };
 
     return (
         <main className="min-h-screen bg-background text-foreground p-6 md:p-12">
