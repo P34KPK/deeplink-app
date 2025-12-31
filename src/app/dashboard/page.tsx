@@ -206,7 +206,7 @@ export default function Dashboard() {
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <button
-                                                        onClick={() => navigator.clipboard.writeText(link.generated)}
+                                                        onClick={() => navigator.clipboard.writeText(link.generated || '')}
                                                         className="text-xs border border-border bg-background hover:bg-secondary px-3 py-1.5 rounded transition-colors"
                                                     >
                                                         Copy
