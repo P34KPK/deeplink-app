@@ -171,6 +171,40 @@ export default function Dashboard() {
                         </div>
                     </div>
 
+                    {/* Permanent Upgrade CTA Card */}
+                    <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <BarChart3 className="w-32 h-32 text-yellow-500" />
+                        </div>
+
+                        <div className="relative z-10">
+                            <h3 className="text-xl font-bold text-yellow-500 mb-2">Unlock Full Potential</h3>
+                            <p className="text-muted-foreground mb-4 max-w-md">
+                                Remove all limits and get deep insights into your audience.
+                            </p>
+                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                                <li className="flex items-center gap-2">
+                                    <span className="text-green-500">✓</span> Unlimited Links
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <span className="text-green-500">✓</span> Full Device Analytics
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <span className="text-green-500">✓</span> Unlimited Clicks
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <span className="text-green-500">✓</span> Priority Support
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div className="relative z-10 w-full md:w-auto">
+                            <button className="w-full md:w-auto btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-3 shadow-lg hover:shadow-yellow-500/20 transition-all">
+                                Upgrade Now
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Simple Link List (No Stats) */}
                     <div className="matte-card overflow-hidden">
                         <div className="p-6 border-b border-border bg-card/50">
