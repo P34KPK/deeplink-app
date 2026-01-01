@@ -122,9 +122,10 @@ export default function Home() {
         }
       }
 
-      // seek ASIN
-      const asinMatch = targetUrl.match(/(?:dp|o|gp\/product)\/([A-Z0-9]{10})/);
-      const asin = asinMatch ? asinMatch[1] : null;
+      // seek ASIN - Robust Regex (Handling /dp/, /gp/product/, /o/)
+      // B0... is standard, but sometimes it's numbers (books). 10 chars.
+      const asinMatch = targetUrl.match(/(?:dp|o|gp\/product)\/([A-Z0-9]{10})/i);
+      const asin = asinMatch ? asinMatch[1].toUpperCase() : null;
 
       // seek Tag
       const tagMatch = targetUrl.match(/[?&]tag=([^&]+)/);
@@ -135,7 +136,7 @@ export default function Home() {
       const domain = domainMatch ? domainMatch[1] : 'com';
 
       if (!asin) {
-        throw new Error('Could not find product ASIN in the URL.');
+        throw new Error(`Could not find product ASIN in URL: "${targetUrl}". Try expanding generic short links first.`);
       }
 
       // Call Shortener API instead of local construction

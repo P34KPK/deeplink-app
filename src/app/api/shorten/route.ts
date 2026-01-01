@@ -8,9 +8,13 @@ const redis = new Redis(process.env.REDIS_URL || '');
 
 export async function POST(req: Request) {
     try {
+        console.log("SHORTEN API CALLED");
         const user = await currentUser();
+        console.log("User retrieved:", user?.id);
+
         const body = await req.json();
-        const { asin, domain, tag, title, slug, isManualAdmin } = body; // isManualAdmin for your Backdoor
+        const { asin, domain, tag, title, slug, isManualAdmin } = body;
+        console.log("Request Body:", { asin, domain, isManualAdmin });
 
         if (!asin) {
             return NextResponse.json({ error: 'Missing ASIN' }, { status: 400 });
