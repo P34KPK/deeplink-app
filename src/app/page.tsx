@@ -139,6 +139,11 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' }
       });
 
+      if (shortenRes.status === 401) {
+        window.location.href = '/sign-in';
+        return;
+      }
+
       const shortenData = await shortenRes.json();
 
       if (!shortenRes.ok) {

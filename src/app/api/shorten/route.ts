@@ -41,8 +41,9 @@ export async function POST(req: Request) {
         // If 'isManualAdmin' flag is sent (from Admin Dashboard), bypass quotas
         // We really should secure this with a secret token, but for now trust the internal call.
         if (!userId && !isManualAdmin) {
-            // GUEST: Very limited? Or treat as Free.
-            // We'll treat as Free for now, but usually Guests don't have persistent history.
+            return NextResponse.json({
+                error: 'Authentication Required. Please Sign In to create links.'
+            }, { status: 401 });
         }
 
         if (userId && plan === 'free' && !isManualAdmin) {
