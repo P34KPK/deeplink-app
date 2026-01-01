@@ -1,6 +1,12 @@
 import { getShortLink } from '@/lib/shortener';
 import DeepLinkRedirect from '@/components/DeepLinkRedirect';
 import { notFound } from 'next/navigation';
+import Redis from 'ioredis';
+import { getLinks } from '@/lib/storage';
+import { getStats } from '@/lib/analytics';
+import Link from 'next/link';
+
+const redis = new Redis(process.env.REDIS_URL || '');
 
 export default async function ShortLinkPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
@@ -8,6 +14,48 @@ export default async function ShortLinkPage({ params }: { params: Promise<{ slug
 
     if (!data) {
         notFound();
+    }
+
+    // --- ENFORCE LIMITS ---
+    if (data.userId) {
+        // 1. Get Plan
+        const planKey = `user:${data.userId}:plan`;
+        const plan = await redis.get(planKey) || 'free';
+
+        // Admin Override
+        const links = await getLinks();
+        const userEmail = links.find(l => l.userId === data.userId)?.userEmail;
+        const isOwner = userEmail === 'p34k.productions@gmail.com';
+
+        if (plan === 'free' && !isOwner) {
+            // 2. Count Usage
+            const userLinks = links.filter(l => l.userId === data.userId);
+            const stats = await getStats();
+
+            let totalClicks = 0;
+            for (const link of userLinks) {
+                const linkSlug = link.generated.split('/').pop();
+                if (linkSlug && stats.statsBySlug[linkSlug]) {
+                    totalClicks += stats.statsBySlug[linkSlug];
+                }
+            }
+
+            if (totalClicks >= 200) {
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-8 text-center">
+                        <div className="bg-red-500/10 border border-red-500/50 p-8 rounded-xl max-w-md">
+                            <h1 className="text-2xl font-bold text-red-500 mb-4">Link Inactive</h1>
+                            <p className="text-gray-300 mb-6">
+                                The owner of this link has reached their monthly traffic limit.
+                            </p>
+                            <Link href="/" className="text-sm text-gray-500 hover:text-white underline">
+                                Create your own deep links
+                            </Link>
+                        </div>
+                    </div>
+                );
+            }
+        }
     }
 
     return (

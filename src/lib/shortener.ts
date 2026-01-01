@@ -9,7 +9,10 @@ export type ShortLinkData = {
     createdAt: number;
     title?: string;
     slug?: string;
+    userId?: string; // Track who created it
 };
+
+
 
 // 6-character random slug
 export function generateSlug(length = 6): string {

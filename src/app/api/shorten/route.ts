@@ -63,7 +63,8 @@ export async function POST(req: Request) {
             asin,
             domain: domain || 'com',
             tag,
-            title
+            title,
+            userId: userId || undefined
         }, slug);
 
         const baseUrl = new URL(req.url).origin;
