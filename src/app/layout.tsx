@@ -4,6 +4,7 @@ import "./globals.css";
 import { ClerkProvider } from '@clerk/nextjs'
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import InAppBrowserGuard from "@/components/InAppBrowserGuard";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,10 +28,12 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="fixed top-4 right-4 z-50">
-              <ThemeToggle />
-            </div>
-            {children}
+            <InAppBrowserGuard>
+              <div className="fixed top-4 right-4 z-50">
+                <ThemeToggle />
+              </div>
+              {children}
+            </InAppBrowserGuard>
           </ThemeProvider>
         </body>
       </html>
