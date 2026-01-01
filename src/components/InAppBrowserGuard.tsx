@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export default function InAppBrowserGuard({ children }: { children: React.ReactNode }) {
     const [isInApp, setIsInApp] = useState(false);
@@ -23,27 +24,43 @@ export default function InAppBrowserGuard({ children }: { children: React.ReactN
 
     if (isInApp) {
         return (
-            <div className="fixed inset-0 z-[9999] bg-background text-foreground flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6 text-center animate-fade">
+                <div className="matte-card p-10 max-w-sm w-full flex flex-col items-center border border-white/10">
+                    <div className="relative w-48 h-24 mb-8">
+                        <Image
+                            src="/logo.png"
+                            alt="DeepLinkrs Logo"
+                            fill
+                            className="object-contain"
+                            style={{ filter: 'brightness(0) invert(1)' }} // White logo
+                            priority
+                        />
+                    </div>
+
+                    <h1 className="text-xl font-bold mb-4 text-white">Browser Action Required</h1>
+                    <p className="text-gray-400 mb-8 text-sm">
+                        Google Security requires an external browser to sign in.
+                    </p>
+
+                    <div className="bg-white/5 p-6 rounded-xl border border-white/10 w-full mb-6">
+                        <p className="font-semibold text-sm mb-3 text-white">How to continue:</p>
+                        <ol className="text-left text-sm space-y-3 list-decimal pl-4 text-gray-400">
+                            <li>Tap the <span className="font-bold text-white">•••</span> or <span className="font-bold text-white">Share</span> icon.</li>
+                            <li>Select <span className="font-bold text-white">Open in Browser</span> or <span className="font-bold text-white">Open in System Browser</span>.</li>
+                        </ol>
+                    </div>
+
+                    <p className="text-xs text-gray-600 mt-4">
+                        This protects your account security.
+                    </p>
+
+                    <button
+                        onClick={() => setIsInApp(false)}
+                        className="mt-8 text-xs text-gray-500 hover:text-white underline transition-colors"
+                    >
+                        Dismiss
+                    </button>
                 </div>
-                <h1 className="text-2xl font-bold mb-4">Browser Action Required</h1>
-                <p className="text-muted-foreground mb-8 max-w-sm">
-                    Google Security prevents signing in from inside this app (Messenger/Instagram/Facebook).
-                </p>
-                <div className="bg-secondary/50 p-6 rounded-xl border border-border max-w-sm w-full">
-                    <p className="font-semibold text-sm mb-2">How to continue:</p>
-                    <ol className="text-left text-sm space-y-3 list-decimal pl-4 text-muted-foreground">
-                        <li>Tap the <span className="font-bold text-foreground">•••</span> or <span className="font-bold text-foreground">Share</span> icon (usually top right or bottom).</li>
-                        <li>Select <span className="font-bold text-foreground">Open in Browser</span> or <span className="font-bold text-foreground">Open in Safari/Chrome</span>.</li>
-                    </ol>
-                </div>
-                <button
-                    onClick={() => setIsInApp(false)}
-                    className="mt-8 text-xs text-muted-foreground hover:text-foreground underline"
-                >
-                    I understand, let me try anyway
-                </button>
             </div>
         );
     }
