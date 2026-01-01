@@ -96,7 +96,12 @@ export async function POST(req: Request) {
 
         await addLink(linkObj);
 
-        return NextResponse.json({ shortUrl, slug: newSlug, usage: plan === 'free' ? '20 max' : 'unlimited' });
+        return NextResponse.json({
+            shortUrl,
+            slug: newSlug,
+            usage: plan === 'free' ? '20 max' : 'unlimited',
+            link: linkObj // Return the full object so frontend doesn't need to save it again
+        });
 
     } catch (e: any) {
         console.error("Shorten Error", e);

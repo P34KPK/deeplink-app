@@ -166,28 +166,26 @@ export default function Home() {
       const newLink = shortenData.shortUrl;
       setGeneratedLink(newLink);
 
-      // Add to History (use full Short Link info)
-      const newEntry: ArchivedLink = {
-        id: Math.random().toString(36).substr(2, 9),
-        original: inputUrl,
-        generated: newLink,
-        asin: asin,
-        title: inputTitle || 'Untitled Product',
-        description: inputDesc || 'No location specified',
-        date: Date.now()
-      };
-
-      // Save to server
-      const saveRes = await fetch('/api/links', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newEntry)
-      });
-
-      if (saveRes.ok) {
-        const updatedHistory = await saveRes.json();
-        setHistory(updatedHistory);
+      // Add to History
+      // The server already saved it (to enforce limits/counting). We just need to update UI.
+      if (shortenData.link) {
+        setHistory(prev => [shortenData.link, ...prev]);
+      } else {
+        // Fallback if server didn't return link object (shouldn't happen with new API)
+        const newEntry: ArchivedLink = {
+          id: Math.random().toString(36).substr(2, 9),
+          original: inputUrl,
+          generated: newLink,
+          asin: asin,
+          title: inputTitle || 'Untitled Product',
+          description: inputDesc || 'No location specified',
+          date: Date.now()
+        };
+        setHistory(prev => [newEntry, ...prev]);
       }
+
+      // REMOVED: Redundant fetch('/api/links') which caused DUPLICATES.
+      // Server is now Single Source of Truth.
 
     } catch (err: any) {
       setError(err.message || 'An error occurred');
