@@ -67,7 +67,8 @@ export async function POST(req: Request) {
             userId: userId || undefined
         }, slug);
 
-        const baseUrl = new URL(req.url).origin;
+        // Use configured domain if available, otherwise fallback to request origin (localhost)
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
         const shortUrl = `${baseUrl}/${newSlug}`;
 
         // --- AUTO SAVE TO HISTORY ---
