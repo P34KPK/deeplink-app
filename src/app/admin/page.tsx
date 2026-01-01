@@ -326,6 +326,7 @@ export default function AdminDashboard() {
                                         <th className="px-6 py-4">User</th>
                                         <th className="px-6 py-4">Resource Title</th>
                                         <th className="px-6 py-4">ASIN ID</th>
+                                        <th className="px-6 py-4 text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
@@ -339,6 +340,16 @@ export default function AdminDashboard() {
                                                 <a href={link.generated} target="_blank" className="hover:text-white hover:underline transition-colors block max-w-[200px] truncate">{link.title || 'Untitled'}</a>
                                             </td>
                                             <td className="px-6 py-4 font-mono text-xs opacity-50">{link.asin}</td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(link.generated || '');
+                                                    }}
+                                                    className="text-xs border border-border bg-background hover:bg-secondary px-3 py-1.5 rounded transition-colors"
+                                                >
+                                                    Copy
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>

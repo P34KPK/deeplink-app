@@ -142,17 +142,17 @@ export default function Dashboard() {
                             <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full transition-all duration-500 ${usage.clicks >= limits.clicks ? 'bg-red-500' :
-                                            usage.clicks >= limits.clicks * 0.75 ? 'bg-orange-500' :
-                                                usage.clicks >= limits.clicks * 0.5 ? 'bg-yellow-500' :
-                                                    'bg-primary'
+                                        usage.clicks >= limits.clicks * 0.75 ? 'bg-orange-500' :
+                                            usage.clicks >= limits.clicks * 0.5 ? 'bg-yellow-500' :
+                                                'bg-primary'
                                         }`}
                                     style={{ width: `${clicksPercent}%` }}
                                 ></div>
                             </div>
                             <p className={`text-xs mt-3 ${usage.clicks >= limits.clicks ? 'text-red-500 font-bold' :
-                                    usage.clicks >= limits.clicks * 0.75 ? 'text-orange-500 font-medium' :
-                                        usage.clicks >= limits.clicks * 0.5 ? 'text-yellow-500 font-medium' :
-                                            'text-muted-foreground'
+                                usage.clicks >= limits.clicks * 0.75 ? 'text-orange-500 font-medium' :
+                                    usage.clicks >= limits.clicks * 0.5 ? 'text-yellow-500 font-medium' :
+                                        'text-muted-foreground'
                                 }`}>
                                 {
                                     usage.clicks >= limits.clicks ? 'Limit reached! Links may stop redirecting.' :
@@ -422,6 +422,7 @@ export default function Dashboard() {
                                         <th className="px-6 py-4 font-medium">Product</th>
                                         <th className="px-6 py-4 font-medium text-right">Total Hits</th>
                                         <th className="px-6 py-4 w-1/4">Activity</th>
+                                        <th className="px-6 py-4 text-right">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-sm divide-y divide-border">
@@ -464,6 +465,17 @@ export default function Dashboard() {
                                                             className="h-full bg-primary transition-all duration-500"
                                                         ></div>
                                                     </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(link.generated || '');
+                                                            // Optional: Toast notification could go here
+                                                        }}
+                                                        className="text-xs border border-border bg-background hover:bg-secondary px-3 py-1.5 rounded transition-colors"
+                                                    >
+                                                        Copy
+                                                    </button>
                                                 </td>
                                             </tr>
                                         );
