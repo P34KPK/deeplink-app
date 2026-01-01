@@ -367,7 +367,7 @@ export default function Home() {
         <div className="mt-16 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-up">
 
           {/* FREE TIER CARD */}
-          <div className="matte-card p-8 border-t-4 border-t-muted-foreground/30 flex flex-col relative overflow-hidden">
+          <div className="matte-card p-8 border-t-4 border-t-muted-foreground/30 flex flex-col relative overflow-hidden h-full">
             <div className="absolute top-0 right-0 p-3 opacity-5">
               <LinkIcon className="w-24 h-24" />
             </div>
@@ -379,23 +379,26 @@ export default function Home() {
                 <Check className="w-5 h-5 text-green-500" /> 20 Deep Links / Month
               </li>
               <li className="flex items-center gap-3 text-sm">
+                <Check className="w-5 h-5 text-green-500" /> 200 Clicks / Month
+              </li>
+              <li className="flex items-center gap-3 text-sm">
                 <Check className="w-5 h-5 text-green-500" /> Basic App Opening
               </li>
               <li className="flex items-center gap-3 text-sm">
                 <Check className="w-5 h-5 text-green-500" /> Link History
               </li>
               <li className="flex items-center gap-3 text-sm text-muted-foreground/50">
-                <span className="w-5 h-5 flex items-center justify-center font-bold text-xs">✕</span> No Analytics
+                <span className="w-5 h-5 flex items-center justify-center font-bold text-xs">✕</span> No Detailed Analytics
               </li>
             </ul>
 
-            <Link href="/sign-up" className="w-full btn-primary bg-secondary text-foreground hover:bg-secondary/80 border border-border">
+            <Link href="/sign-up" className="w-full btn-primary bg-secondary text-foreground hover:bg-secondary/80 border border-border mt-auto">
               Get Started Free
             </Link>
           </div>
 
           {/* PRO TIER CARD */}
-          <div className="matte-card p-8 border-t-4 border-t-yellow-500 flex flex-col relative transform md:-translate-y-4 shadow-2xl shadow-yellow-500/10">
+          <div className="matte-card p-8 border-t-4 border-t-yellow-500 flex flex-col relative shadow-2xl shadow-yellow-500/10 h-full">
             <div className="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
               RECOMMENDED
             </div>
@@ -413,6 +416,10 @@ export default function Home() {
               </li>
               <li className="flex items-center gap-3 text-sm font-medium">
                 <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
+                <strong>Unlimited</strong> Clicks
+              </li>
+              <li className="flex items-center gap-3 text-sm font-medium">
+                <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
                 Smart iOS/Android Redirects
               </li>
               <li className="flex items-center gap-3 text-sm font-medium">
@@ -425,7 +432,7 @@ export default function Home() {
               </li>
             </ul>
 
-            <Link href="/sign-up" className="w-full btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold shadow-lg hover:shadow-yellow-500/20">
+            <Link href="/sign-up" className="w-full btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold shadow-lg hover:shadow-yellow-500/20 mt-auto">
               Upgrade to Pro
             </Link>
           </div>

@@ -141,12 +141,25 @@ export default function Dashboard() {
                             </div>
                             <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
                                 <div
-                                    className={`h-full transition-all duration-500 ${usage.clicks >= limits.clicks ? 'bg-red-500' : 'bg-primary'}`}
+                                    className={`h-full transition-all duration-500 ${usage.clicks >= limits.clicks ? 'bg-red-500' :
+                                            usage.clicks >= limits.clicks * 0.75 ? 'bg-orange-500' :
+                                                usage.clicks >= limits.clicks * 0.5 ? 'bg-yellow-500' :
+                                                    'bg-primary'
+                                        }`}
                                     style={{ width: `${clicksPercent}%` }}
                                 ></div>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-3">
-                                {usage.clicks >= limits.clicks ? 'Limit reached! Links may stop redirecting.' : 'Resets next month.'}
+                            <p className={`text-xs mt-3 ${usage.clicks >= limits.clicks ? 'text-red-500 font-bold' :
+                                    usage.clicks >= limits.clicks * 0.75 ? 'text-orange-500 font-medium' :
+                                        usage.clicks >= limits.clicks * 0.5 ? 'text-yellow-500 font-medium' :
+                                            'text-muted-foreground'
+                                }`}>
+                                {
+                                    usage.clicks >= limits.clicks ? 'Limit reached! Links may stop redirecting.' :
+                                        usage.clicks >= limits.clicks * 0.75 ? 'Warning: 75% used. Upgrade recommended.' :
+                                            usage.clicks >= limits.clicks * 0.5 ? 'Heads up: You have used 50% of your free clicks.' :
+                                                'Resets next month.'
+                                }
                             </p>
                         </div>
 
