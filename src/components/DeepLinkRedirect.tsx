@@ -20,8 +20,8 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
     const encodedWebUrl = encodeURIComponent(webUrl);
 
     // URI Schemes
-    // Standard App Scheme
-    const appUrl = `amzn://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+    // Standard App Scheme (iOS often prefers this verbose scheme)
+    const appUrl = `com.amazon.mobile.shopping.web://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 
     // Android Intent
     // Note: We remove the browser_fallback_url to prevent auto-fallback to browser if we want to force app.

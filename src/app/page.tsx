@@ -122,9 +122,9 @@ export default function Home() {
         }
       }
 
-      // seek ASIN - Robust Regex (Handling /dp/, /gp/product/, /o/)
-      // B0... is standard, but sometimes it's numbers (books). 10 chars.
-      const asinMatch = targetUrl.match(/(?:dp|o|gp\/product)\/([A-Z0-9]{10})/i);
+      // seek ASIN - Very Permissive Regex
+      // Looks for 10-char alphanumeric sequence, usually starting with B, preceded by slash or equal sign
+      const asinMatch = targetUrl.match(/(?:\/|=)([A-Z0-9]{10})(?:$|\/|\?|&|%)/i);
       const asin = asinMatch ? asinMatch[1].toUpperCase() : null;
 
       // seek Tag
