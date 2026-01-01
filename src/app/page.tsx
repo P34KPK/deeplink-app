@@ -30,6 +30,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [history, setHistory] = useState<ArchivedLink[]>([]);
+  const [isPro, setIsPro] = useState(false);
 
   // Load history on mount (ONLY if signed in)
   useEffect(() => {
@@ -76,6 +77,17 @@ export default function Home() {
         }
       })
       .catch(err => console.error("Failed to load history", err));
+
+    // Check Plan Status
+    fetch('/api/stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.plan === 'pro') {
+          setIsPro(true);
+        }
+      })
+      .catch(e => console.error("Failed to check plan", e));
+
   }, [isLoaded, isSignedIn]);
 
   const generateLink = async () => {
@@ -364,80 +376,83 @@ export default function Home() {
             </SignedIn>
           </div>
         </div>
-        <div className="mt-16 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-up">
 
-          {/* FREE TIER CARD */}
-          <div className="matte-card p-8 border-t-4 border-t-muted-foreground/30 flex flex-col relative overflow-hidden h-full">
-            <div className="absolute top-0 right-0 p-3 opacity-5">
-              <LinkIcon className="w-24 h-24" />
+        {!isPro && (
+          <div className="mt-16 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-up">
+
+            {/* FREE TIER CARD */}
+            <div className="matte-card p-8 border-t-4 border-t-muted-foreground/30 flex flex-col relative overflow-hidden h-full">
+              <div className="absolute top-0 right-0 p-3 opacity-5">
+                <LinkIcon className="w-24 h-24" />
+              </div>
+              <h3 className="text-xl font-bold uppercase tracking-wider mb-2">Free Starter</h3>
+              <div className="text-4xl font-extrabold mb-6">$0<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
+
+              <ul className="space-y-4 mb-8 flex-1">
+                <li className="flex items-center gap-3 text-sm">
+                  <Check className="w-5 h-5 text-green-500" /> 20 Deep Links / Month
+                </li>
+                <li className="flex items-center gap-3 text-sm">
+                  <Check className="w-5 h-5 text-green-500" /> 200 Clicks / Month
+                </li>
+                <li className="flex items-center gap-3 text-sm">
+                  <Check className="w-5 h-5 text-green-500" /> Basic App Opening
+                </li>
+                <li className="flex items-center gap-3 text-sm">
+                  <Check className="w-5 h-5 text-green-500" /> Link History
+                </li>
+                <li className="flex items-center gap-3 text-sm text-muted-foreground/50">
+                  <span className="w-5 h-5 flex items-center justify-center font-bold text-xs">✕</span> No Detailed Analytics
+                </li>
+              </ul>
+
+              <Link href="/sign-up" className="w-full btn-primary bg-secondary text-foreground hover:bg-secondary/80 border border-border mt-auto">
+                Get Started Free
+              </Link>
             </div>
-            <h3 className="text-xl font-bold uppercase tracking-wider mb-2">Free Starter</h3>
-            <div className="text-4xl font-extrabold mb-6">$0<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
 
-            <ul className="space-y-4 mb-8 flex-1">
-              <li className="flex items-center gap-3 text-sm">
-                <Check className="w-5 h-5 text-green-500" /> 20 Deep Links / Month
-              </li>
-              <li className="flex items-center gap-3 text-sm">
-                <Check className="w-5 h-5 text-green-500" /> 200 Clicks / Month
-              </li>
-              <li className="flex items-center gap-3 text-sm">
-                <Check className="w-5 h-5 text-green-500" /> Basic App Opening
-              </li>
-              <li className="flex items-center gap-3 text-sm">
-                <Check className="w-5 h-5 text-green-500" /> Link History
-              </li>
-              <li className="flex items-center gap-3 text-sm text-muted-foreground/50">
-                <span className="w-5 h-5 flex items-center justify-center font-bold text-xs">✕</span> No Detailed Analytics
-              </li>
-            </ul>
+            {/* PRO TIER CARD */}
+            <div className="matte-card p-8 border-t-4 border-t-yellow-500 flex flex-col relative shadow-2xl shadow-yellow-500/10 h-full">
+              <div className="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
+                RECOMMENDED
+              </div>
+              <div className="absolute top-10 right-0 p-3 opacity-10">
+                <Activity className="w-24 h-24 text-yellow-500" />
+              </div>
 
-            <Link href="/sign-up" className="w-full btn-primary bg-secondary text-foreground hover:bg-secondary/80 border border-border mt-auto">
-              Get Started Free
-            </Link>
+              <h3 className="text-xl font-bold uppercase tracking-wider mb-2 text-yellow-500">Pro Power</h3>
+              <div className="text-4xl font-extrabold mb-6">$9.99<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
+
+              <ul className="space-y-4 mb-8 flex-1">
+                <li className="flex items-center gap-3 text-sm font-medium">
+                  <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
+                  <strong>Unlimited</strong> Links
+                </li>
+                <li className="flex items-center gap-3 text-sm font-medium">
+                  <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
+                  <strong>Unlimited</strong> Clicks
+                </li>
+                <li className="flex items-center gap-3 text-sm font-medium">
+                  <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
+                  Smart iOS/Android Redirects
+                </li>
+                <li className="flex items-center gap-3 text-sm font-medium">
+                  <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
+                  Full <strong>Analytics & Devices</strong>
+                </li>
+                <li className="flex items-center gap-3 text-sm font-medium">
+                  <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
+                  Priority Support
+                </li>
+              </ul>
+
+              <Link href="/sign-up" className="w-full btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold shadow-lg hover:shadow-yellow-500/20 mt-auto">
+                Upgrade to Pro
+              </Link>
+            </div>
+
           </div>
-
-          {/* PRO TIER CARD */}
-          <div className="matte-card p-8 border-t-4 border-t-yellow-500 flex flex-col relative shadow-2xl shadow-yellow-500/10 h-full">
-            <div className="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
-              RECOMMENDED
-            </div>
-            <div className="absolute top-10 right-0 p-3 opacity-10">
-              <Activity className="w-24 h-24 text-yellow-500" />
-            </div>
-
-            <h3 className="text-xl font-bold uppercase tracking-wider mb-2 text-yellow-500">Pro Power</h3>
-            <div className="text-4xl font-extrabold mb-6">$9.99<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
-
-            <ul className="space-y-4 mb-8 flex-1">
-              <li className="flex items-center gap-3 text-sm font-medium">
-                <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                <strong>Unlimited</strong> Links
-              </li>
-              <li className="flex items-center gap-3 text-sm font-medium">
-                <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                <strong>Unlimited</strong> Clicks
-              </li>
-              <li className="flex items-center gap-3 text-sm font-medium">
-                <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                Smart iOS/Android Redirects
-              </li>
-              <li className="flex items-center gap-3 text-sm font-medium">
-                <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                Full <strong>Analytics & Devices</strong>
-              </li>
-              <li className="flex items-center gap-3 text-sm font-medium">
-                <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                Priority Support
-              </li>
-            </ul>
-
-            <Link href="/sign-up" className="w-full btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold shadow-lg hover:shadow-yellow-500/20 mt-auto">
-              Upgrade to Pro
-            </Link>
-          </div>
-
-        </div>
+        )}
 
         <div className="mt-12 text-center">
           <p className="text-xs text-muted-foreground/40 font-mono tracking-widest uppercase hover:text-primary/50 transition-colors cursor-default">
