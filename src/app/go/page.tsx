@@ -12,7 +12,7 @@ function RedirectContent() {
 
     if (!asin) return <div>Invalid Link</div>;
 
-    return <DeepLinkRedirect asin={asin} tag={tag} domain={domain} />;
+    return <DeepLinkRedirect asin={asin} tag={tag} domain={domain} slug="legacy-go" />;
 }
 
 export default function RedirectPage() {

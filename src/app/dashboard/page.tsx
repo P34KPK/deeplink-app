@@ -382,7 +382,7 @@ export default function Dashboard() {
                                         // Extract slug from generated URL (last part)
                                         const slug = (link.generated || '').split('/').pop() || '';
                                         const hits = stats.statsBySlug[slug] || 0;
-                                        const maxHits = Math.max(...Object.values(stats.statsBySlug), 1);
+                                        const maxHits = Math.max(...Object.values(stats.statsBySlug as Record<string, number>), 1);
 
                                         return (
                                             <tr key={link.id} className="hover:bg-secondary/20 transition-colors group">
