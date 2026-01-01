@@ -380,7 +380,7 @@ export default function Dashboard() {
                                 <tbody className="text-sm divide-y divide-border">
                                     {[...history].reverse().map((link) => {
                                         // Extract slug from generated URL (last part)
-                                        const slug = link.generated.split('/').pop() || '';
+                                        const slug = (link.generated || '').split('/').pop() || '';
                                         const hits = stats.statsBySlug[slug] || 0;
                                         const maxHits = Math.max(...Object.values(stats.statsBySlug), 1);
 
