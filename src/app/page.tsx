@@ -16,7 +16,7 @@ type ArchivedLink = {
   date: number;
 };
 
-import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton, useAuth, SignOutButton } from "@clerk/nextjs";
 
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -209,6 +209,14 @@ export default function Home() {
               <BarChart3 className="w-4 h-4" />
               <span>My Links</span>
             </Link>
+            {/* Explicit Sign Out Text */}
+            <div className="hidden md:block">
+              <SignOutButton>
+                <button className="text-sm font-medium text-muted-foreground hover:text-red-500 transition-colors">
+                  Sign Out
+                </button>
+              </SignOutButton>
+            </div>
           </div>
           <UserButton afterSignOutUrl="/" />
         </SignedIn>
