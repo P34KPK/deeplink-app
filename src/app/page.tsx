@@ -490,7 +490,7 @@ export default function Home() {
                 src="/p34k-logo.png"
                 alt="P34K"
                 fill
-                className="object-contain invert dark:invert-0"
+                className="object-contain filter brightness-0 dark:invert"
               />
             </div>
           </a>
