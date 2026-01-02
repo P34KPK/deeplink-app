@@ -490,8 +490,7 @@ export default function Home() {
                 src="/p34k-logo.png"
                 alt="P34K"
                 fill
-                className="object-contain"
-                style={{ filter: 'brightness(0) invert(1)' }} // Verify if needed based on image color. Assuming white logo needed on dark bg.
+                className="object-contain brightness-0 dark:invert"
               />
             </div>
           </a>
