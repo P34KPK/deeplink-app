@@ -485,7 +485,7 @@ export default function Home() {
             className="inline-block opacity-50 hover:opacity-100 transition-opacity"
             aria-label="Visit P34K"
           >
-            <div className="relative w-24 h-8 mx-auto p34k-logo">
+            <div className="relative w-24 h-8 mx-auto mix-blend-difference">
               <Image
                 src="/p34k-logo.png"
                 alt="P34K"
