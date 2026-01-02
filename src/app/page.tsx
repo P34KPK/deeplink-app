@@ -485,12 +485,12 @@ export default function Home() {
             className="inline-block opacity-50 hover:opacity-100 transition-opacity"
             aria-label="Visit P34K"
           >
-            <div className="relative w-24 h-8 mx-auto border border-red-500">
+            <div className="relative w-24 h-8 mx-auto">
               <Image
                 src="/p34k-logo.png"
                 alt="P34K"
                 fill
-                className="object-contain"
+                className="object-contain invert dark:invert-0"
               />
             </div>
           </a>
