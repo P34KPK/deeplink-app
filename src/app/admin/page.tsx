@@ -12,6 +12,7 @@ export default function AdminDashboard() {
 
     // Stage 2: Data
     const [data, setData] = useState<any>(null);
+    const [selectedUser, setSelectedUser] = useState<string | null>(null); // For User Mini-Dashboard
 
     // The Secret Key (Hardcoded for serverless simplicity, secure enough for this scale)
     // ideally this would be an ENV variable checked on server, but for client-gate this works to block UI
@@ -340,7 +341,16 @@ export default function AdminDashboard() {
                                                 <a href={link.generated} target="_blank" className="hover:text-white hover:underline transition-colors block max-w-[200px] truncate">{link.title || 'Untitled'}</a>
                                             </td>
                                             <td className="px-6 py-4 font-mono text-xs opacity-50">{link.asin}</td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
+                                                {link.userId && (
+                                                    <button
+                                                        onClick={() => setSelectedUser(link.userId)}
+                                                        className="text-xs border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 px-2 py-1.5 rounded transition-colors"
+                                                        title="View User Stats"
+                                                    >
+                                                        Stats
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => {
                                                         navigator.clipboard.writeText(link.generated || '');
@@ -358,6 +368,130 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* USER MINI DASHBOARD MODAL */}
+            {selectedUser && (
+                <UserMiniDashboard userId={selectedUser} onClose={() => setSelectedUser(null)} />
+            )}
         </main>
+    );
+}
+
+function UserMiniDashboard({ userId, onClose }: { userId: string, onClose: () => void }) {
+    const [links, setLinks] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(`/api/admin/user-links?userId=${userId}`)
+            .then(res => res.json())
+            .then(setLinks)
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, [userId]);
+
+    const handleToggle = async (linkId: string, currentStatus: boolean | undefined) => {
+        // Optimistic UI update
+        const newStatus = currentStatus === false ? true : false;
+        setLinks(prev => prev.map(l => l.id === linkId ? { ...l, active: newStatus } : l));
+
+        try {
+            await fetch('/api/links', {
+                method: 'PATCH',
+                body: JSON.stringify({ id: linkId, active: newStatus }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (e) {
+            console.error("Toggle failed", e);
+            // Revert on error could be added here
+        }
+    };
+
+    const handleDelete = async (linkId: string) => {
+        if (!confirm('Are you sure you want to delete this link?')) return;
+
+        setLinks(prev => prev.filter(l => l.id !== linkId));
+        try {
+            await fetch(`/api/links?id=${linkId}`, { method: 'DELETE' });
+        } catch (e) {
+            console.error("Delete failed", e);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-fade">
+            <div className="matte-card w-full max-w-4xl h-[80vh] flex flex-col border border-border bg-black relative">
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-muted-foreground hover:text-white"
+                >
+                    ✕
+                </button>
+
+                <div className="p-6 border-b border-border">
+                    <h2 className="text-xl font-bold">User Dashboard</h2>
+                    <p className="text-xs text-muted-foreground font-mono mt-1">{userId}</p>
+                </div>
+
+                <div className="flex-1 overflow-auto p-6 custom-scrollbar">
+                    {loading ? (
+                        <div className="text-center py-20 text-muted-foreground animate-pulse">Loading User Data...</div>
+                    ) : links.length === 0 ? (
+                        <div className="text-center py-20 text-muted-foreground">No links found for this user.</div>
+                    ) : (
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-secondary/30 text-muted-foreground uppercase text-xs font-medium sticky top-0">
+                                <tr>
+                                    <th className="px-4 py-3">Date</th>
+                                    <th className="px-4 py-3">Product</th>
+                                    <th className="px-4 py-3 text-right">Clicks</th>
+                                    <th className="px-4 py-3 text-center">Status</th>
+                                    <th className="px-4 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {links.map(link => (
+                                    <tr key={link.id} className="hover:bg-secondary/10 group">
+                                        <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(link.date).toLocaleDateString()}</td>
+                                        <td className="px-4 py-3 max-w-[200px]">
+                                            <div className="truncate font-medium text-foreground">{link.title}</div>
+                                            <div className="text-xs text-muted-foreground truncate opacity-50">{link.asin}</div>
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-mono font-bold text-primary">
+                                            {link.hits || 0}
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <button
+                                                onClick={() => handleToggle(link.id, link.active)}
+                                                className={`text-xs px-2 py-1 rounded-full font-bold border transition-all ${link.active === false
+                                                    ? 'bg-red-500/10 text-red-500 border-red-500/20 hover:bg-red-500/20'
+                                                    : 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20'}`}
+                                            >
+                                                {link.active === false ? 'OFF' : 'ON'}
+                                            </button>
+                                        </td>
+                                        <td className="px-4 py-3 text-right flex justify-end gap-2">
+                                            <button
+                                                onClick={() => navigator.clipboard.writeText(link.generated)}
+                                                className="p-1.5 text-xs border border-border rounded hover:bg-secondary hover:text-white text-muted-foreground"
+                                                title="Copy Link"
+                                            >
+                                                📋
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(link.id)}
+                                                className="p-1.5 text-xs border border-border rounded hover:bg-red-900/20 hover:text-red-500 text-muted-foreground hover:border-red-500/30"
+                                                title="Delete Link"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 }

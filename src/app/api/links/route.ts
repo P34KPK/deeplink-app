@@ -68,3 +68,21 @@ export async function DELETE(req: Request) {
         return NextResponse.json({ error: 'Failed to delete link' }, { status: 500 });
     }
 }
+
+export async function PATCH(req: Request) {
+    try {
+        const body = await req.json();
+        const { id, ...updates } = body;
+
+        if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
+
+        // Update in DB (imported from storage)
+        // We need to import updateLink first! Added to imports.
+        const { updateLink } = require('@/lib/storage');
+        const updatedHistory = await updateLink(id, updates);
+
+        return NextResponse.json({ success: true, link: updatedHistory.find((l: any) => l.id === id) });
+    } catch (e) {
+        return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+    }
+}

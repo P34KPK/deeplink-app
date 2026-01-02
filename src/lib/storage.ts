@@ -12,6 +12,7 @@ export type ArchivedLink = {
     title: string;
     description: string;
     date: number;
+    active?: boolean; // New: On/Off toggle
 };
 
 const DB_KEY = 'deeplink_history_v1';
@@ -58,6 +59,13 @@ export async function addLink(link: ArchivedLink) {
 export async function removeLink(id: string) {
     const history = await getDB();
     const newHistory = history.filter(l => l.id !== id);
+    await saveDB(newHistory);
+    return newHistory;
+}
+
+export async function updateLink(id: string, updates: Partial<ArchivedLink>) {
+    const history = await getDB();
+    const newHistory = history.map(l => l.id === id ? { ...l, ...updates } : l);
     await saveDB(newHistory);
     return newHistory;
 }
