@@ -334,6 +334,14 @@ export default function Dashboard() {
                             <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Last Activity</p>
                             <p className="text-sm font-mono text-primary">{getLastActivity()}</p>
                         </div>
+
+                        <a
+                            href="mailto:info@p34k.com?subject=Cancel%20Subscription"
+                            className="text-xs text-muted-foreground hover:text-red-400 border border-border hover:border-red-400/50 px-3 py-2 rounded transition-colors"
+                        >
+                            Cancel Plan
+                        </a>
+
                         <Link href="/" className="btn-primary text-sm px-4 py-2">
                             Back to Generator
                         </Link>
