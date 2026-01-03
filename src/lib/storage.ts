@@ -13,6 +13,8 @@ export type ArchivedLink = {
     description: string;
     date: number;
     active?: boolean; // New: On/Off toggle
+    favorite?: boolean; // New: Favorite toggle
+    tags?: string[]; // New: Agent A - Organization
 };
 
 const DB_KEY = 'deeplink_history_v1';

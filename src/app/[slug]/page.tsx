@@ -5,8 +5,41 @@ import Redis from 'ioredis';
 import { getLinks } from '@/lib/storage';
 import { getStats } from '@/lib/analytics';
 import Link from 'next/link';
+import { Metadata } from 'next';
 
 const redis = new Redis(process.env.REDIS_URL || '');
+
+// --- AGENT A: Social Preview Generator ---
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+    const { slug } = await params;
+    const data = await getShortLink(slug);
+
+    if (!data) return { title: 'Link Information' };
+
+    // Construct Image URL (More Reliable "Widget" URL)
+    // This format redirects to the actual image, usually resolving 404s better than the old P/ style
+    const imageUrl = `https://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=${data.asin}&Format=_SL500_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1`;
+
+    // Fallback image (DeepLinkrs Logo) in case Amazon fails
+    const fallbackImage = 'https://deeplink-app-seven.vercel.app/logo.png'; // Using your Vercel public URL for robust fallback
+
+    return {
+        title: data.title || `View Product on Amazon`,
+        description: `Check out this product on Amazon! ${data.tag ? 'Affiliate Link included.' : ''}`,
+        openGraph: {
+            title: data.title || `View Product on Amazon`,
+            description: 'Tap to view details in the App',
+            images: [imageUrl, fallbackImage],
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: `View Product`,
+            description: 'Tap to open in Amazon App',
+            images: [imageUrl],
+        }
+    };
+}
 
 export default async function ShortLinkPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;

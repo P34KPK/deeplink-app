@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getLinks, addLink, addLinks, removeLink, ArchivedLink } from '@/lib/storage';
+import { getLinks, addLink, addLinks, removeLink, updateLink, ArchivedLink } from '@/lib/storage';
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { isAdmin } from '@/lib/admin-auth';
 
 export async function GET() {
     const { userId } = await auth();
@@ -62,6 +63,21 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ error: 'Missing id' }, { status: 400 });
         }
 
+        const { userId } = await auth();
+
+        // Security Check: Verify ownership or Admin Status
+        const allLinks = await getLinks();
+        const targetLink = allLinks.find(l => l.id === id);
+
+        if (!targetLink) {
+            return NextResponse.json({ error: 'Link not found' }, { status: 404 });
+        }
+
+        // Allow if owner OR Admin
+        if (targetLink.userId !== userId && !isAdmin(req)) {
+            return NextResponse.json({ error: 'Unauthorized: You do not own this link' }, { status: 403 });
+        }
+
         const updatedHistory = await removeLink(id);
         return NextResponse.json(updatedHistory);
     } catch (error) {
@@ -78,7 +94,18 @@ export async function PATCH(req: Request) {
 
         // Update in DB (imported from storage)
         // We need to import updateLink first! Added to imports.
-        const { updateLink } = require('@/lib/storage');
+        const { userId } = await auth();
+
+        // Security Check
+        const allLinks = await getLinks();
+        const targetLink = allLinks.find(l => l.id === id);
+
+        if (!targetLink) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+        if (targetLink.userId !== userId && !isAdmin(req)) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
         const updatedHistory = await updateLink(id, updates);
 
         return NextResponse.json({ success: true, link: updatedHistory.find((l: any) => l.id === id) });

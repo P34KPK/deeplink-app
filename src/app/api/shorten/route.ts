@@ -2,19 +2,16 @@ import { NextResponse } from 'next/server';
 import { createShortLink } from '@/lib/shortener';
 import { addLink, getLinks, ArchivedLink } from '@/lib/storage'; // Import storage methods
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { isAdmin } from '@/lib/admin-auth';
 import Redis from 'ioredis';
 
 const redis = new Redis(process.env.REDIS_URL || '');
 
 export async function POST(req: Request) {
     try {
-        console.log("SHORTEN API CALLED");
         const user = await currentUser();
-        console.log("User retrieved:", user?.id);
-
         const body = await req.json();
         const { asin, domain, tag, title, slug, isManualAdmin } = body;
-        console.log("Request Body:", { asin, domain, isManualAdmin });
 
         if (!asin) {
             return NextResponse.json({ error: 'Missing ASIN' }, { status: 400 });
@@ -24,11 +21,8 @@ export async function POST(req: Request) {
         let userId = user?.id;
         let userEmail = user?.primaryEmailAddress?.emailAddress;
 
-        // If coming from Admin Dashboard (Master Key), we treat as Super User (Pro)
-        // But the API doesn't know about Master Key directly unless we pass a secret.
-        // For now, if no user but valid request, it might be Guest or Admin.
-        // Admin usually is on localhost or has a specific header? 
-        // Let's rely on the fact that if 'user' is null, it's a Guest or Admin.
+        // SECURITY FIX: Only allow "isManualAdmin" status if the request has the Admin Key Headers
+        const isVerifiedAdmin = isManualAdmin && isAdmin(req);
 
         // Retrieve Plan
         let plan = 'free';
@@ -36,21 +30,17 @@ export async function POST(req: Request) {
             const planKey = `user:${userId}:plan`;
             const storedPlan = await redis.get(planKey);
             if (storedPlan) plan = storedPlan;
-
-            // ADMIN OVERRIDE: If it's YOU, you are PRO.
-            // Replace with your actual email to be safe
             if (userEmail === 'p34k.productions@gmail.com') plan = 'pro';
         }
 
-        // If 'isManualAdmin' flag is sent (from Admin Dashboard), bypass quotas
-        // We really should secure this with a secret token, but for now trust the internal call.
-        if (!userId && !isManualAdmin) {
+        // If not authenticated and not a verified admin, BLOCK.
+        if (!userId && !isVerifiedAdmin) {
             return NextResponse.json({
                 error: 'Authentication Required. Please Sign In to create links.'
             }, { status: 401 });
         }
 
-        if (userId && plan === 'free' && !isManualAdmin) {
+        if (userId && plan === 'free' && !isVerifiedAdmin) {
             // Count existing links
             const allLinks = await getLinks();
             const userLinkCount = allLinks.filter(l => l.userId === userId).length;

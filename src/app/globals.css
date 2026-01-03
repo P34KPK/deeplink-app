@@ -102,13 +102,8 @@
 
   /* Logo Filter Strategy: Assume logo.png is WHITE */
   /* Light Mode (White BG): Invert to Black */
-  --logo-filter: invert(1);
-}
-
-.dark {
-  /* ... */
-  /* Dark Mode (Black BG): Keep White */
   --logo-filter: none;
+  /* Reset filter for dark mode if used */
 }
 
 body {

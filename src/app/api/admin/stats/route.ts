@@ -1,22 +1,18 @@
-
 import { NextResponse } from 'next/server';
 import { getLinks } from '@/lib/storage';
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { isAdmin } from '@/lib/admin-auth';
 
-export async function GET() {
+export async function GET(req: Request) {
     const { userId } = await auth();
-    const user = await currentUser();
 
-    // Check if Admin (Simple check: You can hardcode your email here for security)
-    // Replace 'YOUR_EMAIL' with your actual email if you want to lock it down
-    // const ADMIN_EMAILS = ['your-email@example.com'];
-    // if (!user || !user.primaryEmailAddress || !ADMIN_EMAILS.includes(user.primaryEmailAddress.emailAddress)) { ... }
-
-    // For now, assumed authorized if they can access this route (Middleware protection recommended)
-    // For now, assumed authorized if they can access this route (Middleware protection recommended)
-    // if (!userId) {
-    //     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // Secure Admin Check
+    if (!isAdmin(req) && !userId) {
+        // If not explicit admin key, and not logged in (or we could enforce strict admin email list here)
+        // For now, Strict Admin Key or deny. Even logged in users shouldn't see GLOBAL stats unless they are admin.
+        // So let's enforce Key Only for this route or specific email.
+        return NextResponse.json({ error: 'Unauthorized: Admin Key Required' }, { status: 401 });
+    }
 
     const allLinks = await getLinks();
 

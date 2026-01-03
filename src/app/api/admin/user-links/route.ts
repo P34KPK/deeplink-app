@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { getLinks } from '@/lib/storage';
 import Redis from 'ioredis';
+import { isAdmin } from '@/lib/admin-auth';
 
 const redis = new Redis(process.env.REDIS_URL || '');
 
 export async function GET(req: Request) {
+    // Security Check
+    if (!isAdmin(req)) {
+        return NextResponse.json({ error: 'Unauthorized Admin Access' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 

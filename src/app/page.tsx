@@ -31,6 +31,7 @@ export default function Home() {
   const [error, setError] = useState('');
   const [history, setHistory] = useState<ArchivedLink[]>([]);
   const [isPro, setIsPro] = useState(false);
+  const [clicksUsed, setClicksUsed] = useState(0);
 
   // Bug Report State
   const [reportOpen, setReportOpen] = useState(false);
@@ -108,6 +109,11 @@ export default function Home() {
       .then(data => {
         if (data.plan === 'pro') {
           setIsPro(true);
+        } else {
+          // Free Plan - Set usage
+          if (data.usage?.clicks) {
+            setClicksUsed(data.usage.clicks);
+          }
         }
       })
       .catch(e => console.error("Failed to check plan", e));
@@ -241,14 +247,16 @@ export default function Home() {
         <SignedIn>
           <div className="flex items-center gap-4 mr-4">
             {/* User Links */}
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-              title="My Links"
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>My Links</span>
-            </Link>
+            {isPro && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                title="My Links"
+              >
+                <BarChart3 className="w-4 h-4" />
+                <span>My Links</span>
+              </Link>
+            )}
             {/* Explicit Sign Out Text */}
             <div className="hidden md:block">
               <SignOutButton>
@@ -381,21 +389,22 @@ export default function Home() {
             </SignedOut>
 
             <SignedIn>
-              <Link
-                href="/history"
-                className="w-full bg-card hover:bg-accent border border-border text-muted-foreground hover:text-foreground py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:shadow"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                View My Links
-              </Link>
-
-              <Link
-                href="/dashboard"
-                className="w-full bg-card hover:bg-accent border border-border text-muted-foreground hover:text-foreground py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:shadow"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                View Analytics Dashboard
-              </Link>
+              {!isPro && (
+                <>
+                  <Link
+                    href="/history"
+                    className="w-full bg-card hover:bg-accent border border-border text-muted-foreground hover:text-foreground py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:shadow"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    View My Links
+                  </Link>
+                  <div className="mt-3 text-center">
+                    <span className="text-xs font-mono text-muted-foreground/80 bg-secondary/30 px-3 py-1 rounded-full border border-border/50">
+                      {Math.max(0, 200 - clicksUsed)} clicks remaining
+                    </span>
+                  </div>
+                </>
+              )}
             </SignedIn>
           </div>
         </div>
@@ -482,15 +491,15 @@ export default function Home() {
             href="https://www.p34k.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block opacity-50 hover:opacity-100 transition-opacity"
+            className="inline-block transition-opacity"
             aria-label="Visit P34K"
           >
-            <div className="relative w-24 h-8 mx-auto mix-blend-difference">
-              <Image
+            <div className="relative w-24 h-8 mx-auto">
+              <img
                 src="/p34k-logo.png"
                 alt="P34K"
-                fill
-                className="object-contain"
+                className="w-full h-full object-contain"
+                style={{ filter: 'var(--logo-filter)' }}
               />
             </div>
           </a>

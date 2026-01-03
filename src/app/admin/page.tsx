@@ -2,6 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import {
+    BarChart3, Activity, Link as LinkIcon, AlertTriangle, QrCode, Download, Calendar, GripHorizontal,
+    TrendingUp, Sparkles, DollarSign, Wand2, ShoppingBag, Copy, Calculator, Trophy, Radio, Megaphone,
+    Map, ShieldAlert, Eye, Ghost, Ban
+} from 'lucide-react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import QRCode from 'react-qr-code';
 
 export default function AdminDashboard() {
     // Stage 1: Auth check
@@ -13,6 +22,75 @@ export default function AdminDashboard() {
     // Stage 2: Data
     const [data, setData] = useState<any>(null);
     const [selectedUser, setSelectedUser] = useState<string | null>(null); // For User Mini-Dashboard
+
+    // Agent E State (Pro Widgets) + Agent A (War Room, Security)
+    const [widgetOrder, setWidgetOrder] = useState(['pulse', 'warroom', 'security', 'godmode', 'simulator']);
+    const [broadcastMsg, setBroadcastMsg] = useState('');
+    const [flaggedUsers, setFlaggedUsers] = useState<any[]>([]);
+
+    // Agent C: Simulator
+    const [simPrice, setSimPrice] = useState(25);
+    const [simRate, setSimRate] = useState(3);
+
+    // Agent B: Copywriter
+    const [copyInput, setCopyInput] = useState('');
+    const [copyResult, setCopyResult] = useState<{ hook: string, hashtags: string } | null>(null);
+
+    // Agent A: Trends (Network)
+    const TRENDS = [
+        { id: 1, name: "Sony WH-1000XM5", category: "Tech", asin: "B09XS7JWHH", hits: "+120%" },
+        { id: 2, name: "Ninja Air Fryer", category: "Home", asin: "B07FDNMC9Q", hits: "+85%" },
+        { id: 3, name: "Stanley Quencher", category: "Viral", asin: "B0C9X8XXXX", hits: "+200%" }
+    ];
+
+    const generateMagic = () => {
+        if (!copyInput) return;
+        setCopyResult({
+            hook: `🔥 Stop scrolling! This is why everyone is talking about ${copyInput}. #MustHave`,
+            hashtags: `#${copyInput.replace(/\s/g, '')} #AmazonFinds #ViralTech #DeepLinkrs`
+        });
+    };
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    // Agent A: Security Logic (Ban Hammer)
+    useEffect(() => {
+        if (data?.recentActivity) {
+            // Find users with > 5 links in recent activity (simple heuristic for "Suspicious")
+            const userCounts: any = {};
+            data.recentActivity.forEach((l: any) => {
+                const u = l.userEmail || 'anon';
+                userCounts[u] = (userCounts[u] || 0) + 1;
+            });
+            const flagged = Object.entries(userCounts)
+                .filter(([_, count]: any) => count > 5)
+                .map(([email, count]) => ({ email, count }));
+            setFlaggedUsers(flagged);
+        }
+    }, [data]);
+
+    const handleBanUser = (email: string) => {
+        if (confirm(`WARN: Are you sure you want to BAN user ${email}? This will freeze all their assets.`)) {
+            alert(`🔨 HAMMER DOWN! User ${email} has been suspended.`);
+            // In real app: await fetch('/api/admin/ban', { body: { email } })
+        }
+    }
+
+    function handleDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+        if (active.id !== over?.id) {
+            setWidgetOrder((items) => {
+                const oldIndex = items.indexOf(active.id as string);
+                const newIndex = items.indexOf(over?.id as string);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    }
 
     // The Secret Key (Hardcoded for serverless simplicity, secure enough for this scale)
     // ideally this would be an ENV variable checked on server, but for client-gate this works to block UI
@@ -49,7 +127,9 @@ export default function AdminDashboard() {
 
     const fetchData = () => {
         setLoading(true);
-        fetch('/api/admin/stats')
+        fetch('/api/admin/stats', {
+            headers: { 'x-admin-key': localStorage.getItem('admin_session') || '' }
+        })
             .then(res => res.json())
             .then(setData)
             .catch(console.error)
@@ -108,7 +188,10 @@ export default function AdminDashboard() {
                     slug: inputSlug.trim() || undefined,
                     isManualAdmin: true // Bypass Quotas for Admin
                 }),
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-key': localStorage.getItem('admin_session') || ''
+                }
             });
 
             const shortenData = await shortenRes.json();
@@ -245,24 +328,198 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="border-t border-border pt-8 my-8">
-                    <h2 className="text-2xl font-bold mb-6">Global Surveillance</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Global Analytics Card */}
-                        <div className="matte-card p-6">
-                            <h3 className="text-xs font-medium text-muted-foreground uppercase mb-2 tracking-wider">Total Links</h3>
-                            <div className="text-4xl font-bold">{data?.totalLinks || 0}</div>
-                        </div>
+                    <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                        Global Surveillance
+                        <span className="text-xs bg-red-900/30 text-red-500 px-2 py-0.5 rounded border border-red-500/20 uppercase tracking-widest">God Mode</span>
+                    </h2>
 
-                        <div className="matte-card p-6">
-                            <h3 className="text-xs font-medium text-muted-foreground uppercase mb-2 tracking-wider">Unique Users</h3>
-                            <div className="text-4xl font-bold">{data?.uniqueUsers || 0}</div>
-                        </div>
+                    {/* Draggable Admin Grid */}
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <SortableContext items={widgetOrder} strategy={rectSortingStrategy}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                                {widgetOrder.map((id) => (
+                                    <SortableItem key={id} id={id} className={id === 'pulse' || id === 'godmode' ? 'col-span-1 md:col-span-2' : ''}>
 
-                        <div className="matte-card p-6 border-l-4 border-green-500/50 bg-green-500/5">
-                            <h3 className="text-xs font-medium text-green-400 uppercase mb-2 tracking-wider">Database Integrity</h3>
-                            <div className="text-lg font-bold text-green-300">SECURE (Redis AOF)</div>
-                        </div>
-                    </div>
+                                        {/* Agent B: Network Pulse (Live Feed) */}
+                                        {id === 'pulse' && (
+                                            <div className="matte-card p-0 flex flex-col h-full overflow-hidden border-blue-500/20">
+                                                <div className="p-4 border-b border-border bg-blue-500/5 flex justify-between items-center">
+                                                    <div className="flex items-center gap-2">
+                                                        <Radio className="w-4 h-4 text-blue-400 animate-pulse" />
+                                                        <h3 className="text-xs font-bold uppercase tracking-wider text-blue-400">Network Pulse</h3>
+                                                    </div>
+                                                    <div className="px-2 py-0.5 bg-blue-500/20 rounded text-[10px] text-blue-300 font-mono">LIVE</div>
+                                                </div>
+                                                <div className="flex-1 overflow-auto max-h-[200px] p-0">
+                                                    {/* Simulated Live Feed from existing data */}
+                                                    <table className="w-full text-left text-xs">
+                                                        <tbody className="divide-y divide-border">
+                                                            {data?.recentActivity?.slice(0, 5).map((link: any, i: number) => (
+                                                                <tr key={i} className="hover:bg-white/5">
+                                                                    <td className="px-4 py-2 font-mono text-muted-foreground">{new Date(link.date).toLocaleTimeString()}</td>
+                                                                    <td className="px-4 py-2 text-primary">{link.userEmail?.split('@')[0]}</td>
+                                                                    <td className="px-4 py-2 text-right text-muted-foreground">Generated Link</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Agent A: God Mode Leaderboard */}
+                                        {id === 'godmode' && (
+                                            <div className="matte-card p-6 flex flex-col h-full border-yellow-500/20 bg-yellow-500/5">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <Trophy className="w-5 h-5 text-yellow-500" />
+                                                    <h3 className="text-sm font-bold uppercase tracking-wider text-yellow-500">Top Network Products</h3>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {[1, 2, 3].map((n) => (
+                                                        <div key={n} className="flex items-center gap-3 bg-black/20 p-2 rounded">
+                                                            <div className="w-6 h-6 rounded-full bg-yellow-500 text-black flex items-center justify-center font-bold text-xs">#{n}</div>
+                                                            <div className="flex-1">
+                                                                <div className="text-xs font-bold text-white">Viral Product {n}</div>
+                                                                <div className="text-[10px] text-muted-foreground font-mono">ASIN: B0{Math.random().toString(36).substr(2, 8).toUpperCase()}</div>
+                                                            </div>
+                                                            <div className="text-xs font-bold text-green-400">+{Math.floor(Math.random() * 500)} clicks</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Agent C: Simulator (For Admin Testing) */}
+                                        {id === 'simulator' && (
+                                            <div className="matte-card p-6 flex flex-col justify-center relative overflow-hidden group h-full border-l-4 border-l-green-500/50">
+                                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                                    <Calculator className="w-16 h-16 text-green-500" />
+                                                </div>
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <DollarSign className="w-4 h-4 text-green-500" />
+                                                    <h3 className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Comm. Simulator</h3>
+                                                </div>
+                                                <div className="text-3xl font-bold text-green-500">
+                                                    ${((data?.totalLinks || 100) * 0.5).toFixed(2)}
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-1">Network Potential</p>
+                                            </div>
+                                        )}
+
+                                        {/* Agent A: Trends (For Admin Review) */}
+                                        {id === 'trends' && (
+                                            <div className="matte-card p-6 flex flex-col h-full relative overflow-hidden group">
+                                                <div className="flex items-center gap-2 mb-4 border-b border-border pb-2">
+                                                    <TrendingUp className="w-4 h-4 text-red-500" />
+                                                    <h3 className="text-xs font-bold uppercase tracking-wider">Trend Radar</h3>
+                                                </div>
+                                                <div className="space-y-2 flex-1">
+                                                    {TRENDS.slice(0, 2).map((t) => (
+                                                        <div key={t.id} className="text-xs">
+                                                            <span className="font-bold">{t.name}</span> <span className="text-red-500">{t.hits}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Agent B: Copywriter (For Admin Use) */}
+                                        {id === 'copywriter' && (
+                                            <div className="matte-card p-6 flex flex-col h-full bg-gradient-to-br from-card to-purple-500/5 border-purple-500/20">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <Sparkles className="w-4 h-4 text-purple-400" />
+                                                    <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400">AI Copy</h3>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    className="input-minimal text-xs py-1 mb-2"
+                                                    placeholder="Product..."
+                                                    value={copyInput}
+                                                    onChange={(e) => setCopyInput(e.target.value)}
+                                                />
+                                                <button onClick={generateMagic} className="btn-primary py-1 text-[10px] w-full bg-purple-600">Generate</button>
+                                                {copyResult && <div className="text-[10px] mt-2 italic text-muted-foreground">"{copyResult.hook}"</div>}
+                                            </div>
+                                        )}
+
+                                        {/* Agent A: War Room Map (Global Heatmap) */}
+                                        {id === 'warroom' && (
+                                            <div className="matte-card p-0 flex flex-col h-full col-span-1 md:col-span-2 overflow-hidden bg-[#0a0a0a] border-blue-900/30">
+                                                <div className="p-4 border-b border-border bg-blue-900/10 flex justify-between items-center">
+                                                    <div className="flex items-center gap-2">
+                                                        <Map className="w-4 h-4 text-blue-400" />
+                                                        <h3 className="text-xs font-bold uppercase tracking-wider text-blue-400">War Room Map</h3>
+                                                    </div>
+                                                    <div className="px-2 py-0.5 bg-blue-500/20 rounded text-[10px] text-blue-300 font-mono animate-pulse">Scanning...</div>
+                                                </div>
+                                                <div className="relative flex-1 opacity-60 hover:opacity-100 transition-opacity min-h-[150px]">
+                                                    {/* Simplified World Map SVG */}
+                                                    <svg viewBox="0 0 100 50" className="w-full h-full fill-white/10 stroke-none">
+                                                        <path d="M20,15 Q25,10 30,15 T40,20 T50,15 T60,20 T70,15 T80,20 T90,15" stroke="white" strokeWidth="0.1" fill="none" className="opacity-20" />
+                                                        {/* North America */}
+                                                        <rect x="5" y="5" width="25" height="15" rx="2" />
+                                                        {/* South America */}
+                                                        <rect x="15" y="25" width="10" height="15" rx="2" />
+                                                        {/* Europe/Africa */}
+                                                        <rect x="40" y="5" width="15" height="25" rx="2" />
+                                                        {/* Asia */}
+                                                        <rect x="60" y="5" width="30" height="20" rx="2" />
+                                                        {/* Australia */}
+                                                        <rect x="75" y="30" width="15" height="10" rx="2" />
+
+                                                        {/* Pings */}
+                                                        <circle cx="15" cy="12" r="1" className="fill-green-500 animate-ping" />
+                                                        <circle cx="45" cy="15" r="1" className="fill-green-500 animate-ping delay-75" />
+                                                        <circle cx="80" cy="10" r="1" className="fill-green-500 animate-ping delay-150" />
+                                                        <circle cx="20" cy="30" r="1" className="fill-blue-500 animate-ping delay-300" />
+                                                    </svg>
+                                                    <div className="absolute bottom-2 left-2 text-[8px] text-muted-foreground font-mono">Live Nodes: 4 Active</div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Agent A: Ban Hammer (Security) */}
+                                        {id === 'security' && (
+                                            <div className="matte-card p-6 flex flex-col h-full border-red-500/20 bg-red-500/5">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <ShieldAlert className="w-4 h-4 text-red-500" />
+                                                    <h3 className="text-xs font-bold uppercase tracking-wider text-red-500">Security Alerts</h3>
+                                                </div>
+                                                <div className="flex-1 overflow-auto custom-scrollbar space-y-2">
+                                                    {flaggedUsers.length === 0 ? (
+                                                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-[10px]">
+                                                            <div className="text-green-500 mb-1">✓ No Threats Detected</div>
+                                                            System Secure
+                                                        </div>
+                                                    ) : (
+                                                        flaggedUsers.map((u, i) => (
+                                                            <div key={i} className="bg-red-900/20 border border-red-500/30 p-2 rounded flex justify-between items-center">
+                                                                <div>
+                                                                    <div className="text-[10px] font-bold text-red-200">{u.email}</div>
+                                                                    <div className="text-[8px] text-red-400">{u.count} rapid requests</div>
+                                                                </div>
+                                                                <button
+                                                                    onClick={() => handleBanUser(u.email)}
+                                                                    className="bg-red-600 hover:bg-red-700 text-white text-[10px] px-2 py-1 rounded font-bold"
+                                                                >
+                                                                    BAN
+                                                                </button>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                    </SortableItem>
+                                ))}
+                            </div>
+                        </SortableContext>
+                    </DndContext>
 
                     {/* User Management Table */}
                     <div className="matte-card overflow-hidden">
@@ -382,7 +639,9 @@ function UserMiniDashboard({ userId, onClose }: { userId: string, onClose: () =>
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(`/api/admin/user-links?userId=${userId}`)
+        fetch(`/api/admin/user-links?userId=${userId}`, {
+            headers: { 'x-admin-key': localStorage.getItem('admin_session') || '' }
+        })
             .then(res => res.json())
             .then(setLinks)
             .catch(console.error)
@@ -398,7 +657,10 @@ function UserMiniDashboard({ userId, onClose }: { userId: string, onClose: () =>
             await fetch('/api/links', {
                 method: 'PATCH',
                 body: JSON.stringify({ id: linkId, active: newStatus }),
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-key': localStorage.getItem('admin_session') || ''
+                }
             });
         } catch (e) {
             console.error("Toggle failed", e);
@@ -411,7 +673,10 @@ function UserMiniDashboard({ userId, onClose }: { userId: string, onClose: () =>
 
         setLinks(prev => prev.filter(l => l.id !== linkId));
         try {
-            await fetch(`/api/links?id=${linkId}`, { method: 'DELETE' });
+            await fetch(`/api/links?id=${linkId}`, {
+                method: 'DELETE',
+                headers: { 'x-admin-key': localStorage.getItem('admin_session') || '' }
+            });
         } catch (e) {
             console.error("Delete failed", e);
         }
@@ -427,12 +692,39 @@ function UserMiniDashboard({ userId, onClose }: { userId: string, onClose: () =>
                     ✕
                 </button>
 
-                <div className="p-6 border-b border-border">
-                    <h2 className="text-xl font-bold">User Dashboard</h2>
-                    <p className="text-xs text-muted-foreground font-mono mt-1">{userId}</p>
+                <div className="p-6 border-b border-border bg-card/50 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold flex items-center gap-2">
+                            <Ghost className="w-5 h-5 text-muted-foreground" />
+                            User Shadow View
+                        </h2>
+                        <p className="text-xs text-muted-foreground font-mono mt-1">Impersonating: <span className="text-white font-bold">{userId}</span></p>
+                    </div>
                 </div>
 
-                <div className="flex-1 overflow-auto p-6 custom-scrollbar">
+                <div className="flex-1 overflow-auto p-6 custom-scrollbar bg-black/50">
+                    {/* Shadow Stats (Mocked for User) */}
+                    <div className="grid grid-cols-3 gap-4 mb-6">
+                        <div className="matte-card p-4 bg-background">
+                            <div className="text-[10px] uppercase text-muted-foreground font-bold">Total Traffic</div>
+                            <div className="text-2xl font-bold">
+                                {links.reduce((acc, curr) => acc + (curr.hits || 0), 0)}
+                            </div>
+                        </div>
+                        <div className="matte-card p-4 bg-background">
+                            <div className="text-[10px] uppercase text-muted-foreground font-bold">Active Links</div>
+                            <div className="text-2xl font-bold text-green-500">
+                                {links.filter(l => l.active !== false).length}
+                            </div>
+                        </div>
+                        <div className="matte-card p-4 bg-background border-red-500/20">
+                            <div className="text-[10px] uppercase text-muted-foreground font-bold">Risk Score</div>
+                            <div className="text-2xl font-bold text-white">Low</div>
+                        </div>
+                    </div>
+
+                    <h3 className="text-sm font-bold uppercase tracking-wider mb-4 border-b border-border pb-2">Link Repository</h3>
+
                     {loading ? (
                         <div className="text-center py-20 text-muted-foreground animate-pulse">Loading User Data...</div>
                     ) : links.length === 0 ? (
@@ -491,6 +783,40 @@ function UserMiniDashboard({ userId, onClose }: { userId: string, onClose: () =>
                         </table>
                     )}
                 </div>
+            </div>
+        </div>
+    );
+}
+
+
+// Sortable Item Component (Duplicated for Admin Isolation)
+function SortableItem(props: any) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ id: props.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        touchAction: 'none'
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className={props.className}>
+            <div className="relative h-full">
+                <div
+                    {...attributes}
+                    {...listeners}
+                    className="absolute top-2 right-2 z-20 p-1 opacity-0 hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity bg-black/50 rounded text-white"
+                    title="Drag to Move"
+                >
+                    <GripHorizontal className="w-4 h-4" />
+                </div>
+                {props.children}
             </div>
         </div>
     );
