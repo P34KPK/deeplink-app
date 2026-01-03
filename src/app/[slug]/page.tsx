@@ -16,20 +16,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     if (!data) return { title: 'Link Information' };
 
-    // Construct Image URL (More Reliable "Widget" URL)
-    // This format redirects to the actual image, usually resolving 404s better than the old P/ style
-    const imageUrl = `https://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=${data.asin}&Format=_SL500_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1`;
-
-    // Fallback image (DeepLinkrs Logo) in case Amazon fails
-    const fallbackImage = 'https://deeplink-app-seven.vercel.app/logo.png'; // Using your Vercel public URL for robust fallback
+    // Construct Image URLs - Try multiple known endpoints
+    // 1. High-Res Image handler (often works)
+    const img1 = `https://images-na.ssl-images-amazon.com/images/P/${data.asin}.01._LZZZZZZZ_.jpg`;
+    // 2. Widget handler (sometimes more reliable)
+    const img2 = `https://ws-na.amazon-adsystem.com/widgets/q?_encoding=UTF8&ASIN=${data.asin}&Format=_SL500_&ID=AsinImage&MarketPlace=US&ServiceVersion=20070822&WS=1`;
+    // 3. Fallback
+    const fallback = 'https://deeplink-app-seven.vercel.app/logo.png';
 
     return {
         title: data.title || `View Product on Amazon`,
         description: `Check out this product on Amazon! ${data.tag ? 'Affiliate Link included.' : ''}`,
         openGraph: {
             title: data.title || `View Product on Amazon`,
-            description: 'Tap to view details in the App',
-            images: [imageUrl, fallbackImage],
+            description: 'Check to view details',
+            images: [img1, img2, fallback],
             type: 'website',
         },
         twitter: {
