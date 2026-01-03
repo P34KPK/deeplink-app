@@ -1,13 +1,16 @@
-import { getShortLink } from '@/lib/shortener';
 import DeepLinkRedirect from '@/components/DeepLinkRedirect';
 import { notFound } from 'next/navigation';
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 import { getLinks } from '@/lib/storage';
 import { getStats } from '@/lib/analytics';
 import Link from 'next/link';
 import { Metadata } from 'next';
 
-const redis = new Redis(process.env.REDIS_URL || '');
+const redisUrl = process.env.REDIS_URL;
+const redisToken = process.env.REDIS_TOKEN;
+const redis = (redisUrl && redisToken)
+    ? new Redis({ url: redisUrl, token: redisToken })
+    : { get: async () => null }; // Mock to prevent crash
 
 // --- AGENT A: Social Preview Generator ---
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {

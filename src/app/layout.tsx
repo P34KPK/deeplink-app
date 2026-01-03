@@ -5,6 +5,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import InAppBrowserGuard from "@/components/InAppBrowserGuard";
+import ErrorMonitor from "@/components/ErrorMonitor";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,6 +29,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <ErrorMonitor />
             <InAppBrowserGuard>
               <div className="fixed top-4 right-4 z-50">
                 <ThemeToggle />

@@ -1,6 +1,11 @@
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 
-const redis = new Redis(process.env.REDIS_URL || '');
+const redisUrl = process.env.REDIS_URL;
+const redisToken = process.env.REDIS_TOKEN;
+
+const redis = (redisUrl && redisToken)
+    ? new Redis({ url: redisUrl, token: redisToken })
+    : null;
 
 export type ArchivedLink = {
     id: string;
@@ -20,16 +25,19 @@ export type ArchivedLink = {
 const DB_KEY = 'deeplink_history_v1';
 
 async function getDB(): Promise<ArchivedLink[]> {
+    if (!redis) return []; // Graceful degradation
     try {
         const data = await redis.get(DB_KEY);
-        return data ? JSON.parse(data) : [];
+        // @ts-ignore
+        return data ? (typeof data === 'string' ? JSON.parse(data) : data) : [];
     } catch (error) {
-        console.warn('Failed to fetch history from Redis, returning empty', error);
+        console.warn('Failed to fetch history from Redis', error);
         return [];
     }
 }
 
 async function saveDB(data: ArchivedLink[]) {
+    if (!redis) return;
     try {
         await redis.set(DB_KEY, JSON.stringify(data));
     } catch (error) {

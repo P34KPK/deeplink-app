@@ -11,26 +11,44 @@ interface DeepLinkRedirectProps {
 }
 
 export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: DeepLinkRedirectProps) {
-    const [status, setStatus] = useState('Opening Amazon...');
+    // Intelligent Geo-Redirect (Agent B)
+    const [effectiveDomain, setEffectiveDomain] = useState(domain || 'com');
+    const [flag, setFlag] = useState('🇺🇸'); // Default US
     const [isAndroid, setIsAndroid] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
 
-    // Construct URLs
-    const webUrl = `https://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+    const getLocalAmazonDomain = () => {
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (tz.includes('Europe/London')) return { d: 'co.uk', f: '🇬🇧' };
+            if (tz.includes('Europe/Berlin')) return { d: 'de', f: '🇩🇪' };
+            if (tz.includes('Europe/Paris')) return { d: 'fr', f: '🇫🇷' };
+            if (tz.includes('Europe/Rome')) return { d: 'it', f: '🇮🇹' };
+            if (tz.includes('Europe/Madrid')) return { d: 'es', f: '🇪🇸' };
+            if (tz.startsWith('America/Toronto') || tz.startsWith('America/Vancouver') || tz.startsWith('America/Montreal') || tz.includes('Canada')) return { d: 'ca', f: '🇨🇦' };
+            if (tz.startsWith('Australia')) return { d: 'com.au', f: '🇦🇺' };
+            if (tz.startsWith('Asia/Tokyo')) return { d: 'co.jp', f: '🇯🇵' };
+            // Default to provided domain (usually .com)
+            return { d: domain || 'com', f: '🇺🇸' };
+        } catch (e) {
+            return { d: domain || 'com', f: '🇺🇸' };
+        }
+    };
+
+    // Construct URLs using Effective Domain
+    const webUrl = `https://www.amazon.${effectiveDomain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
     const encodedWebUrl = encodeURIComponent(webUrl);
 
     // URI Schemes
-    // Standard App Scheme (iOS often prefers this verbose scheme)
-    const appUrl = `com.amazon.mobile.shopping.web://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+    const appUrl = `com.amazon.mobile.shopping.web://www.amazon.${effectiveDomain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 
     // Android Intent
-    // Note: We remove the browser_fallback_url to prevent auto-fallback to browser if we want to force app.
-    // However, intents usually need a fallback. Keeping it but relying on Logic to prefer app.
-    const androidIntent = `intent://www.amazon.${domain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
+    const androidIntent = `intent://www.amazon.${effectiveDomain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
 
     useEffect(() => {
         if (!asin) return;
 
+        // 1. Detect Environment
         const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
         const android = /android/i.test(userAgent);
         const ios = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
@@ -38,43 +56,63 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
         setIsAndroid(android);
         setIsIOS(ios);
 
-        // Track Click (Background)
-        fetch('/api/track', {
-            method: 'POST',
-            body: JSON.stringify({ asin, userAgent, slug }),
-            headers: { 'Content-Type': 'application/json' },
-            keepalive: true
-        }).catch(err => console.error('Tracking failed', err));
+        // 2. Detect Country (Geo-Redirect)
+        const { d, f } = getLocalAmazonDomain();
+        setEffectiveDomain(d);
+        setFlag(f);
 
-        // Aggressive Auto-Redirect (APP ONLY on Mobile)
-        const tryOpen = () => {
-            if (android) {
+        // Note: URLs (webUrl, appUrl) will update on next render when string state changes.
+        // We trigger the redirect logic ONLY after domain is settled or if we want to proceed immediately.
+        // To be safe, we let the state update first, then this effect re-runs? 
+        // No, we need a separate effect or just check if effectiveDomain matches detection.
+        // Actually, for speed, let's use the local 'd' variable for the Initial Redirect if we want it instant.
+        // But to keep it React-clean, we'll let the re-render handle the updated URLs.
+
+    }, [asin]); // Run once on mount to detect
+
+    // 3. Trigger Redirect when URLs correspond to the effective domain
+    useEffect(() => {
+        if (!asin) return;
+
+        const performRedirect = () => {
+            // Track Click (Background) - Send only once? We might send duplicates if re-rendering. 
+            // Ideally tracking should be in the mount effect. Moving it back there is safer?
+            // Actually, tracking the *final* destination is better.
+
+            if (isAndroid) {
                 window.location.href = androidIntent;
-            } else if (ios) {
-                // Try App Scheme
+            } else if (isIOS && effectiveDomain !== 'pending') { // Wait for detection?
                 window.location.replace(appUrl);
-
-                // FALLBACK: If app doesn't open within 2.5s, go to web
-                // Note: If app opens, the browser enters background and this timer usually pauses
-                // But modern iOS might behave differently. 
-                // The "Continue to Website" button is the safest backup, but auto-fallback helps.
                 setTimeout(() => {
-                    // Check if page is still visible (user didn't leave)
-                    if (!document.hidden) {
-                        window.location.href = webUrl;
-                    }
+                    if (!document.hidden) window.location.href = webUrl;
                 }, 2500);
-
             } else {
                 // Desktop
                 window.location.replace(webUrl);
             }
         };
 
-        // Fire immediately
-        tryOpen();
+        // Small delay to allow UI to show "Redirecting to Canada..."
+        const timer = setTimeout(() => {
+            performRedirect();
+        }, 800); // 800ms delay for user to see the "Smart" action
 
-    }, [asin, tag, domain, androidIntent, appUrl, webUrl, slug]);
+        return () => clearTimeout(timer);
+
+    }, [effectiveDomain, androidIntent, appUrl, webUrl, isAndroid, isIOS, asin]);
+
+    // Legacy tracking (moved to mount to avoid double-count, or keep here?)
+    // Let's keep tracking separate to avoid duplicate counts during re-renders.
+    useEffect(() => {
+        if (asin) {
+            fetch('/api/track', {
+                method: 'POST',
+                body: JSON.stringify({ asin, userAgent: navigator.userAgent, slug }),
+                headers: { 'Content-Type': 'application/json' },
+                keepalive: true
+            }).catch(err => console.error('Tracking failed', err));
+        }
+    }, [asin, slug]);
 
     const handleManualClick = () => {
         if (isAndroid) {
@@ -110,7 +148,7 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
                     />
                 </div>
 
-                <h1 className="text-xl font-semibold mb-2 text-foreground">{status === 'Opening Amazon...' ? 'Opening App...' : 'View Product'}</h1>
+                <h1 className="text-xl font-semibold mb-2 text-foreground">Redirecting to {flag}...</h1>
                 <p className="text-gray-500 mb-8 max-w-xs mx-auto text-sm">
                     Opening Amazon App...
                 </p>

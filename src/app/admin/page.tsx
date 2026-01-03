@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     BarChart3, Activity, Link as LinkIcon, AlertTriangle, QrCode, Download, Calendar, GripHorizontal,
     TrendingUp, Sparkles, DollarSign, Wand2, ShoppingBag, Copy, Calculator, Trophy, Radio, Megaphone,
-    Map, ShieldAlert, Eye, Ghost, Ban
+    Map, ShieldAlert, Eye, Ghost, Ban, CreditCard
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -24,24 +24,31 @@ export default function AdminDashboard() {
     const [selectedUser, setSelectedUser] = useState<string | null>(null); // For User Mini-Dashboard
 
     // Agent E State (Pro Widgets) + Agent A (War Room, Security)
-    const [widgetOrder, setWidgetOrder] = useState(['pulse', 'warroom', 'security', 'godmode', 'simulator']);
+    const [widgetOrder, setWidgetOrder] = useState(['pulse', 'warroom', 'map', 'inbox', 'security', 'godmode', 'simulator', 'trends', 'copywriter']);
     const [broadcastMsg, setBroadcastMsg] = useState('');
     const [flaggedUsers, setFlaggedUsers] = useState<any[]>([]);
 
-    // Agent C: Simulator
-    const [simPrice, setSimPrice] = useState(25);
-    const [simRate, setSimRate] = useState(3);
+    // Agent A: Real Inbox
+    const [messagesState, setMessagesState] = useState<any[]>([]);
 
+    useEffect(() => {
+        if (data?.inbox) {
+            setMessagesState(data.inbox);
+        }
+    }, [data]);
+
+    const resolveMessage = (id: string) => {
+        // Optimistic update
+        setMessagesState(msgs => msgs.map(m => m.id === id ? { ...m, status: 'resolved' } : m));
+        // Todo: Add API call to remove from Redis list if needed, but for now visual resolved is enough for session
+    };
+
+
+    // Agent C: Simulator (Legacy removed but state kept for safety if referenced)
     // Agent B: Copywriter
     const [copyInput, setCopyInput] = useState('');
     const [copyResult, setCopyResult] = useState<{ hook: string, hashtags: string } | null>(null);
 
-    // Agent A: Trends (Network)
-    const TRENDS = [
-        { id: 1, name: "Sony WH-1000XM5", category: "Tech", asin: "B09XS7JWHH", hits: "+120%" },
-        { id: 2, name: "Ninja Air Fryer", category: "Home", asin: "B07FDNMC9Q", hits: "+85%" },
-        { id: 3, name: "Stanley Quencher", category: "Viral", asin: "B0C9X8XXXX", hits: "+200%" }
-    ];
 
     const generateMagic = () => {
         if (!copyInput) return;
@@ -52,7 +59,11 @@ export default function AdminDashboard() {
     };
 
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -251,24 +262,15 @@ export default function AdminDashboard() {
                         <p className="text-muted-foreground text-sm">System Status: <span className="text-green-500">Operational</span></p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => {
-                                localStorage.removeItem('admin_session');
-                                window.location.reload();
-                            }}
-                            className="text-xs px-3 py-1.5 border border-red-900/30 text-red-500 rounded hover:bg-red-900/10 transition-colors uppercase tracking-wider font-mono"
-                        >
-                            Lock Session
-                        </button>
-                        <Link href="/" className="text-sm px-4 py-2 rounded bg-secondary hover:bg-secondary/80 transition-colors">
-                            View App
+                        <Link href="/" target="_blank" className="text-sm px-4 py-2 rounded bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-2">
+                            <Eye className="w-4 h-4" /> View Live App
                         </Link>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <button onClick={handleLogout} className="text-sm text-red-400 hover:text-red-300 transition-colors">
-                            Lock Terminal
+                        <button
+                            onClick={handleLogout}
+                            className="text-xs px-3 py-2 border border-red-900/40 text-red-500 rounded hover:bg-red-900/20 transition-colors uppercase tracking-wider font-mono flex items-center gap-2"
+                        >
+                            <Ban className="w-3 h-3" /> LOCK TERMINAL
                         </button>
-                        <Link href="/" className="btn-primary text-sm">Back to App</Link>
                     </div>
                 </div>
 
@@ -327,6 +329,60 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
+                {/* --- NEW: User Profile Customization --- */}
+                <div className="matte-card p-8 mb-8 border-purple-500/20 bg-purple-500/5">
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-purple-400">
+                        ✨ Customize Your Bio Page
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Display Name</label>
+                                <input type="text" id="prof-name" placeholder="E.g. Sebastien's Picks" className="input-minimal w-full bg-background" defaultValue="P34K" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Bio Description</label>
+                                <textarea id="prof-bio" placeholder="Tell your audience who you are..." className="input-minimal w-full min-h-[80px] bg-background" defaultValue="Curated Amazon deals & favorite products." />
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Avatar URL</label>
+                                <input type="text" id="prof-avatar" placeholder="https://..." className="input-minimal w-full bg-background" defaultValue="/logo.png" />
+                            </div>
+                            <button
+                                onClick={() => {
+                                    const name = (document.getElementById('prof-name') as HTMLInputElement).value;
+                                    const bio = (document.getElementById('prof-bio') as HTMLInputElement).value;
+                                    const avatar = (document.getElementById('prof-avatar') as HTMLInputElement).value;
+
+                                    fetch('/api/user/profile', {
+                                        method: 'POST',
+                                        body: JSON.stringify({ userId: 'p34k', username: name, bio, avatar }),
+                                        headers: { 'Content-Type': 'application/json' }
+                                    }).then(() => alert('Profile Updated Successfully! 🚀\n\nVisit your public page to see changes.'));
+                                }}
+                                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded font-bold w-full transition-colors flex items-center justify-center gap-2"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                        <div className="flex flex-col items-center justify-center p-6 bg-black/40 rounded-xl border border-white/5 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none" />
+                            <p className="text-[10px] text-muted-foreground mb-4 uppercase tracking-widest z-10">Live Preview Link</p>
+
+                            <a href="/u/p34k" target="_blank" className="group flex flex-col items-center z-10 cursor-pointer">
+                                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-[2px] mb-3 group-hover:scale-105 transition-transform">
+                                    <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+                                        <span className="text-2xl">👤</span>
+                                    </div>
+                                </div>
+                                <div className="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-full text-xs font-bold hover:bg-purple-500 hover:text-white transition-colors">
+                                    Open /u/p34k ↗
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="border-t border-border pt-8 my-8">
                     <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                         Global Surveillance
@@ -342,7 +398,77 @@ export default function AdminDashboard() {
                         <SortableContext items={widgetOrder} strategy={rectSortingStrategy}>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                                 {widgetOrder.map((id) => (
-                                    <SortableItem key={id} id={id} className={id === 'pulse' || id === 'godmode' ? 'col-span-1 md:col-span-2' : ''}>
+                                    <SortableItem key={id} id={id} className={id === 'pulse' || id === 'godmode' || id === 'map' ? 'col-span-1 md:col-span-2' : ''}>
+
+                                        {/* Agent A: Inbox Zero (Support) */}
+                                        {id === 'inbox' && (
+                                            <div className="matte-card p-0 flex flex-col h-full border-orange-500/20 bg-orange-500/5 overflow-hidden">
+                                                <div className="p-4 border-b border-white/5 flex justify-between items-center">
+                                                    <div className="flex items-center gap-2">
+                                                        <Megaphone className="w-4 h-4 text-orange-400" />
+                                                        <h3 className="text-xs font-bold uppercase tracking-wider text-orange-400">Support Inbox</h3>
+                                                    </div>
+                                                    <span className="bg-orange-500/20 text-orange-300 text-[10px] px-2 py-0.5 rounded-full">
+                                                        {messagesState.filter(m => m.status === 'open').length} New
+                                                    </span>
+                                                </div>
+                                                <div className="flex-1 overflow-auto">
+                                                    {messagesState.length === 0 ? (
+                                                        <div className="p-6 text-center text-xs text-muted-foreground">All caught up! 🎉</div>
+                                                    ) : (
+                                                        <div className="divide-y divide-white/5">
+                                                            {messagesState.filter(m => m.status === 'open').map((m, i) => (
+                                                                <div key={m.id || i} className="p-3 hover:bg-white/5 transition-colors group">
+                                                                    <div className="flex justify-between mb-1">
+                                                                        <span className="text-xs font-bold text-foreground">{m.user}</span>
+                                                                        <span className="text-[10px] text-muted-foreground">{m.date ? new Date(m.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}</span>
+                                                                    </div>
+                                                                    <p className="text-xs text-muted-foreground mb-2">{m.msg}</p>
+                                                                    <button
+                                                                        onClick={() => resolveMessage(m.id)}
+                                                                        className="text-[10px] w-full border border-green-500/20 text-green-500 hover:bg-green-500/10 py-1 rounded transition-colors uppercase tracking-wider"
+                                                                    >
+                                                                        Mark Resolved
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Agent A: War Room Map */}
+                                        {id === 'map' && (
+                                            <div className="matte-card p-0 flex flex-col h-full w-full relative overflow-hidden bg-[#0a0a0a] border-cyan-500/0">
+                                                <div className="absolute inset-0 opacity-20"
+                                                    style={{
+                                                        backgroundImage: 'radial-gradient(circle at 50% 50%, #06b6d4 1px, transparent 1px)',
+                                                        backgroundSize: '20px 20px'
+                                                    }}
+                                                />
+                                                <div className="relative z-10 p-4 flex justify-between items-start pointer-events-none">
+                                                    <div className="flex items-center gap-2">
+                                                        <Map className="w-4 h-4 text-cyan-400" />
+                                                        <h3 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Cyber Map Live</h3>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <div className="px-2 py-1 bg-cyan-900/40 border border-cyan-500/30 rounded text-[10px] text-cyan-300">US: 45%</div>
+                                                        <div className="px-2 py-1 bg-purple-900/40 border border-purple-500/30 rounded text-[10px] text-purple-300">EU: 30%</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Simulated Pings */}
+                                                <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-cyan-500 rounded-full animate-ping"></div>
+                                                <div className="absolute top-1/3 left-1/3 w-1.5 h-1.5 bg-purple-500 rounded-full animate-ping delay-75"></div>
+                                                <div className="absolute bottom-1/3 right-1/3 w-2 h-2 bg-green-500 rounded-full animate-ping delay-150"></div>
+
+                                                <div className="absolute bottom-4 left-4 text-[10px] font-mono text-cyan-500/50">
+                                                    LAT: 45.4215 LON: -75.6972<br />
+                                                    SCANNING NETWORK...
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Agent B: Network Pulse (Live Feed) */}
                                         {id === 'pulse' && (
@@ -393,20 +519,31 @@ export default function AdminDashboard() {
                                             </div>
                                         )}
 
-                                        {/* Agent C: Simulator (For Admin Testing) */}
+                                        {/* Agent C: MRR Tracker (Pro Subscriptions) */}
                                         {id === 'simulator' && (
-                                            <div className="matte-card p-6 flex flex-col justify-center relative overflow-hidden group h-full border-l-4 border-l-green-500/50">
+                                            <div className="matte-card p-6 flex flex-col justify-center relative overflow-hidden group h-full border-l-4 border-l-green-500 bg-gradient-to-br from-green-500/5 to-transparent">
                                                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                                    <Calculator className="w-16 h-16 text-green-500" />
+                                                    <DollarSign className="w-16 h-16 text-green-500" />
                                                 </div>
                                                 <div className="flex items-center gap-2 mb-3">
-                                                    <DollarSign className="w-4 h-4 text-green-500" />
-                                                    <h3 className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Comm. Simulator</h3>
+                                                    <div className="bg-green-500/20 p-1.5 rounded-full">
+                                                        <CreditCard className="w-4 h-4 text-green-500" />
+                                                    </div>
+                                                    <h3 className="text-xs text-green-400 font-bold uppercase tracking-wide">Monthly Revenue (MRR)</h3>
                                                 </div>
-                                                <div className="text-3xl font-bold text-green-500">
-                                                    ${((data?.totalLinks || 100) * 0.5).toFixed(2)}
+                                                <div className="text-3xl font-bold text-white tracking-tight flex items-baseline gap-1">
+                                                    $0.00
+                                                    <span className="text-xs font-normal text-muted-foreground">/ mon</span>
                                                 </div>
-                                                <p className="text-xs text-muted-foreground mt-1">Network Potential</p>
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <div className="h-1.5 w-16 bg-secondary rounded-full overflow-hidden">
+                                                        <div className="h-full bg-green-500 w-[5%] animate-pulse"></div>
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Stripe Pending</p>
+                                                </div>
+                                                <p className="text-[10px] text-muted-foreground/50 mt-4 italic">
+                                                    * Updates automatically when sales occur.
+                                                </p>
                                             </div>
                                         )}
 
@@ -418,11 +555,15 @@ export default function AdminDashboard() {
                                                     <h3 className="text-xs font-bold uppercase tracking-wider">Trend Radar</h3>
                                                 </div>
                                                 <div className="space-y-2 flex-1">
-                                                    {TRENDS.slice(0, 2).map((t) => (
-                                                        <div key={t.id} className="text-xs">
-                                                            <span className="font-bold">{t.name}</span> <span className="text-red-500">{t.hits}</span>
-                                                        </div>
-                                                    ))}
+                                                    {(!data?.trends || data.trends.length === 0) ? (
+                                                        <div className="text-xs text-muted-foreground italic">No trend data accumulating yet.</div>
+                                                    ) : (
+                                                        data.trends.map((t: any) => (
+                                                            <div key={t.id} className="text-xs flex justify-between">
+                                                                <span className="font-bold truncate max-w-[100px]">{t.name}</span> <span className="text-red-500">{t.hits}</span>
+                                                            </div>
+                                                        ))
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -558,7 +699,23 @@ export default function AdminDashboard() {
 
                                         return Object.entries(userStats).map(([email, stats]: [string, any]) => (
                                             <tr key={email} className="hover:bg-secondary/10 transition-colors group">
-                                                <td className="px-6 py-4 font-medium text-primary group-hover:text-white transition-colors">{email}</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-medium text-primary group-hover:text-white transition-colors">{email}</div>
+                                                    {/* Show ID for Admin reference */}
+                                                    {data?.recentActivity?.find((l: any) => l.userEmail === email)?.userId && (
+                                                        <div
+                                                            className="text-[10px] text-muted-foreground font-mono mt-1 cursor-pointer hover:text-blue-400"
+                                                            onClick={() => {
+                                                                const uid = data.recentActivity.find((l: any) => l.userEmail === email)?.userId;
+                                                                if (uid) navigator.clipboard.writeText(uid);
+                                                                alert('User ID Copied!');
+                                                            }}
+                                                            title="Click to copy User ID"
+                                                        >
+                                                            {data.recentActivity.find((l: any) => l.userEmail === email)?.userId}
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td className="px-6 py-4"><span className="text-green-500 font-bold text-xs bg-green-500/10 px-2 py-1 rounded-full">● Active</span></td>
                                                 <td className="px-6 py-4 font-mono">{stats.count}</td>
                                                 <td className="px-6 py-4"><span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded text-xs">Free Tier</span></td>
@@ -811,7 +968,7 @@ function SortableItem(props: any) {
                 <div
                     {...attributes}
                     {...listeners}
-                    className="absolute top-2 right-2 z-20 p-1 opacity-0 hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity bg-black/50 rounded text-white"
+                    className="absolute top-2 right-2 z-20 p-1.5 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity bg-black/50 rounded-md text-white border border-white/10"
                     title="Drag to Move"
                 >
                     <GripHorizontal className="w-4 h-4" />

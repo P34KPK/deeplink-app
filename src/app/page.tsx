@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Link as LinkIcon, Copy, Check, BarChart3, LayoutDashboard, Activity } from "lucide-react";
 import { ThemeToggle } from '@/components/theme-toggle';
+import OnboardingTour from '@/components/OnboardingTour';
 
 type ArchivedLink = {
   id: string;
@@ -21,7 +22,7 @@ import { SignedIn, SignedOut, UserButton, useAuth, SignOutButton } from "@clerk/
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
   const [inputUrl, setInputUrl] = useState('');
-  // ... (keep usage of state)
+
   const [inputTitle, setInputTitle] = useState('');
   const [inputDesc, setInputDesc] = useState('');
   const [inputSlug, setInputSlug] = useState(''); // Custom Alias
@@ -214,9 +215,6 @@ export default function Home() {
         setHistory(prev => [newEntry, ...prev]);
       }
 
-      // REMOVED: Redundant fetch('/api/links') which caused DUPLICATES.
-      // Server is now Single Source of Truth.
-
     } catch (err: any) {
       setError(err.message || 'An error occurred');
     } finally {
@@ -232,7 +230,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center py-12 p-6 bg-background text-foreground transition-colors duration-300">
-
+      <OnboardingTour />
       {/* Authentication & Navigation */}
       <div className="absolute top-4 left-4 z-50 flex items-center gap-4">
         {/* Admin Access is now Stealth Mode (Direct URL only) */}
