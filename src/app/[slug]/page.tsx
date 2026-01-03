@@ -16,19 +16,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     if (!data) return { title: 'Link Information' };
 
-    // Construct Image URLs - "Shotgun" Strategy
+    // Construct Image URLs - Using External Proxy (wsrv.nl) to bypass geo/bot blocks
     const baseUrl = 'https://deeplink-app-seven.vercel.app';
+    const amazonBase = `https://images-na.ssl-images-amazon.com/images/P/${data.asin}.01._LZZZZZZZ_.jpg`;
 
-    // 1. Direct Media-Amazon (Least processed, often usually works)
+    // 1. External Proxy (High Success Rate for FB)
+    const imgExternalProxy = `https://wsrv.nl/?url=${encodeURIComponent(amazonBase)}&w=600&h=600&fit=contain&output=jpg`;
+
+    // 2. Direct Backup (m.media often works if ssl fails)
     const imgDirect = `https://m.media-amazon.com/images/I/${data.asin}.jpg`;
 
-    // 2. High-Res SSL (Classic)
-    const imgSSL = `https://images-na.ssl-images-amazon.com/images/P/${data.asin}.01._LZZZZZZZ_.jpg`;
-
-    // 3. Proxy (Backup)
-    const imgProxy = `${baseUrl}/api/proxy-image?url=${encodeURIComponent(imgSSL)}`;
-
-    // 4. Fallback
+    // 3. Fallback
     const fallback = `${baseUrl}/logo.png`;
 
     return {
@@ -37,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         openGraph: {
             title: data.title || `View Product on Amazon`,
             description: 'Check to view details',
-            images: [imgDirect, imgProxy, imgSSL, fallback],
+            images: [imgExternalProxy, imgDirect, fallback],
             type: 'website',
         },
         twitter: {
