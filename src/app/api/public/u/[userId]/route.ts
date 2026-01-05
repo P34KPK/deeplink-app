@@ -1,13 +1,7 @@
-
 import { NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
-
-// Safe initialization
-const redisUrl = process.env.REDIS_URL;
-const redisToken = process.env.REDIS_TOKEN;
-const redis = (redisUrl && redisToken)
-    ? new Redis({ url: redisUrl, token: redisToken })
-    : { smembers: async () => [], pipeline: () => ({ hgetall: () => { }, exec: async () => [] }), hgetall: async () => null }; // Mock for safety
+import { getLinks } from '@/lib/storage'; // Standardized Storage
+import { getUserProfile } from '@/lib/user-profile';
+import { isBanned } from '@/lib/ban-system';
 
 export async function GET(
     req: Request,
@@ -20,66 +14,43 @@ export async function GET(
             return new NextResponse("User ID is required", { status: 400 });
         }
 
-        // 1. Fetch Profile Data (Dynamic)
-        // @ts-ignore
-        const profile = await redis.hgetall(`user:${userId}:profile`);
+        if (await isBanned(userId)) {
+            return new NextResponse("This account has been suspended due to policy violations.", { status: 403 });
+        }
 
-        // Default / Mock Data
+        // 1. Fetch Profile Data (Dynamic from Redis if available)
+        const profileData = await getUserProfile(userId);
+
+        // Default / Mock Profile
         const defaultProfile = {
-            username: "P34K",
+            username: "My Recommendations",
             bio: "Curated Amazon deals & favorite products.",
-            avatar: "/logo.png",
-            isVerified: true
+            avatar: null, // Frontend uses placeholder if null
+            socials: {},
+            isVerified: false
         };
 
-        // Merge saved profile with defaults
         const userProfile = {
             ...defaultProfile,
-            ...profile,
+            ...profileData,
+            avatar: profileData?.avatarUrl || null
         };
 
-        if (userId === 'p34k' || userId === 'P34K') {
-            // VIP: P34K Special Bypass for LINKS ONLY (Data is now dynamic)
-            return NextResponse.json({
-                user: userProfile,
-                links: [
-                    { id: '1', title: 'Sony WH-1000XM5 Noise Canceling', generated: 'https://amzn.to/3EXAMPLE', hits: 1542, date: Date.now() },
-                    { id: '2', title: 'MacBook Pro M3 Max (Space Black)', generated: 'https://amzn.to/3TEST', hits: 890, date: Date.now() - 100000 },
-                    { id: '3', title: 'Logitech MX Master 3S', generated: 'https://amzn.to/MOUSE', hits: 420, date: Date.now() - 200000 },
-                ]
-            });
-        }
+        // 2. Fetch Links from Main Storage (JSON Blob)
+        // This ensures compatibility with the Dashboard and Link Generator
+        const allLinks = await getLinks();
 
-        // 1. Get List of Link IDs for this User
-        // @ts-ignore
-        const userLinkIds = await redis.smembers(`user:${userId}:links`);
-
-        if (!userLinkIds || userLinkIds.length === 0) {
-            return NextResponse.json({ links: [], user: null });
-        }
-
-        // 2. Fetch details for each link
-        // Optimization: Pipeline for speed
-        // @ts-ignore
-        const pipeline = redis.pipeline();
-        // @ts-ignore
-        userLinkIds.forEach((id) => pipeline.hgetall(`link:${id}`));
-        // @ts-ignore
-        const results = await pipeline.exec();
-
-        // 3. Filter and Format
-        const links = results
-            .map((link: any) => link)
-            .filter((link: any) => link && link.active !== false) // Only show ACTIVE links
-            .sort((a: any, b: any) => b.date - a.date); // Newest first
+        const userLinks = allLinks
+            .filter((l) => l.userId === userId && l.active !== false)
+            .sort((a, b) => b.date - a.date);
 
         return NextResponse.json({
             user: userProfile,
-            links: links
+            links: userLinks
         });
 
     } catch (error) {
         console.error("Profile Fetch Error:", error);
-        return new NextResponse("Internal Server Error", { status: 500 });
+        return new NextResponse("Internal Server Error", { status: 500 }); // Fix JSON validity
     }
 }

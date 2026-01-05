@@ -1,11 +1,4 @@
-import { Redis } from '@upstash/redis';
-
-const redisUrl = process.env.REDIS_URL;
-const redisToken = process.env.REDIS_TOKEN;
-
-const redis = (redisUrl && redisToken)
-    ? new Redis({ url: redisUrl, token: redisToken })
-    : null;
+import { redis } from '@/lib/redis';
 
 export type ArchivedLink = {
     id: string;
@@ -20,28 +13,76 @@ export type ArchivedLink = {
     active?: boolean; // New: On/Off toggle
     favorite?: boolean; // New: Favorite toggle
     tags?: string[]; // New: Agent A - Organization
+    image?: string; // New: Social Preview Image
 };
 
 const DB_KEY = 'deeplink_history_v1';
 
 async function getDB(): Promise<ArchivedLink[]> {
-    if (!redis) return []; // Graceful degradation
-    try {
-        const data = await redis.get(DB_KEY);
-        // @ts-ignore
-        return data ? (typeof data === 'string' ? JSON.parse(data) : data) : [];
-    } catch (error) {
-        console.warn('Failed to fetch history from Redis', error);
-        return [];
+    let data: ArchivedLink[] | null = null;
+
+    // 1. Try Redis
+    if (redis) {
+        try {
+            const redisData = await redis.get(DB_KEY);
+            // @ts-ignore
+            if (redisData) data = (typeof redisData === 'string' ? JSON.parse(redisData) : redisData);
+        } catch (error) {
+            console.warn('Failed to fetch history from Redis', error);
+        }
     }
+
+    // 2. Fallback to Local Backup if Redis is empty or failed
+    if (!data || data.length === 0) {
+        try {
+            const backupPath = path.join(process.cwd(), 'data', 'backups', 'links_latest.json');
+            if (fs.existsSync(backupPath)) {
+                const fileContent = fs.readFileSync(backupPath, 'utf8');
+                data = JSON.parse(fileContent);
+                console.log('Restored data from local backup');
+
+                // Optional: Heal Redis immediately
+                if (redis && data) {
+                    await redis.set(DB_KEY, JSON.stringify(data));
+                }
+            }
+        } catch (fsError) {
+            console.warn('Failed to read local backup', fsError);
+        }
+    }
+
+    return data || [];
 }
 
+import fs from 'fs';
+import path from 'path';
+
 async function saveDB(data: ArchivedLink[]) {
-    if (!redis) return;
+    // 1. Always save to Local Backup (Source of Truth)
     try {
-        await redis.set(DB_KEY, JSON.stringify(data));
-    } catch (error) {
-        console.error('Failed to save history to Redis', error);
+        const backupDir = path.join(process.cwd(), 'data', 'backups');
+        if (!fs.existsSync(backupDir)) {
+            fs.mkdirSync(backupDir, { recursive: true });
+        }
+
+        // Save 'latest' version
+        fs.writeFileSync(path.join(backupDir, 'links_latest.json'), JSON.stringify(data, null, 2));
+
+        // Optional: Save timestamped version every hour/day? 
+        // For now, let's just keep 'latest' to avoid disk spam, 
+        // but maybe a 'daily' one if we really want history.
+
+    } catch (fsError) {
+        console.error('Failed to write local backup', fsError);
+    }
+
+    // 2. Save to Redis (Cache / Cloud)
+    if (redis) {
+        try {
+            await redis.set(DB_KEY, JSON.stringify(data));
+        } catch (error) {
+            console.error('Failed to save to Redis', error);
+        }
     }
 }
 

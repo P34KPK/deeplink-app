@@ -1,36 +1,35 @@
 import { NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
-import { isAdmin } from '@/lib/admin-auth';
+import { getUserProfile, saveUserProfile } from '@/lib/user-profile';
+import { auth } from '@clerk/nextjs/server';
 
-// Safe initialization
-const redisUrl = process.env.REDIS_URL;
-const redisToken = process.env.REDIS_TOKEN;
-const redis = (redisUrl && redisToken)
-    ? new Redis({ url: redisUrl, token: redisToken })
-    : { hset: async () => { }, hgetall: async () => null };
+export async function GET(req: Request) {
+    const { userId } = await auth();
+    if (!userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const profile = await getUserProfile(userId);
+    // Return default if null
+    return NextResponse.json(profile || {
+        userId,
+        username: '',
+        bio: '',
+        socials: {}
+    });
+}
 
 export async function POST(req: Request) {
+    const { userId } = await auth();
+    if (!userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
-        // Secure it (or allow logged in user)
-        // For now, we use the admin key check or assuming simple access for the demo
-        // const { userId } = await auth(); 
-        // Using a hardcoded userId for the P34K demo if not passed
-
         const body = await req.json();
-        const { username, bio, avatar, userId = 'p34k' } = body;
-
-        // Save to Redis
-        await redis.hset(`user:${userId}:profile`, {
-            username,
-            bio,
-            avatar,
-            updatedAt: Date.now()
-        });
-
-        return NextResponse.json({ success: true });
-
-    } catch (error) {
-        console.error('Profile Save Error:', error);
-        return new NextResponse("Internal Error", { status: 500 });
+        // Validation could go here
+        const updated = await saveUserProfile(userId, body);
+        return NextResponse.json(updated);
+    } catch (e) {
+        return NextResponse.json({ error: 'Failed to save profile' }, { status: 500 });
     }
 }

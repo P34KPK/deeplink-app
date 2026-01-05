@@ -1,0 +1,72 @@
+import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { stripe } from '@/lib/stripe';
+import { clerkClient } from '@clerk/nextjs/server';
+import Stripe from 'stripe';
+
+export async function POST(req: Request) {
+    const body = await req.text();
+    const signature = (await headers()).get('Stripe-Signature') as string;
+
+    let event: Stripe.Event;
+
+    try {
+        event = stripe.webhooks.constructEvent(
+            body,
+            signature,
+            process.env.STRIPE_WEBHOOK_SECRET!
+        );
+    } catch (error: any) {
+        return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+    }
+
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object as Stripe.Checkout.Session;
+
+        const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string
+        );
+
+        if (!session?.metadata?.userId) {
+            return new NextResponse('User ID is missing in session metadata', { status: 400 });
+        }
+
+        const client = await clerkClient();
+
+        await client.users.updateUserMetadata(session.metadata.userId, {
+            publicMetadata: {
+                stripeSubscriptionId: subscription.id,
+                stripeCustomerId: subscription.customer as string,
+                stripePriceId: subscription.items.data[0].price.id,
+                stripeCurrentPeriodEnd: new Date(
+                    subscription.current_period_end * 1000
+                ),
+            },
+        });
+    }
+
+    if (event.type === 'invoice.payment_succeeded') {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscription = await stripe.subscriptions.retrieve(
+            invoice.subscription as string
+        );
+
+        // You can handle subscription renewal logic here if needed,
+        // although Clerk metadata update as above covers the basic state.
+        // Ideally, you'd check if the user exists and update the period "end" date.
+
+        // Note: invoice.payment_succeeded payload is an Invoice.
+
+        if (invoice.subscription) {
+            const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+            // Find user by subscription ID ? 
+            // Clerk doesn't allow searching by metadata easily without listUsers loop.
+            // Usually, we trust the checkout flow to set it up initially.
+            // For renewals, we might need a database to map stripeCustomerId -> userId.
+            // Since we don't have a DB, we might skip renewal updates for now, 
+            // relying on the initial setup or the user re-logging in to refresh status if we logic check against Stripe API.
+        }
+    }
+
+    return new NextResponse(null, { status: 200 });
+}

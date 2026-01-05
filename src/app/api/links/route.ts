@@ -4,17 +4,26 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { isAdmin } from '@/lib/admin-auth';
 
 export async function GET() {
-    const { userId } = await auth();
+    const user = await currentUser();
+
+    // If user is not logged in, return empty
+    if (!user) return NextResponse.json([]);
+
     const links = await getLinks();
 
-    // If user is not logged in, return empty (or handle as public if desired, but here we want private)
-    if (!userId) return NextResponse.json([]);
+    // Filter links to only show those owned by the user (ID or Email match)
+    const userEmail = user.emailAddresses[0]?.emailAddress;
 
-    // Filter links to only show those owned by the user
-    // Legacy links (no userId) are considered "orphan" or could be shown to everyone (optional)
-    // For now, let's show only owned links + links they just created (handled by frontend state mostly)
-    // Or strictly: only match userId.
-    const userLinks = links.filter(l => l.userId === userId);
+    const userLinks = links.filter(l => {
+        const idMatch = l.userId === user.id;
+        const emailMatch = userEmail && l.userEmail && l.userEmail.toLowerCase() === userEmail.toLowerCase();
+        return idMatch || emailMatch;
+    });
+
+    console.log(`[API/Links] User: ${user.id} (${userEmail})`);
+    console.log(`[API/Links] Total Links in DB: ${links.length}`);
+    console.log(`[API/Links] Links found for user: ${userLinks.length}`);
+
     return NextResponse.json(userLinks);
 }
 

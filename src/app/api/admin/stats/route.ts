@@ -2,16 +2,9 @@ import { NextResponse } from 'next/server';
 import { getLinks } from '@/lib/storage';
 // import { auth, currentUser } from '@clerk/nextjs/server';
 import { isAdmin } from '@/lib/admin-auth';
+import { getStats } from '@/lib/analytics';
 
-import { Redis } from '@upstash/redis';
-
-// Safe initialization to prevent crash if env vars are missing
-const redisUrl = process.env.REDIS_URL;
-const redisToken = process.env.REDIS_TOKEN;
-
-const redis = (redisUrl && redisToken)
-    ? new Redis({ url: redisUrl, token: redisToken })
-    : null;
+import { redis } from '@/lib/redis';
 
 export async function GET(req: Request) {
     // const { userId } = await auth();
@@ -23,6 +16,7 @@ export async function GET(req: Request) {
     }
 
     const allLinks = await getLinks();
+    const globalStats = await getStats(); // Fetch analytics
 
     // 1. Basic Stats
     const totalLinks = allLinks.length;
@@ -32,6 +26,8 @@ export async function GET(req: Request) {
     // 2. Fetch Inbox Tickets & Trends (Safely)
     let inbox: any[] = [];
     let trends: any[] = [];
+    // ...
+    // Processing data...
 
     try {
         if (redis) {
@@ -63,14 +59,43 @@ export async function GET(req: Request) {
 
     } catch (err) {
         console.error("Redis/Trends Error (Non-Fatal):", err);
-        // Fallback to empty arrays so dashboard doesn't crash on DB issues
     }
+
+    // 4. Calculate User Roster (Server Side Aggregation on ALL links)
+    const userMap: Record<string, any> = {};
+
+    // Known VIPs / Subscriptions (Manual Override)
+    const VIP_PLANS: Record<string, string> = {
+        'p34k.productions@gmail.com': 'Admin / Founder',
+        'stacyadds@gmail.com': 'Pro Member',
+    };
+
+    allLinks.forEach(link => {
+        const email = link.userEmail || 'Guest / Anonymous';
+        if (!userMap[email]) {
+            userMap[email] = {
+                email: email,
+                userId: link.userId, // Keep one ID for reference
+                count: 0,
+                lastDate: 0,
+                status: 'Active',
+                plan: VIP_PLANS[email] || 'Free Tier'
+            };
+        }
+        userMap[email].count++;
+        userMap[email].lastDate = Math.max(userMap[email].lastDate, link.date || 0);
+    });
+
+    // Convert to sorted array
+    const users = Object.values(userMap).sort((a, b) => b.lastDate - a.lastDate);
 
     return NextResponse.json({
         totalLinks,
         uniqueUsers,
         recentActivity,
         inbox,
-        trends
+        trends,
+        users,
+        globalStats
     });
 }

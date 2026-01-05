@@ -62,11 +62,13 @@ export default function OnboardingTour() {
 
         if (el) {
             const rect = el.getBoundingClientRect();
-            setPosition({
-                top: rect.top + window.scrollY,
-                left: rect.left + window.scrollX,
-                width: rect.width,
-                height: rect.height
+            requestAnimationFrame(() => {
+                setPosition({
+                    top: rect.top + window.scrollY,
+                    left: rect.left + window.scrollX,
+                    width: rect.width,
+                    height: rect.height
+                });
             });
 
             // Scroll to element

@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     try {
         const user = await currentUser();
         const body = await req.json();
-        const { asin, domain, tag, title, slug, isManualAdmin } = body;
+        const { asin, domain, tag, title, slug, isManualAdmin, image } = body;
 
         if (!asin) {
             return NextResponse.json({ error: 'Missing ASIN' }, { status: 400 });
@@ -33,6 +33,9 @@ export async function POST(req: Request) {
             if (userEmail === 'p34k.productions@gmail.com') plan = 'pro';
         }
 
+        // Only PRO users can use custom images
+        const finalImage = (plan === 'pro' && image) ? image : undefined;
+
         // If not authenticated and not a verified admin, BLOCK.
         if (!userId && !isVerifiedAdmin) {
             return NextResponse.json({
@@ -41,6 +44,13 @@ export async function POST(req: Request) {
         }
 
         if (userId && plan === 'free' && !isVerifiedAdmin) {
+            // Free users can't use custom aliases
+            if (slug) {
+                return NextResponse.json({
+                    error: 'Custom aliases are a PRO feature.'
+                }, { status: 403 });
+            }
+
             // Count existing links
             const allLinks = await getLinks();
             const userLinkCount = allLinks.filter(l => l.userId === userId).length;
@@ -58,12 +68,14 @@ export async function POST(req: Request) {
             domain: domain || 'com',
             tag,
             title,
-            userId: userId || undefined
+            userId: userId || undefined,
+            image: finalImage
         }, slug);
 
         // Use configured domain if available, otherwise fallback to request origin (localhost)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
-        const shortUrl = `${baseUrl}/${newSlug}`;
+        // Inject 'amzn' prefix for trust, e.g., domain.com/amzn/slug
+        const shortUrl = `${baseUrl}/amzn/${newSlug}`;
 
         // --- AUTO SAVE TO HISTORY ---
         // We now save immediately so it's counted next time

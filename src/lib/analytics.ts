@@ -1,121 +1,170 @@
-import Redis from 'ioredis';
+import { redis } from '@/lib/redis';
 
-const redis = new Redis(process.env.REDIS_URL || '');
-
-type AnalyticsData = {
+export type AnalyticsData = {
     totalClicks: number;
-    globalLastClick: number; // For "Last Activity" KPI
-    devices: {
-        android: number;
-        ios: number;
-        desktop: number;
-        other: number;
-    };
-    // Agent A: Time Series (YYYY-MM-DD -> Count)
+    globalLastClick: number;
+    devices: { android: number; ios: number; desktop: number; other: number };
     dailyClicks: Record<string, number>;
-    // Upgrade: Store stats per unique Slug (for independent link tracking)
     statsBySlug: Record<string, number>;
-    // Upgrade: Store full breakdown per ASIN
-    topLinks: Record<string, {
-        total: number;
-        android: number;
-        ios: number;
-        desktop: number;
-        lastClick: number;
-    }>;
+    topLinks: Record<string, { total: number; android: number; ios: number; desktop: number; lastClick: number }>;
+    locations: Record<string, number>;
+    browsers: Record<string, number>;
+    referrers: Record<string, number>;
 };
 
-const defaultData: AnalyticsData = {
-    totalClicks: 0,
-    globalLastClick: 0,
-    devices: { android: 0, ios: 0, desktop: 0, other: 0 },
-    dailyClicks: {},
-    statsBySlug: {},
-    topLinks: {},
+// V2 Keys
+const KEYS = {
+    TOTAL_CLICKS: 'v2:stats:global:clicks',
+    LAST_CLICK: 'v2:stats:global:last_click',
+    DEVICES: 'v2:stats:global:devices',
+    LOCATIONS: 'v2:stats:global:locations',
+    BROWSERS: 'v2:stats:global:browsers',
+    REFERRERS: 'v2:stats:global:referrers',
+    DAILY: 'v2:stats:history:daily',
+    SLUGS: 'v2:stats:slugs', // Hash: slug -> count
+    ASIN_RANK: 'v2:stats:rank:asins', // ZSET: score=clicks, member=asin
+    ASIN_DATA: (asin: string) => `v2:stats:asin:${asin}` // Hash: last_click, android, ios...
 };
 
-const DB_KEY = 'deeplink_analytics_v3'; // Bump version for new schema
+export async function trackClick(asin: string, userAgent: string, slug?: string, geo?: string, referrer?: string) {
+    if (!redis) return;
 
-async function getDB(): Promise<AnalyticsData> {
-    try {
-        const data = await redis.get(DB_KEY);
-        // Merge with defaultData to ensure new fields exist if migrating
-        if (data) {
-            const parsed = JSON.parse(data);
-            return {
-                ...defaultData,
-                ...parsed,
-                dailyClicks: parsed.dailyClicks || {}, // Ensure safety
-                statsBySlug: parsed.statsBySlug || {},
-            };
-        }
-        return defaultData;
-    } catch (error) {
-        console.warn('Failed to fetch from Redis, returning default data', error);
-        return defaultData;
-    }
-}
-
-async function saveDB(data: AnalyticsData) {
-    try {
-        await redis.set(DB_KEY, JSON.stringify(data));
-    } catch (error) {
-        console.error('Failed to save to Redis', error);
-    }
-}
-
-export async function trackClick(asin: string, userAgent: string, slug?: string) {
-    const data = await getDB();
-
-    // 1. Total Clicks & Global Timestamp
-    data.totalClicks += 1;
-    data.globalLastClick = Date.now();
-
-    // 2. Daily Clicks (Agent A)
+    const pipeline = redis.pipeline();
+    const timestamp = Date.now();
     const today = new Date().toISOString().split('T')[0];
-    data.dailyClicks[today] = (data.dailyClicks[today] || 0) + 1;
 
-    // 3. Stats by Slug (Independent Link Tracking)
+    // 1. Global Counters
+    pipeline.incr(KEYS.TOTAL_CLICKS);
+    pipeline.set(KEYS.LAST_CLICK, timestamp);
+    pipeline.hincrby(KEYS.DAILY, today, 1);
+
+    // 2. Slug Stats
     if (slug) {
-        data.statsBySlug[slug] = (data.statsBySlug[slug] || 0) + 1;
+        pipeline.hincrby(KEYS.SLUGS, slug, 1);
     }
 
-    // 4. Determine Device
+    // 3. User Agent Parsing
     const ua = userAgent.toLowerCase();
-    let isAndroid = false;
-    let isIos = false;
-    let isDesktop = false;
+    let device = 'other';
+    if (ua.includes('android')) device = 'android';
+    else if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) device = 'ios';
+    else if (ua.includes('mac') || ua.includes('windows') || ua.includes('linux')) device = 'desktop';
 
-    if (ua.includes('android')) {
-        isAndroid = true;
-        data.devices.android += 1;
-    } else if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) {
-        isIos = true;
-        data.devices.ios += 1;
-    } else if (ua.includes('mac') || ua.includes('windows') || ua.includes('linux')) {
-        isDesktop = true;
-        data.devices.desktop += 1;
-    } else {
-        data.devices.other += 1;
+    pipeline.hincrby(KEYS.DEVICES, device, 1);
+
+    // 4. Browser & Geo
+    let browser = 'Other';
+    if (ua.includes('instagram')) browser = 'Instagram App';
+    else if (ua.includes('fbav')) browser = 'Facebook App';
+    else if (ua.includes('chrome')) browser = 'Chrome';
+    else if (ua.includes('safari') && !ua.includes('chrome')) browser = 'Safari';
+    else if (ua.includes('firefox')) browser = 'Firefox';
+    else if (ua.includes('edge')) browser = 'Edge';
+    pipeline.hincrby(KEYS.BROWSERS, browser, 1);
+
+    if (geo && geo !== 'unknown') {
+        pipeline.hincrby(KEYS.LOCATIONS, geo.toUpperCase(), 1);
     }
 
-    // 5. Per-Link Stats (ASIN)
-    if (!data.topLinks[asin]) {
-        data.topLinks[asin] = { total: 0, android: 0, ios: 0, desktop: 0, lastClick: 0 };
+    if (referrer) {
+        try {
+            const hostname = new URL(referrer).hostname.replace('www.', '');
+            pipeline.hincrby(KEYS.REFERRERS, hostname, 1);
+        } catch { }
     }
 
-    const linkStats = data.topLinks[asin];
-    linkStats.total += 1;
-    linkStats.lastClick = Date.now();
+    // 5. ASIN Individual Stats
+    const asinKey = KEYS.ASIN_DATA(asin);
+    pipeline.hset(asinKey, 'last_click', timestamp);
+    pipeline.hincrby(asinKey, 'total', 1);
+    pipeline.hincrby(asinKey, device, 1); // Increment specific device count for this ASIN
 
-    if (isAndroid) linkStats.android += 1;
-    else if (isIos) linkStats.ios += 1;
-    else if (isDesktop) linkStats.desktop += 1;
+    // 6. ASIN Leaderboard
+    pipeline.zincrby(KEYS.ASIN_RANK, 1, asin);
 
-    // Save
-    await saveDB(data);
+    await pipeline.exec();
 }
 
-export async function getStats() {
-    return await getDB();
+export async function getStats(): Promise<AnalyticsData> {
+    if (!redis) return {
+        totalClicks: 0, globalLastClick: 0, devices: { android: 0, ios: 0, desktop: 0, other: 0 },
+        dailyClicks: {}, statsBySlug: {}, topLinks: {}, locations: {}, browsers: {}, referrers: {}
+    };
+
+    // Parallel Fetching
+    const [
+        totalClicks,
+        lastClick,
+        devicesRaw,
+        dailyRaw,
+        slugsRaw,
+        locationsRaw,
+        browsersRaw,
+        referrersRaw,
+        topAsins // ZRange (top 100?)
+    ] = await Promise.all([
+        redis.get(KEYS.TOTAL_CLICKS),
+        redis.get(KEYS.LAST_CLICK),
+        redis.hgetall(KEYS.DEVICES),
+        redis.hgetall(KEYS.DAILY),
+        redis.hgetall(KEYS.SLUGS),
+        redis.hgetall(KEYS.LOCATIONS),
+        redis.hgetall(KEYS.BROWSERS),
+        redis.hgetall(KEYS.REFERRERS),
+        redis.zrevrange(KEYS.ASIN_RANK, 0, 99, 'WITHSCORES') // Top 100
+    ]);
+
+    // Reconstruct Top Links Logic
+    // We need to fetch details for these top ASINs
+    const topLinks: AnalyticsData['topLinks'] = {};
+
+    // topAsins is [asin, score, asin, score...]
+    if (topAsins && topAsins.length > 0) {
+        const asinIds = [];
+        for (let i = 0; i < topAsins.length; i += 2) {
+            asinIds.push(topAsins[i]);
+        }
+
+        // Fetch details for each ASIN in parallel pipeline
+        const asinPipe = redis.pipeline();
+        asinIds.forEach(id => asinPipe.hgetall(KEYS.ASIN_DATA(id)));
+        const asinDetails = await asinPipe.exec();
+
+        asinIds.forEach((id, idx) => {
+            const details = asinDetails?.[idx]?.[1] as any || {};
+            topLinks[id] = {
+                total: parseInt(details.total || '0'),
+                android: parseInt(details.android || '0'),
+                ios: parseInt(details.ios || '0'),
+                desktop: parseInt(details.desktop || '0'),
+                lastClick: parseInt(details.last_click || '0')
+            };
+        });
+    }
+
+    return {
+        totalClicks: parseInt(totalClicks as string || '0'),
+        globalLastClick: parseInt(lastClick as string || '0'),
+        devices: {
+            android: parseInt(devicesRaw?.android || '0'),
+            ios: parseInt(devicesRaw?.ios || '0'),
+            desktop: parseInt(devicesRaw?.desktop || '0'),
+            other: parseInt(devicesRaw?.other || '0'),
+        },
+        dailyClicks: convertToIntMap(dailyRaw as any),
+        statsBySlug: convertToIntMap(slugsRaw as any),
+        locations: convertToIntMap(locationsRaw as any),
+        browsers: convertToIntMap(browsersRaw as any),
+        referrers: convertToIntMap(referrersRaw as any),
+        topLinks
+    };
+}
+
+function convertToIntMap(raw: Record<string, string> | null) {
+    if (!raw) return {};
+    const res: Record<string, number> = {};
+    for (const [k, v] of Object.entries(raw)) {
+        res[k] = parseInt(v);
+    }
+    return res;
 }

@@ -1,16 +1,13 @@
 import DeepLinkRedirect from '@/components/DeepLinkRedirect';
 import { notFound } from 'next/navigation';
-import { Redis } from '@upstash/redis';
+import { redis } from '@/lib/redis';
 import { getLinks } from '@/lib/storage';
+import { getShortLink } from '@/lib/shortener';
 import { getStats } from '@/lib/analytics';
 import Link from 'next/link';
 import { Metadata } from 'next';
 
-const redisUrl = process.env.REDIS_URL;
-const redisToken = process.env.REDIS_TOKEN;
-const redis = (redisUrl && redisToken)
-    ? new Redis({ url: redisUrl, token: redisToken })
-    : { get: async () => null }; // Mock to prevent crash
+import { fetchAmazonMetadata } from '@/lib/metadata-fetcher';
 
 // --- AGENT A: Social Preview Generator ---
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -19,10 +16,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     if (!data) return { title: 'Link Information' };
 
-    // Construct Image URLs - STATIC CARD STRATEGY
-    // This guarantees a professional 100% success rate display on Facebook/Meta.
+    // 1. Try to Scrape Image dynamically
+    let scrapedImage = null;
+    if (data.asin) {
+        // Construct basic product URL
+        const domain = data.domain || 'com';
+        const productUrl = `https://www.amazon.${domain}/dp/${data.asin}`;
+
+        const metadata = await fetchAmazonMetadata(productUrl, data.asin);
+        if (metadata?.image) {
+            scrapedImage = metadata.image;
+        }
+    }
+
+    // 2. Fallback to Static Card
     const baseUrl = 'https://deeplink-app-seven.vercel.app';
-    const socialCardUrl = `${baseUrl}/social-preview.png`;
+    const finalImage = scrapedImage || `${baseUrl}/social-preview.png`;
 
     return {
         title: data.title || `View Deal on Amazon`,
@@ -32,7 +41,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             description: 'Tap to view exclusive price in App',
             images: [
                 {
-                    url: socialCardUrl,
+                    url: finalImage,
                     width: 1200,
                     height: 630,
                     alt: 'View Deal'
@@ -44,7 +53,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             card: 'summary_large_image',
             title: `View Deal`,
             description: 'Tap to open in Amazon App',
-            images: [socialCardUrl],
+            images: [finalImage],
         }
     };
 }
@@ -61,7 +70,7 @@ export default async function ShortLinkPage({ params }: { params: Promise<{ slug
     if (data.userId) {
         // 1. Get Plan
         const planKey = `user:${data.userId}:plan`;
-        const plan = await redis.get(planKey) || 'free';
+        const plan = await redis?.get(planKey) || 'free';
 
         // Admin Override
         const links = await getLinks();

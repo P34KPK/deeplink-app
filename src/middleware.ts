@@ -31,11 +31,29 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+    // Custom Domain Logic (Multi-Tenancy)
+    const url = req.nextUrl;
+    const hostname = req.headers.get("host"); // e.g. "promo.sebastien.com" or "localhost:3000"
+
+    // Define your main domains
+    const mainDomains = ["localhost:3000", "deeplinkrs.app", "deeplink-app.vercel.app"];
+    const isCustomDomain = hostname && !mainDomains.some(d => hostname.includes(d));
+
+    if (isCustomDomain) {
+        // SECURITY: Prevent accessing Dashboard/Admin via Custom Domain
+        // We only want to serve the Link (/[slug]) via custom domain.
+        if (url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/admin') || url.pathname.startsWith('/sign-in')) {
+            const mainUrl = new URL(url.pathname, process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+            return Response.redirect(mainUrl);
+        }
+
+        // Allow public access to everything else (likely the slug) on custom domain
+        return;
+    }
+
     if (isProtectedRoute(req)) {
         await auth.protect();
     }
-    // Optional: Protect root '/' if you want only members to create links
-    // if (req.nextUrl.pathname === '/') await auth.protect();
 });
 
 export const config = {

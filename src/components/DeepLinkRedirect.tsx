@@ -14,52 +14,47 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
     // Intelligent Geo-Redirect (Agent B)
     const [effectiveDomain, setEffectiveDomain] = useState(domain || 'com');
     const [flag, setFlag] = useState('🇺🇸'); // Default US
+    const [countryCode, setCountryCode] = useState('US'); // Default US
     const [isAndroid, setIsAndroid] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
 
-    const getLocalAmazonDomain = () => {
-        try {
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            if (tz.includes('Europe/London')) return { d: 'co.uk', f: '🇬🇧' };
-            if (tz.includes('Europe/Berlin')) return { d: 'de', f: '🇩🇪' };
-            if (tz.includes('Europe/Paris')) return { d: 'fr', f: '🇫🇷' };
-            if (tz.includes('Europe/Rome')) return { d: 'it', f: '🇮🇹' };
-            if (tz.includes('Europe/Madrid')) return { d: 'es', f: '🇪🇸' };
-            if (tz.startsWith('America/Toronto') || tz.startsWith('America/Vancouver') || tz.startsWith('America/Montreal') || tz.includes('Canada')) return { d: 'ca', f: '🇨🇦' };
-            if (tz.startsWith('Australia')) return { d: 'com.au', f: '🇦🇺' };
-            if (tz.startsWith('Asia/Tokyo')) return { d: 'co.jp', f: '🇯🇵' };
-            // Default to provided domain (usually .com)
-            return { d: domain || 'com', f: '🇺🇸' };
-        } catch (e) {
-            return { d: domain || 'com', f: '🇺🇸' };
-        }
-    };
-
-    // Construct URLs using Effective Domain
-    const webUrl = `https://www.amazon.${effectiveDomain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-    const encodedWebUrl = encodeURIComponent(webUrl);
-
-    // URI Schemes
-    const appUrl = `com.amazon.mobile.shopping.web://www.amazon.${effectiveDomain}/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-
-    // Android Intent
-    const androidIntent = `intent://www.amazon.${effectiveDomain}/dp/${asin}${tag ? `?tag=${tag}` : ''}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;S.browser_fallback_url=${encodedWebUrl};end`;
-
     useEffect(() => {
         if (!asin) return;
+
+        const getLocalAmazonDomain = () => {
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if (tz.includes('Europe/London')) return { d: 'co.uk', f: '🇬🇧', c: 'GB' };
+                if (tz.includes('Europe/Berlin')) return { d: 'de', f: '🇩🇪', c: 'DE' };
+                if (tz.includes('Europe/Paris')) return { d: 'fr', f: '🇫🇷', c: 'FR' };
+                if (tz.includes('Europe/Rome')) return { d: 'it', f: '🇮🇹', c: 'IT' };
+                if (tz.includes('Europe/Madrid')) return { d: 'es', f: '🇪🇸', c: 'ES' };
+                if (tz.startsWith('America/Toronto') || tz.startsWith('America/Vancouver') || tz.startsWith('America/Montreal') || tz.includes('Canada')) return { d: 'ca', f: '🇨🇦', c: 'CA' };
+                if (tz.startsWith('Australia')) return { d: 'com.au', f: '🇦🇺', c: 'AU' };
+                if (tz.startsWith('Asia/Tokyo')) return { d: 'co.jp', f: '🇯🇵', c: 'JP' };
+                // Default to provided domain (usually .com)
+                return { d: domain || 'com', f: '🇺🇸', c: 'US' };
+            } catch (e) {
+                return { d: domain || 'com', f: '🇺🇸', c: 'US' };
+            }
+        };
 
         // 1. Detect Environment
         const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
         const android = /android/i.test(userAgent);
         const ios = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
 
-        setIsAndroid(android);
-        setIsIOS(ios);
-
         // 2. Detect Country (Geo-Redirect)
-        const { d, f } = getLocalAmazonDomain();
-        setEffectiveDomain(d);
-        setFlag(f);
+        const { d, f, c } = getLocalAmazonDomain();
+
+        // Batch update to avoid flash/warnings
+        requestAnimationFrame(() => {
+            setIsAndroid(android);
+            setIsIOS(ios);
+            setEffectiveDomain(d);
+            setFlag(f);
+            setCountryCode(c);
+        });
 
         // Note: URLs (webUrl, appUrl) will update on next render when string state changes.
         // We trigger the redirect logic ONLY after domain is settled or if we want to proceed immediately.
@@ -68,7 +63,20 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
         // Actually, for speed, let's use the local 'd' variable for the Initial Redirect if we want it instant.
         // But to keep it React-clean, we'll let the re-render handle the updated URLs.
 
-    }, [asin]); // Run once on mount to detect
+    }, [asin, domain]); // Run once on mount to detect
+
+    // 3. Construct URLs based on dynamic domain
+    const tagValue = tag || 'deeplink0d-20'; // Fallback tag
+    const cleanDomain = effectiveDomain.replace('www.', '');
+
+    // Website URL (Fallback)
+    const webUrl = `https://www.amazon.${cleanDomain}/dp/${asin}?tag=${tagValue}`;
+
+    // iOS App URL (Scheme) - Uses the deep link scheme
+    const appUrl = `com.amazon.mobile.shopping://www.amazon.${cleanDomain}/products/${asin}?tag=${tagValue}`;
+
+    // Android Intent - Tries app, falls back to browser automatically
+    const androidIntent = `intent://www.amazon.${cleanDomain}/dp/${asin}?tag=${tagValue}#Intent;package=com.amazon.mShop.android.shopping;scheme=https;end`;
 
     // 3. Trigger Redirect when URLs correspond to the effective domain
     useEffect(() => {
@@ -107,12 +115,18 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
         if (asin) {
             fetch('/api/track', {
                 method: 'POST',
-                body: JSON.stringify({ asin, userAgent: navigator.userAgent, slug }),
+                body: JSON.stringify({
+                    asin,
+                    userAgent: navigator.userAgent,
+                    slug,
+                    geo: countryCode,
+                    referrer: document.referrer || ''
+                }),
                 headers: { 'Content-Type': 'application/json' },
                 keepalive: true
             }).catch(err => console.error('Tracking failed', err));
         }
-    }, [asin, slug]);
+    }, [asin, slug, countryCode]);
 
     const handleManualClick = () => {
         if (isAndroid) {

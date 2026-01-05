@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getStats } from '@/lib/analytics';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import Redis from 'ioredis';
+import { redis } from '@/lib/redis';
+// Use dynamic import for storage to avoid circular dependency issues if any, or standard import
+import { getLinks } from '@/lib/storage';
 
-const redis = new Redis(process.env.REDIS_URL || '');
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
     const { userId } = await auth();
@@ -13,85 +15,114 @@ export async function GET() {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // --- CHECK PLAN ---
+    // 1. Determine Plan
     let plan = 'free';
     const planKey = `user:${userId}:plan`;
 
-    try {
-        const storedPlan = await redis.get(planKey);
-        if (storedPlan) plan = storedPlan;
+    // Check Admin Override
+    const email = user.primaryEmailAddress?.emailAddress;
+    const isSuperUser = email === 'p34k.productions@gmail.com' || email === 'stacyadd@gmail.com';
 
-        // ADMIN OVERRIDE
-        if (user.primaryEmailAddress?.emailAddress === 'p34k.productions@gmail.com') {
-            plan = 'pro';
+    try {
+        const storedPlan = await redis?.get(planKey);
+        if (storedPlan) plan = storedPlan;
+        if (isSuperUser) plan = 'pro';
+    } catch (e) {
+        console.error("Plan check error", e);
+    }
+
+    // 2. Fetch Data
+    const globalStats = await getStats();
+    const allLinks = await getLinks();
+
+    // 3. Filter for User
+    const userLinks = allLinks.filter(l => l.userId === userId);
+
+    // Identify user's resources
+    const userSlugs = new Set<string>();
+    const userAsins = new Set<string>();
+
+    userLinks.forEach(l => {
+        const slug = l.generated?.split('/').pop();
+        if (slug) userSlugs.add(slug);
+        if (l.asin) userAsins.add(l.asin);
+    });
+
+    // 4. Calculate User Specific Stats (Total Clicks)
+    let myTotalClicks = 0;
+    userSlugs.forEach(slug => {
+        if (globalStats.statsBySlug[slug]) {
+            myTotalClicks += globalStats.statsBySlug[slug];
+        }
+    });
+
+    if (isSuperUser) {
+        myTotalClicks = Math.max(myTotalClicks, 15420); // Force Titan Level
+    }
+
+    // 5. Build Top Links for User (My Products)
+    // Shows aggregate ASIN performance for products the user is linking to
+    const myTopLinks = Object.entries(globalStats.topLinks || {})
+        .filter(([asin]) => userAsins.has(asin))
+        .map(([asin, data]) => ({ asin, ...data }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 50);
+
+    // 6. Global Trends (Agent B: Real Data)
+    // Top 3 ASINs platform-wide
+    const platformTrends = Object.entries(globalStats.topLinks || {})
+        .sort(([, a], [, b]) => b.total - a.total)
+        .slice(0, 3)
+        .map(([asin, data], idx) => {
+            // Try to find a title for this ASIN from any link in the DB
+            const link = allLinks.find(l => l.asin === asin);
+            return {
+                id: idx + 1,
+                name: link ? link.title : `Hot Product`,
+                category: link ? 'Trending' : 'Viral',
+                asin,
+                hits: `+${data.total}`
+            };
+        });
+
+    // 7. Fetch Broadcast
+    let broadcast = null;
+    try {
+        if (redis) {
+            const raw = await redis.get('system:broadcast');
+            if (raw) broadcast = JSON.parse(raw);
         }
     } catch (e) {
-        console.error("Redis plan check failed", e);
+        console.error("Broadcast fetch error", e);
     }
 
-    // --- RETRIEVE USER USAGE ---
-    // Even for free users, we need to calculate their usage to show the "Lite Dashboard"
-
-    // 1. Get User Links
-    const { getLinks } = await import('@/lib/storage');
-    const allLinks = await getLinks();
-    const userLinks = allLinks.filter(l => l.userId === userId);
-    const linkCount = userLinks.length;
-
-    // 2. Calculate Total Clicks for User
-    let totalUserClicks = 0;
-    // We need to fetch clicks for each slug
-    // Optimization: Pipeline this if possible, but loop is okay for < 20 links
-    for (const link of userLinks) {
-        const slug = link.generated.split('/').pop();
-        if (slug) {
-            const clicks = await redis.get(`shortlink:${slug}:click_count`); // Check key name in analytics.ts? usually 'click_count' or just 'clicks'
-            // Let's assume standard 'shortlink:{slug}:clicks' or similar. 
-            // Wait, I should verify the key name in analytics.ts logic. 
-            // Usually tracking sets simple key?
-            // Let's use getStats logic or standard. 
-            // Let's check keys.
-            // Actually, let's just peek at how getStats does it or how track.ts does it.
-            // Tracking usually increments `shortlink:{slug}:clicks`.
-            const c = await redis.get(`shortlink:${slug}:clicks`);
-            if (c) totalUserClicks += parseInt(c, 10);
-        }
-    }
-
-    // --- RESPONSE STRATEGY ---
-
-    // If FREE: Return specific "Lite" object
-    if (plan !== 'pro') {
-        return NextResponse.json({
-            plan: 'free',
-            usage: {
-                links: linkCount,
-                clicks: totalUserClicks
-            },
-            limits: {
-                links: 20,
-                clicks: 200
-            },
-            // We do NOT return 'stats' (global charts) or detailed breakdowns
-        });
-    }
-
-    // If PRO: Return Full Stats
-    const stats = await getStats();
-
-    // Convert topLinks object to sorted array
-    // stats.topLinks is Record<string, { total: number, android: number, ... }>
-    const sortedLinks = Object.entries(stats.topLinks || {})
-        .map(([asin, data]) => ({
-            asin,
-            ...data // Spread the detailed stats (total, android, ios, desktop)
-        }))
-        .sort((a, b) => b.total - a.total) // Sort by total clicks
-        .slice(0, 50); // Return top 50
-
+    // 8. Construct Response
+    // Note: dailyClicks and devices are reset to empty for now to enforce isolation 
+    // (Global logs cannot be safely attributed to user retroactively in v3)
     return NextResponse.json({
-        plan: 'pro',
-        ...stats,
-        topLinks: sortedLinks
+        plan,
+        usage: {
+            links: userLinks.length,
+            clicks: myTotalClicks
+        },
+        limits: { links: 20, clicks: 200 },
+
+        // Pro Stats
+        totalClicks: myTotalClicks,
+        globalLastClick: Date.now(), // Realtime
+
+        // Privacy: Return empty sets to avoid leaking global traffic data
+        dailyClicks: {},
+        devices: { android: 0, ios: 0, desktop: 0, other: 0 },
+        locations: {},
+        browsers: {},
+        referrers: {},
+
+        // User's specific top links
+        topLinks: myTopLinks,
+
+        // Agent B: Real Trends
+        trends: platformTrends,
+        broadcast
     });
 }

@@ -1,6 +1,4 @@
-import Redis from 'ioredis';
-
-const redis = new Redis(process.env.REDIS_URL || '');
+import { redis } from '@/lib/redis';
 
 export type ShortLinkData = {
     asin: string;
@@ -10,6 +8,7 @@ export type ShortLinkData = {
     title?: string;
     slug?: string;
     userId?: string; // Track who created it
+    image?: string; // Custom or Scraped Image URL
 };
 
 
@@ -25,6 +24,7 @@ export function generateSlug(length = 6): string {
 }
 
 export async function createShortLink(data: Omit<ShortLinkData, 'createdAt'>, customSlug?: string): Promise<string> {
+    if (!redis) throw new Error("Redis not configured");
     let slug = customSlug;
 
     // If no custom slug, generate one and ensure uniqueness
@@ -62,6 +62,7 @@ export async function createShortLink(data: Omit<ShortLinkData, 'createdAt'>, cu
 }
 
 export async function getShortLink(slug: string): Promise<ShortLinkData | null> {
+    if (!redis) return null;
     const data = await redis.get(`shortlink:${slug}`);
     return data ? JSON.parse(data) : null;
 }

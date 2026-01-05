@@ -7,6 +7,7 @@ export default function InAppBrowserGuard({ children }: { children: React.ReactN
     const [isInApp, setIsInApp] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line
         const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
         // Detect Facebook, Messenger, Instagram, LinkedIn, etc.
         // FBAN/FBAV = Facebook/Messenger
@@ -18,7 +19,7 @@ export default function InAppBrowserGuard({ children }: { children: React.ReactN
 
         // Only block if we truly suspect it will break OAuth (Mainly Google Auth in WebViews)
         if (isFacebook || isInstagram || isLinkedin) {
-            setIsInApp(true);
+            requestAnimationFrame(() => setIsInApp(true));
         }
     }, []);
 
