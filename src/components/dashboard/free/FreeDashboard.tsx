@@ -10,6 +10,8 @@ type FreeDashboardProps = {
     copiedId: string | null;
 };
 
+import UsageNotifier from '@/components/dashboard/free/UsageNotifier';
+
 export default function FreeDashboard({ stats, history, handleCopy, copiedId }: FreeDashboardProps) {
     const { limits, usage } = stats;
     const clicksPercent = Math.min((usage.clicks / limits.clicks) * 100, 100);
@@ -17,6 +19,7 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId }: 
 
     return (
         <main className="min-h-screen bg-background text-foreground p-6 md:p-12">
+            <UsageNotifier stats={stats} />
             <div className="max-w-4xl mx-auto space-y-8 animate-fade">
                 {stats?.broadcast && (
                     <div className={`p-4 rounded-lg border flex items-center gap-3 animate-fade-down ${stats.broadcast.type === 'urgent' ? 'bg-red-500/10 border-red-500/20 text-red-500' :

@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   description: "Create smart deep links for Amazon affiliate marketing",
 };
 
+import OfflineStatus from "@/components/OfflineStatus";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,6 +31,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <OfflineStatus />
             <ErrorMonitor />
             <InAppBrowserGuard>
               <div className="fixed top-4 right-4 z-50">
