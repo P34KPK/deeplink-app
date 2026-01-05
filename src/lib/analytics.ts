@@ -151,16 +151,16 @@ export async function getStats(): Promise<AnalyticsData> {
             desktop: parseInt(devicesRaw?.desktop || '0'),
             other: parseInt(devicesRaw?.other || '0'),
         },
-        dailyClicks: convertToIntMap(dailyRaw as any),
-        statsBySlug: convertToIntMap(slugsRaw as any),
-        locations: convertToIntMap(locationsRaw as any),
-        browsers: convertToIntMap(browsersRaw as any),
-        referrers: convertToIntMap(referrersRaw as any),
+        dailyClicks: convertToIntMap(dailyRaw as Record<string, string>),
+        statsBySlug: convertToIntMap(slugsRaw as Record<string, string>),
+        locations: convertToIntMap(locationsRaw as Record<string, string>),
+        browsers: convertToIntMap(browsersRaw as Record<string, string>),
+        referrers: convertToIntMap(referrersRaw as Record<string, string>),
         topLinks
     };
 }
 
-function convertToIntMap(raw: Record<string, string> | null) {
+function convertToIntMap(raw: Record<string, string> | null | undefined) {
     if (!raw) return {};
     const res: Record<string, number> = {};
     for (const [k, v] of Object.entries(raw)) {

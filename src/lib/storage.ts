@@ -24,9 +24,14 @@ async function getDB(): Promise<ArchivedLink[]> {
     // 1. Try Redis
     if (redis) {
         try {
-            const redisData = await redis.get(DB_KEY);
-            // @ts-ignore
-            if (redisData) data = (typeof redisData === 'string' ? JSON.parse(redisData) : redisData);
+            const redisData = await redis.get(DB_KEY) as string | null | object;
+            if (redisData) {
+                if (typeof redisData === 'string') {
+                    data = JSON.parse(redisData);
+                } else {
+                    data = redisData as ArchivedLink[];
+                }
+            }
         } catch (error) {
             console.warn('Failed to fetch history from Redis', error);
         }

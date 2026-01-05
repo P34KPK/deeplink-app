@@ -597,11 +597,6 @@ export default function Home() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     View My Links
                   </Link>
-                  <div className="mt-3 text-center">
-                    <span className="text-xs font-mono text-muted-foreground/80 bg-secondary/30 px-3 py-1 rounded-full border border-border/50">
-                      {Math.max(0, 200 - clicksUsed)} clicks remaining
-                    </span>
-                  </div>
                 </>
               )}
             </SignedIn>
@@ -654,168 +649,12 @@ export default function Home() {
                     <div className="font-bold text-3xl text-white mb-1">24/7</div>
                     <div className="text-xs text-muted-foreground uppercase tracking-widest">Uptime</div>
                   </div>
-                  <div>
-                    <div className="font-bold text-3xl text-white mb-1">Safe</div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-widest">Amazon Compliant</div>
-                  </div>
                 </div>
               </div>
-
-            </div>
-
-            {/* PRICING TABLE - ALWAYS VISIBLE */}
-            <div className="mt-16 w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-up">
-
-              {/* FREE TIER CARD */}
-              <div className="matte-card p-8 border-t-4 border-t-muted-foreground/30 flex flex-col relative overflow-hidden h-full">
-                <div className="absolute top-0 right-0 p-3 opacity-5">
-                  <LinkIcon className="w-24 h-24" />
-                </div>
-                <h3 className="text-xl font-bold uppercase tracking-wider mb-2">Free Starter</h3>
-                <div className="text-4xl font-extrabold mb-6">$0<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
-
-                <ul className="space-y-4 mb-8 flex-1">
-                  <li className="flex items-center gap-3 text-sm">
-                    <Check className="w-5 h-5 text-green-500" /> 20 Deep Links / Month
-                  </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <Check className="w-5 h-5 text-green-500" /> 200 Clicks / Month
-                  </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <Check className="w-5 h-5 text-green-500" /> Basic App Opening
-                  </li>
-                  <li className="flex items-center gap-3 text-sm">
-                    <Check className="w-5 h-5 text-green-500" /> Link History
-                  </li>
-                  <li className="flex items-center gap-3 text-sm text-muted-foreground/50">
-                    <span className="w-5 h-5 flex items-center justify-center font-bold text-xs">✕</span> No Detailed Analytics
-                  </li>
-                </ul>
-
-                <Link href="/sign-up" className="w-full btn-primary bg-secondary text-foreground hover:bg-secondary/80 border border-border mt-auto">
-                  Get Started Free
-                </Link>
-              </div>
-
-              {/* PRO TIER CARD */}
-              <div className="matte-card p-8 border-t-4 border-t-yellow-500 flex flex-col relative shadow-2xl shadow-yellow-500/10 h-full">
-                <div className="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
-                  RECOMMENDED
-                </div>
-                <div className="absolute top-10 right-0 p-3 opacity-10">
-                  <Activity className="w-24 h-24 text-yellow-500" />
-                </div>
-
-                <h3 className="text-xl font-bold uppercase tracking-wider mb-2 text-yellow-500">Pro Power</h3>
-                <div className="text-4xl font-extrabold mb-6">$9.99<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
-
-                <ul className="space-y-4 mb-8 flex-1">
-                  <li className="flex items-center gap-3 text-sm font-medium">
-                    <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                    <strong>Unlimited</strong> Links
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-medium">
-                    <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                    <strong>Unlimited</strong> Clicks
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-medium">
-                    <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                    Smart iOS/Android Redirects
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-medium">
-                    <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                    Full <strong>Analytics & Devices</strong>
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-medium">
-                    <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                    Custom <strong>Link-in-Bio</strong> Page
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-medium">
-                    <div className="bg-green-500/20 p-1 rounded-full"><Check className="w-3 h-3 text-green-500" /></div>
-                    Priority Support
-                  </li>
-                </ul>
-
-                <Link href="/sign-up" className="w-full btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold shadow-lg hover:shadow-yellow-500/20 mt-auto">
-                  Upgrade to Pro
-                </Link>
-              </div>
-
             </div>
           </>
         )}
-
-
-        <div className="mt-12 text-center space-y-4">
-          <a
-            href="https://www.p34k.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block transition-opacity"
-            aria-label="Visit P34K"
-          >
-            <div className="relative w-24 h-8 mx-auto">
-              <img
-                src="/p34k-logo.png"
-                alt="P34K"
-                className="w-full h-full object-contain"
-                style={{ filter: 'var(--logo-filter)' }}
-              />
-            </div>
-          </a>
-          <div className="flex items-center justify-center gap-6">
-            <button
-              onClick={() => setReportOpen(true)}
-              className="text-xs text-muted-foreground/60 hover:text-red-400 transition-colors flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-              Report a Bug
-            </button>
-            <a
-              href="mailto:info@p34k.com"
-              className="text-xs text-muted-foreground/60 hover:text-primary transition-colors flex items-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
-              Contact
-            </a>
-          </div>
-        </div>
-      </div >
-
-      {/* BUG REPORT MODAL */}
-      {
-        reportOpen && (
-          <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade">
-            <div className="matte-card p-6 w-full max-w-md border border-red-500/20 bg-black">
-              <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground">
-                <span className="text-red-500">⚠</span> Report an Issue
-              </h3>
-              <textarea
-                className="w-full h-32 bg-secondary/50 border border-border rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-primary mb-4"
-                placeholder="Describe what happened..."
-                value={reportMessage}
-                onChange={(e) => setReportMessage(e.target.value)}
-              />
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setReportOpen(false)}
-                  className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleReportSubmit}
-                  disabled={sendingReport || !reportMessage.trim()}
-                  className="px-4 py-2 text-sm bg-red-500/10 text-red-500 border border-red-500/20 rounded hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                >
-                  {sendingReport ? 'Sending...' : 'Send Report'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-    </main >
+      </div>
+    </main>
   );
 }

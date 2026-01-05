@@ -22,13 +22,6 @@ const isProtectedRoute = createRouteMatcher([
 // For now, let's protect the Dashboard and Admin, but keep the Generator public OR protect it to require login to CREATE links.
 // User said "membership", so creating links should be protected.
 
-const isPublicRoute = createRouteMatcher([
-    '/api/track',
-    '/sign-in(.*)',
-    '/sign-up(.*)',
-    '/api/webhooks(.*)',
-    // We assume any other route like /AbC12 is a public short link
-]);
 
 export default clerkMiddleware(async (auth, req) => {
     // Custom Domain Logic (Multi-Tenancy)

@@ -125,18 +125,28 @@ export default function ProDashboard({
         return days;
     };
 
+    // Fallback for daily clicks if missing
+    const safeDailyClicks = stats.dailyClicks || {};
     const chartData = getLast7Days().map(date => ({
         date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        clicks: stats.dailyClicks[date] || 0
+        clicks: safeDailyClicks[date] || 0
     }));
 
-    const deviceData = [
-        { name: 'Android', value: stats.devices.android }, { name: 'iOS', value: stats.devices.ios },
-        { name: 'Desktop', value: stats.devices.desktop }, { name: 'Other', value: stats.devices.other },
+    // Fallback for devices if missing or all zero
+    const deviceStats = stats.devices || { android: 0, ios: 0, desktop: 0, other: 0 };
+    let deviceData = [
+        { name: 'Android', value: deviceStats.android }, { name: 'iOS', value: deviceStats.ios },
+        { name: 'Desktop', value: deviceStats.desktop }, { name: 'Other', value: deviceStats.other },
     ].filter(d => d.value > 0);
 
+    if (deviceData.length === 0) {
+        deviceData = [{ name: 'No Data', value: 1 }]; // Placeholder to prevent crash
+    }
+
     const locationData = stats?.locations ? Object.entries(stats.locations as Record<string, number>).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value) : [];
-    const browserData = stats?.browsers ? Object.entries(stats.browsers as Record<string, number>).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value) : [];
+    const browserDataRaw = stats?.browsers ? Object.entries(stats.browsers as Record<string, number>).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value) : [];
+    const browserData = browserDataRaw.length > 0 ? browserDataRaw : [{ name: 'No Data', value: 1 }]; // Placeholder
+
     const referrerData = stats?.referrers ? Object.entries(stats.referrers as Record<string, number>).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value) : [];
     const getBestDay = () => {
         if (!stats?.dailyClicks) return { day: 'N/A', count: 0 };
@@ -241,7 +251,7 @@ export default function ProDashboard({
                                     {id === 'gamification' && (<div className="h-full"><GamificationWidget totalClicks={stats.totalClicks || 0} /></div>)}
                                     {id === 'simulator' && (
                                         <div className="matte-card p-6 h-full border-l-4 border-l-green-500/50">
-                                            <div className="flex gap-2 mb-4"><input type="number" value={simPrice} onChange={(e) => setSimPrice(Number(e.target.value))} className="w-full bg-secondary/50 border border-border rounded px-2 py-1 text-sm" /><input type="number" value={simRate} onChange={(e) => setSimRate(Number(e.target.value))} className="w-full bg-secondary/50 border border-border rounded px-2 py-1 text-sm" /></div>
+                                            <div className="flex gap-2 mb-4"><input type="number" value={simPrice} onChange={(e) => setSimPrice(Number(e.target.value))} className="w-full bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground" /><input type="number" value={simRate} onChange={(e) => setSimRate(Number(e.target.value))} className="w-full bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground" /></div>
                                             <div className="text-3xl font-bold text-green-500">${((stats.totalClicks * (simRate / 100)) * (simPrice * 0.04)).toFixed(2)}</div>
                                             <p className="text-xs text-muted-foreground">Potential (4% comm)</p>
                                         </div>
@@ -267,12 +277,56 @@ export default function ProDashboard({
                                         </div>
                                     )}
                                     {id === 'daily' && (
-                                        <div className="matte-card p-6 h-full bg-gradient-to-br from-card to-zinc-900/50"><div className="h-[140px]"><ResponsiveContainer width="100%" height="100%"><AreaChart data={chartData}><Area type="monotone" dataKey="clicks" stroke="#fff" fill="#ffffff10" /></AreaChart></ResponsiveContainer></div></div>
+                                        <div className="matte-card p-6 h-full bg-gradient-to-br from-card to-zinc-900/50 flex flex-col">
+                                            <div className="text-xs text-muted-foreground font-bold uppercase mb-4">Traffic Trend (7 Days)</div>
+                                            <div className="flex-1 min-h-[100px]">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={chartData}>
+                                                        <defs>
+                                                            <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="5%" stopColor="#fff" stopOpacity={0.8} />
+                                                                <stop offset="95%" stopColor="#fff" stopOpacity={0} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <RechartsTooltip contentStyle={{ backgroundColor: '#111', border: '1px solid #333' }} />
+                                                        <Area type="monotone" dataKey="clicks" stroke="#fff" fill="url(#colorClicks)" strokeWidth={2} />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
                                     )}
-                                    {id === 'devices' && (<div className="matte-card p-6 h-full flex flex-col items-center"><div className="h-40 w-full"><ResponsiveContainer><PieChart><Pie data={deviceData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5} dataKey="value">{deviceData.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />)}</Pie></PieChart></ResponsiveContainer></div></div>)}
-                                    {id === 'locations' && (<div className="matte-card h-full relative group overflow-hidden"><div className="absolute inset-0 opacity-40"><GlobeWidget /></div><div className="relative z-10 p-6 h-full bg-gradient-to-b from-transparent to-black pointer-events-none flex flex-col justify-end"><div className="space-y-2 pointer-events-auto">{locationData.slice(0, 3).map((l, i) => (<div key={i} className="flex justify-between text-xs backdrop-blur bg-white/5 p-2 rounded"><span>{l.name}</span><span className="text-indigo-300">{l.value}</span></div>))}</div></div></div>)}
-                                    {id === 'browsers' && (<div className="matte-card p-6 h-full"><div className="h-[150px]"><ResponsiveContainer><PieChart><Pie data={browserData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} dataKey="value">{browserData.map((e, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie></PieChart></ResponsiveContainer></div></div>)}
-                                    {id === 'referrers' && (<div className="matte-card p-6 h-full"><div className="space-y-2 h-[150px] overflow-auto">{referrerData.slice(0, 5).map((l, i) => (<div key={i} className="flex justify-between text-xs p-2 bg-secondary/20 rounded"><span className="truncate max-w-[100px]">{l.name}</span><span className="font-bold">{l.value}</span></div>))}</div></div>)}
+                                    {id === 'devices' && (
+                                        <div className="matte-card p-6 h-full flex flex-col items-center justify-center">
+                                            <div className="text-xs text-muted-foreground font-bold uppercase mb-2 self-start">Devices</div>
+                                            <div className="h-40 w-full">
+                                                <ResponsiveContainer>
+                                                    <PieChart>
+                                                        <Pie data={deviceData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5} dataKey="value">
+                                                            {deviceData.map((e, i) => <Cell key={i} fill={e.name === 'No Data' ? '#333' : COLORS[i % COLORS.length]} stroke="none" />)}
+                                                        </Pie>
+                                                        <RechartsTooltip contentStyle={{ backgroundColor: '#111', border: '1px solid #333' }} />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                            {deviceData[0].name === 'No Data' && <div className="text-[10px] text-muted-foreground mt-2">No device data yet</div>}
+                                        </div>
+                                    )}
+                                    {id === 'locations' && (<div className="matte-card h-full relative group overflow-hidden"><div className="absolute inset-0 opacity-60"><GlobeWidget /></div><div className="relative z-10 p-6 h-full bg-gradient-to-b from-transparent to-black pointer-events-none flex flex-col justify-end"><div className="absolute top-6 left-6 text-xs text-muted-foreground font-bold uppercase">Top Locations</div><div className="space-y-2 pointer-events-auto">{locationData.slice(0, 3).map((l, i) => (<div key={i} className="flex justify-between text-xs backdrop-blur bg-white/5 p-2 rounded"><span>{l.name}</span><span className="text-indigo-300">{l.value}</span></div>))}</div></div></div>)}
+                                    {id === 'browsers' && (
+                                        <div className="matte-card p-6 h-full flex flex-col items-center justify-center">
+                                            <div className="text-xs text-muted-foreground font-bold uppercase mb-2 self-start">Browsers</div>
+                                            <div className="h-[150px] w-full">
+                                                <ResponsiveContainer>
+                                                    <PieChart>
+                                                        <Pie data={browserData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} dataKey="value">
+                                                            {browserData.map((e, i) => <Cell key={i} fill={e.name === 'No Data' ? '#333' : COLORS[i % COLORS.length]} stroke="none" />)}
+                                                        </Pie>
+                                                        <RechartsTooltip contentStyle={{ backgroundColor: '#111', border: '1px solid #333' }} />
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                    )}
                                 </SortableItem>))}
                         </div>
                     </SortableContext>

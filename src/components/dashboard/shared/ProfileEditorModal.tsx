@@ -9,8 +9,26 @@ interface ProfileEditorModalProps {
     userId: string;
 }
 
+interface UserProfile {
+    username: string;
+    bio: string;
+    avatarUrl?: string;
+    backgroundImage?: string;
+    socials: {
+        instagram?: string;
+        tiktok?: string;
+        youtube?: string;
+        [key: string]: string | undefined;
+    };
+    [key: string]: any; // fallback for loose API structure
+}
+
 export default function ProfileEditorModal({ isOpen, onClose, userId }: ProfileEditorModalProps) {
-    const [userProfile, setUserProfile] = useState<any>({ username: '', bio: '', socials: {} });
+    const [userProfile, setUserProfile] = useState<UserProfile>({
+        username: '',
+        bio: '',
+        socials: {}
+    });
     const [pendingImage, setPendingImage] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -28,12 +46,12 @@ export default function ProfileEditorModal({ isOpen, onClose, userId }: ProfileE
         }
     }, [isOpen, userId]);
 
-    const updateProfile = (field: string, value: any) => {
-        setUserProfile((prev: any) => ({ ...prev, [field]: value }));
+    const updateProfile = (field: keyof UserProfile, value: any) => {
+        setUserProfile((prev) => ({ ...prev, [field]: value }));
     };
 
     const updateSocial = (platform: string, value: string) => {
-        setUserProfile((prev: any) => ({
+        setUserProfile((prev) => ({
             ...prev,
             socials: { ...prev.socials, [platform]: value }
         }));
