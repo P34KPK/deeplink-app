@@ -39,7 +39,7 @@ export async function POST(req: Request) {
                 stripeCustomerId: subscription.customer as string,
                 stripePriceId: subscription.items.data[0].price.id,
                 stripeCurrentPeriodEnd: new Date(
-                    subscription.current_period_end * 1000
+                    (subscription as any).current_period_end * 1000
                 ),
             },
         });
@@ -47,18 +47,11 @@ export async function POST(req: Request) {
 
     if (event.type === 'invoice.payment_succeeded') {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscription = await stripe.subscriptions.retrieve(
-            invoice.subscription as string
-        );
 
-        // You can handle subscription renewal logic here if needed,
-        // although Clerk metadata update as above covers the basic state.
-        // Ideally, you'd check if the user exists and update the period "end" date.
-
-        // Note: invoice.payment_succeeded payload is an Invoice.
-
-        if (invoice.subscription) {
-            const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+        if ((invoice as any).subscription) {
+            const subscription = await stripe.subscriptions.retrieve(
+                (invoice as any).subscription as string
+            );
             // Find user by subscription ID ? 
             // Clerk doesn't allow searching by metadata easily without listUsers loop.
             // Usually, we trust the checkout flow to set it up initially.

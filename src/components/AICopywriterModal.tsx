@@ -13,32 +13,23 @@ export default function AICopywriterModal({ title, link, onClose }: AICopywriter
     const [loading, setLoading] = useState(false);
     const [captions, setCaptions] = useState<string[]>([]);
 
-    const generateCaptions = () => {
+    const generateCaptions = async () => {
         setLoading(true);
-        // Simulate AI Delay
-        setTimeout(() => {
-            const hooks = ["Stop scrolling! 🛑", "You need this! 😍", "Best Amazon Find! 📦", "Viral Product Alert! 🚨", "Obsessed with this! ✨"];
-            const features = [
-                `Just found ${title} and it's a game changer.`,
-                `${title} is finally back in stock!`,
-                `Level up your setup with ${title}.`,
-                `I can't believe the price on ${title} right now.`
-            ];
-            const ctas = ["Link in bio to shop! 👇", "Grab yours here: " + link, "Tap the link in my profile!", "Don't miss out!"];
-            const tags = ["#AmazonFinds", "#MustHave", "#Trending", "#Deal", "#AmazonPrime", "#Shopping"];
-
-            const newCaptions = Array(3).fill(0).map(() => {
-                const hook = hooks[Math.floor(Math.random() * hooks.length)];
-                const feature = features[Math.floor(Math.random() * features.length)];
-                const cta = ctas[Math.floor(Math.random() * ctas.length)];
-                const randomTags = tags.sort(() => 0.5 - Math.random()).slice(0, 3).join(' ');
-
-                return `${hook}\n\n${feature}\n\n${cta}\n\n${randomTags}`;
+        try {
+            const res = await fetch('/api/ai/generate-text', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product: title, context: 'Amazon Affiliate Product Promotion' })
             });
-
-            setCaptions(newCaptions);
+            const data = await res.json();
+            if (data.captions) {
+                setCaptions(data.captions);
+            }
+        } catch (error) {
+            console.error('Failed to generate captions', error);
+        } finally {
             setLoading(false);
-        }, 1500);
+        }
     };
 
     // Auto-generate on mount? No, let user click "Magic".

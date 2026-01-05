@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
-
-const redis = new Redis({
-    url: process.env.REDIS_URL || '',
-    token: process.env.REDIS_TOKEN || '',
-});
+import { redis } from '@/lib/redis';
 
 export async function POST(req: Request) {
     try {
+        if (!redis) {
+            return new NextResponse("Redis not configured", { status: 503 });
+        }
         const body = await req.json();
         const { message, email } = body;
 

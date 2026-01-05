@@ -60,7 +60,7 @@ export default async function AmznShortLinkPage({ params }: { params: Promise<{ 
     if (data.userId) {
         // 1. Get Plan
         const planKey = `user:${data.userId}:plan`;
-        const plan = await redis.get(planKey) || 'free';
+        const plan = await redis?.get(planKey) || 'free';
 
         // Admin Override
         const links = await getLinks();

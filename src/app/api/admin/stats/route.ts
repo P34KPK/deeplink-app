@@ -41,7 +41,10 @@ export async function GET(req: Request) {
 
         allLinks.forEach(link => {
             if (link.asin) {
-                asinCounts[link.asin] = (asinCounts[link.asin] || 0) + (link.hits || 1);
+                const slug = (link.generated || '').split('/').pop() || '';
+                const hits = globalStats.statsBySlug[slug] || 0;
+
+                asinCounts[link.asin] = (asinCounts[link.asin] || 0) + hits;
                 if (link.title) asinNames[link.asin] = link.title;
             }
         });
