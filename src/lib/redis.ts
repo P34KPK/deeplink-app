@@ -1,7 +1,7 @@
 
 import Redis from 'ioredis';
 
-const redisUrl = process.env.REDIS_URL;
+const redisUrl = process.env.REDIS_URL || process.env.KV_URL;
 
 // Create a singleton instance
 // If REDIS_URL is not provided, this will be null, allowing for graceful degradation
