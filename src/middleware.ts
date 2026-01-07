@@ -35,7 +35,7 @@ export default clerkMiddleware(async (auth, req) => {
     if (isCustomDomain) {
         // SECURITY: Prevent accessing Dashboard/Admin via Custom Domain
         // We only want to serve the Link (/[slug]) via custom domain.
-        if (url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/admin') || url.pathname.startsWith('/sign-in')) {
+        if (url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/admin') || url.pathname.startsWith('/command-center') || url.pathname.startsWith('/sign-in')) {
             const mainUrl = new URL(url.pathname, process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
             return Response.redirect(mainUrl);
         }
