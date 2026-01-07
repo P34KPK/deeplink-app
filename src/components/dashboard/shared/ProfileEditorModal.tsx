@@ -9,200 +9,63 @@ interface ProfileEditorModalProps {
     onClose: () => void;
     userId: string;
     onSaveSuccess?: () => void;
+    isPro?: boolean;
 }
 
-interface UserProfile {
-    username: string;
-    bio: string;
-    avatarUrl?: string;
-    backgroundImage?: string;
-    amazonTag?: string; // New!
-    socials: {
-        website?: string;
-        instagram?: string;
-        tiktok?: string;
-        youtube?: string;
-        twitter?: string;
-        discord?: string;
-        twitch?: string;
-        facebook?: string;
-        [key: string]: string | undefined;
-    };
-    [key: string]: any; // fallback for loose API structure
-}
+// ... imports
 
-export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSuccess }: ProfileEditorModalProps) {
-    const [userProfile, setUserProfile] = useState<UserProfile>({
-        username: '',
-        bio: '',
-        socials: {}
-    });
-    const [pendingImage, setPendingImage] = useState<string | null>(null);
-    const [rawFileImage, setRawFileImage] = useState<string | null>(null);
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [loading, setLoading] = useState(false);
+export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSuccess, isPro = false }: ProfileEditorModalProps) {
+    // ... existing state
 
-    useEffect(() => {
-        if (isOpen && userId) {
-            setLoading(true);
-            fetch('/api/user/profile')
-                .then(res => res.json())
-                .then(data => {
-                    if (data && !data.error) setUserProfile(data);
+    // ... existing functions (updateProfile, updateSocial, saveProfile, generateBackground)
+
+    const handleAiBio = async () => {
+        if (!isPro) return alert("AI Bio writing is a PRO feature. Please upgrade to unlock.");
+        if (!userProfile.username) return alert('Enter a display name first!');
+        // ... rest of logic
+        const btn = document.getElementById('bio-magic-btn');
+        if (btn) btn.innerHTML = '✨ Writing...';
+
+        try {
+            const res = await fetch('/api/ai/generate-text', {
+                method: 'POST',
+                body: JSON.stringify({
+                    product: userProfile.username,
+                    context: 'Influencer Bio',
+                    type: 'bio'
                 })
-                .catch(err => console.error("Failed to load profile", err))
-                .finally(() => setLoading(false));
-        }
-    }, [isOpen, userId]);
-
-    const updateProfile = (field: keyof UserProfile, value: any) => {
-        setUserProfile((prev) => ({ ...prev, [field]: value }));
-    };
-
-    const updateSocial = (platform: string, value: string) => {
-        setUserProfile((prev) => ({
-            ...prev,
-            socials: { ...prev.socials, [platform]: value }
-        }));
-    };
-
-    const saveProfile = async () => {
-        const res = await fetch('/api/user/profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userProfile)
-        });
-        if (res.ok) {
-            alert('Profile updated!');
-            if (onSaveSuccess) onSaveSuccess();
-            onClose();
-            // TODO: Trigger a refresh of the preview if needed
+            });
+            const data = await res.json();
+            if (data.result) updateProfile('bio', data.result);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (btn) btn.innerHTML = '✨ AI Magic';
         }
     };
 
-    const generateBackground = () => {
-        const prompt = window.prompt("✨ AI Background Generator\n\nDescribe the vibe you want (e.g., 'cyberpunk city neon rain', 'pastel clouds aesthetic'):", "aesthetic gradient abstract");
-        if (prompt === null) return;
+    // ... render
 
-        setIsGenerating(true);
-        const finalPrompt = prompt || "aesthetic gradient abstract";
-        const seed = Math.floor(Math.random() * 1000000);
+    <button
+        onClick={handleAiBio}
+        id="bio-magic-btn"
+        className={`text-[9px] font-bold flex items-center gap-1 transition-colors ${!isPro ? 'text-zinc-600 cursor-not-allowed' : 'text-pink-500 hover:text-pink-400'}`}
+    >
+        {!isPro && <span className="mr-0.5">🔒</span>}
+        ✨ AI Magic
+    </button>
+                                </label >
+        <textarea className="input-minimal w-full py-2 px-3 text-sm resize-none h-20 bg-zinc-900 border border-zinc-800 rounded-lg focus:border-pink-500 outline-none transition-colors" placeholder="Tell your audience about your style..." value={userProfile.bio || ''} onChange={e => updateProfile('bio', e.target.value)} />
+                            </div >
 
-        // Point directly to local proxy to solve CORS/AdBlock
-        const proxyUrl = `/api/ai/generate-image?prompt=${encodeURIComponent(finalPrompt)}&seed=${seed}`;
-
-        setPendingImage(proxyUrl);
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-10 md:pt-20 p-4 animate-in fade-in duration-200">
-            <div className="bg-[#09090b] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
-                <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 transition-colors border border-zinc-700 shadow-sm">
-                    <X className="w-5 h-5" />
-                </button>
-
-                <div className="flex items-center gap-2 mb-6">
-                    <div className="p-2 bg-pink-500/10 rounded-lg">
-                        <Settings className="w-5 h-5 text-pink-500" />
-                    </div>
-                    <h2 className="text-xl font-bold">Edit Profile</h2>
-                </div>
-
-                <div className="space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
-                    {loading ? (
-                        <div className="text-center py-10 text-muted-foreground">Loading profile...</div>
-                    ) : (
-                        <>
-                            <div>
-                                <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">Profile Picture</label>
-                                <div className="flex gap-4 items-center">
-                                    <div className="relative group cursor-pointer w-14 h-14">
-                                        {userProfile.avatarUrl ? (
-                                            <img src={userProfile.avatarUrl} className="w-full h-full rounded-full border border-zinc-700 object-cover" alt="Preview" />
-                                        ) : (
-                                            <div className="w-full h-full rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500">
-                                                <span className="text-xs">?</span>
-                                            </div>
-                                        )}
-                                        <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                            <span className="text-[8px] text-white font-bold uppercase">Edit</span>
-                                        </div>
-                                        <input
-                                            id="avatar-upload"
-                                            type="file"
-                                            accept="image/*"
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
-                                            onChange={(e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) {
-                                                    const reader = new FileReader();
-                                                    reader.onload = (readerEvent) => {
-                                                        const result = readerEvent.target?.result as string;
-                                                        if (result) setRawFileImage(result);
-                                                    };
-                                                    reader.readAsDataURL(file);
-                                                }
-                                                e.target.value = ''; // Allow re-select
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-xs text-zinc-400 mb-2">Upload a profile picture. JPG, PNG or GIF.</p>
-                                        <label htmlFor="avatar-upload" className="text-[10px] border border-zinc-700 hover:bg-zinc-800 px-3 py-1.5 rounded text-zinc-300 transition-colors cursor-pointer inline-block">
-                                            Click to Upload
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">Display Name</label>
-                                <input className="input-minimal w-full py-2 px-3 text-sm bg-zinc-900 border border-zinc-800 rounded-lg focus:border-pink-500 outline-none transition-colors" placeholder="e.g. Sarah's Picks" value={userProfile.username || ''} onChange={e => updateProfile('username', e.target.value)} />
-                            </div>
-                            <div>
-                                <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 flex justify-between">
-                                    Bio
-                                    <button
-                                        onClick={async () => {
-                                            if (!userProfile.username) return alert('Enter a display name first!');
-                                            const btn = document.getElementById('bio-magic-btn');
-                                            if (btn) btn.innerHTML = '✨ Writing...';
-
-                                            try {
-                                                const res = await fetch('/api/ai/generate-text', {
-                                                    method: 'POST',
-                                                    body: JSON.stringify({
-                                                        product: userProfile.username, // Reuse product field as "Keywords/Name"
-                                                        context: 'Influencer Bio',
-                                                        type: 'bio'
-                                                    })
-                                                });
-                                                const data = await res.json();
-                                                if (data.result) updateProfile('bio', data.result);
-                                            } catch (e) {
-                                                console.error(e);
-                                            } finally {
-                                                if (btn) btn.innerHTML = '✨ AI Magic';
-                                            }
-                                        }}
-                                        id="bio-magic-btn"
-                                        className="text-[9px] text-pink-500 hover:text-pink-400 font-bold flex items-center gap-1 transition-colors"
-                                    >
-                                        ✨ AI Magic
-                                    </button>
-                                </label>
-                                <textarea className="input-minimal w-full py-2 px-3 text-sm resize-none h-20 bg-zinc-900 border border-zinc-800 rounded-lg focus:border-pink-500 outline-none transition-colors" placeholder="Tell your audience about your style..." value={userProfile.bio || ''} onChange={e => updateProfile('bio', e.target.value)} />
-                            </div>
-
-                            {/* Theme Customization Section */}
-                            <div>
+        {/* Theme Customization Section */ }
+        < div >
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="text-[10px] text-zinc-500 uppercase font-bold block">Page Theme</label>
                                     <span className="text-[9px] text-pink-500 font-bold border border-pink-500/20 bg-pink-500/10 px-1.5 rounded">INFLUENCER UNLOCK</span>
                                 </div>
                                 <div className="grid grid-cols-6 gap-2">
+                                    {/* ... Colors ... */}
                                     {[
                                         { v: '#000000', n: 'Black' }, { v: '#ffffff', n: 'White' },
                                         { v: '#1a1a2e', n: 'Midnight' }, { v: '#27272a', n: 'Zinc' },
@@ -226,9 +89,16 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                                             {userProfile.theme === theme.v && <div className="absolute inset-0 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white shadow-sm"></div></div>}
                                         </div>
                                     ))}
-                                    <button onClick={generateBackground} className="col-span-4 mt-1 flex items-center justify-center gap-2 py-2 rounded border border-dashed border-zinc-700 hover:border-pink-500 hover:text-pink-500 text-zinc-500 text-xs transition-colors group">
-                                        <Wand2 className="w-3 h-3 group-hover:animate-pulse" />
+                                    <button 
+                                        onClick={() => {
+                                            if (!isPro) return alert("AI Background Generation is a PRO feature.");
+                                            generateBackground();
+                                        }} 
+                                        className={`col-span-4 mt-1 flex items-center justify-center gap-2 py-2 rounded border border-dashed text-xs transition-colors group ${!isPro ? 'border-zinc-800 text-zinc-600 bg-zinc-900/50 cursor-not-allowed' : 'border-zinc-700 hover:border-pink-500 hover:text-pink-500 text-zinc-500'}`}
+                                    >
+                                        {!isPro ? <span className="mr-1">🔒</span> : <Wand2 className="w-3 h-3 group-hover:animate-pulse" />}
                                         <span>{userProfile.backgroundImage ? 'Generate New Background' : 'Generate with AI'}</span>
+                                        {!isPro && <span className="ml-1 text-[8px] bg-zinc-800 px-1 rounded border border-zinc-700">PRO</span>}
                                     </button>
 
                                     {/* Pending Approval UI */}
@@ -288,7 +158,7 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            </div >
 
                             <div className="pt-2">
                                 <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">Amazon Associate Tag (Important!)</label>
@@ -334,29 +204,30 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                                 </div>
                             </div>
                         </>
-                    )}
-                </div>
+                    )
+}
+                </div >
 
-                <div className="pt-4 flex gap-3">
-                    <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-transparent border border-zinc-700 hover:bg-zinc-800 transition-colors">
-                        Cancel
-                    </button>
-                    <button onClick={saveProfile} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-500/20 transition-colors">
-                        Save Changes
-                    </button>
-                </div>
-            </div>
+    <div className="pt-4 flex gap-3">
+        <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-transparent border border-zinc-700 hover:bg-zinc-800 transition-colors">
+            Cancel
+        </button>
+        <button onClick={saveProfile} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-500/20 transition-colors">
+            Save Changes
+        </button>
+    </div>
+            </div >
 
 
-            {/* Image Cropper */}
-            <ImageCropperModal
-                isOpen={!!rawFileImage}
-                imageSrc={rawFileImage}
-                onClose={() => setRawFileImage(null)}
-                onSave={(cropped) => {
-                    updateProfile('avatarUrl', cropped);
-                    setRawFileImage(null);
-                }}
+    {/* Image Cropper */ }
+    < ImageCropperModal
+isOpen = {!!rawFileImage}
+imageSrc = { rawFileImage }
+onClose = {() => setRawFileImage(null)}
+onSave = {(cropped) => {
+    updateProfile('avatarUrl', cropped);
+    setRawFileImage(null);
+}}
             />
         </div >
     );

@@ -303,6 +303,7 @@ export default function Dashboard() {
                 onClose={() => setShowProfileEditor(false)}
                 userId={userId || ''}
                 onSaveSuccess={() => setProfileVersion(v => v + 1)}
+                isPro={stats?.plan === 'pro'}
             />
 
             {aiModal.open && (
