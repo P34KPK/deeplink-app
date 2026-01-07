@@ -44,12 +44,34 @@ export default function VaultWidget() {
                     'x-admin-key': localStorage.getItem('admin_session') || ''
                 }
             });
-            const data = await res.json();
-            if (data.success) {
-                alert(`✅ BACKUP SECURED!\n\nFile: ${data.fileName}\nEnc: ${data.encryption}\nItems: ${JSON.stringify(data.itemCount)}`);
+
+            const contentType = res.headers.get('content-type');
+            if (contentType && contentType.includes('application/octet-stream')) {
+                // Handle Download
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+
+                // Extract filename
+                const contentDisp = res.headers.get('content-disposition');
+                const fileNameMatch = contentDisp && contentDisp.match(/filename="(.+)"/);
+                const fileName = fileNameMatch ? fileNameMatch[1] : `secure_backup_${Date.now()}.enc`;
+
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                const itemCounts = res.headers.get('x-item-count');
+
+                alert(`✅ BACKUP DOWNLOADED!\n\nFile: ${fileName}\nItems: ${itemCounts || 'Unknown'}\n\nStore this file safely.`);
                 fetchStatus();
             } else {
-                throw new Error(data.error);
+                // Handle Error JSON
+                const data = await res.json();
+                throw new Error(data.error || 'Unknown error');
             }
         } catch (e: any) {
             alert('Backup Failed: ' + e.message);

@@ -87,31 +87,25 @@ export async function POST(req: Request) {
         const jsonContent = JSON.stringify(backupData);
         const encrypted = encrypt(jsonContent);
 
-        // 5. Save to Disk
-        const backupDir = path.join(process.cwd(), 'data', 'backups');
-        if (!fs.existsSync(backupDir)) {
-            fs.mkdirSync(backupDir, { recursive: true });
-        }
-
+        // 5. Stream to Client (Download) instead of FileSystem
         const fileName = `secure_backup_${Date.now()}.enc`;
-        const filePath = path.join(backupDir, fileName);
 
         // File Format: IV::CONTENT
         const fileContent = `${encrypted.iv}::${encrypted.content}`;
-        fs.writeFileSync(filePath, fileContent);
 
-        console.log(`[Backup] Success: Saved to ${fileName}`);
+        console.log(`[Backup] Success: Streaming ${fileName} to client`);
 
-        return NextResponse.json({
-            success: true,
-            fileName: fileName,
-            path: filePath,
-            itemCount: {
-                history: Array.isArray(backupData.data.history) ? backupData.data.history.length : 0,
-                shortlinks: keys.length,
-                users: userKeys.length
-            },
-            encryption: 'AES-256-CBC'
+        return new NextResponse(fileContent, {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/octet-stream',
+                'Content-Disposition': `attachment; filename="${fileName}"`,
+                'x-item-count': JSON.stringify({
+                    history: Array.isArray(backupData.data.history) ? backupData.data.history.length : 0,
+                    shortlinks: keys.length,
+                    users: userKeys.length
+                })
+            }
         });
 
     } catch (error: any) {
