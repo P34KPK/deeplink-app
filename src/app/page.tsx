@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Link as LinkIcon, Copy, Check, BarChart3, LayoutDashboard, Activity, Wand2, DollarSign, Image as ImageIcon, RefreshCw, Camera, Upload, ShoppingBag } from "lucide-react";
+import { ArrowRight, Link as LinkIcon, Copy, Check, BarChart3, LayoutDashboard, Activity, Wand2, DollarSign, Image as ImageIcon, RefreshCw, Camera, Upload, ShoppingBag, X } from "lucide-react";
 import { ThemeToggle } from '@/components/theme-toggle';
 import OnboardingTour from '@/components/OnboardingTour';
 import CheckoutButton from '@/components/CheckoutButton';
