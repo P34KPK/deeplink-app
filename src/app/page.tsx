@@ -624,7 +624,7 @@ export default function Home() {
             </div>
           )}
 
-          <div className="mt-8 space-y-3 pt-6 border-t border-border">
+          <div id="tour-dashboard-actions" className="mt-8 space-y-3 pt-6 border-t border-border">
             <SignedOut>
               <Link
                 href="/sign-in"

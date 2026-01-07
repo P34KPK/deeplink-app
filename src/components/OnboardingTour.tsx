@@ -21,7 +21,7 @@ const TOUR_STEPS = [
     },
     {
         title: "Step 3: Track & Grow",
-        description: "See your clicks and performance in the Dashboard. Upgrade to Pro for detailed analytics!",
+        description: "View your links and analytics here. Upgrade to Pro for more!",
         target: "link_dashboard"
     }
 ];
@@ -53,8 +53,7 @@ export default function OnboardingTour() {
             } else if (currentStep.target === 'btn_generate') {
                 el = document.getElementById('tour-generate-btn');
             } else if (currentStep.target === 'link_dashboard') {
-                el = document.querySelector('a[href="/sign-in"]');
-                if (!el) el = document.querySelector('a[href="/dashboard"]');
+                el = document.getElementById('tour-dashboard-actions');
             }
 
             if (el) {
