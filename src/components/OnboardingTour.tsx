@@ -43,37 +43,43 @@ export default function OnboardingTour() {
 
         const currentStep = TOUR_STEPS[step];
         if (currentStep.target === 'center') {
-            return; // No highlighting needed
+            return;
         }
 
-        // Find element
-        // We need to map abstract IDs to real DOM elements. 
-        // This requires the parent page to retain IDs or we use selectors.
-        let el: HTMLElement | null = null;
+        const updatePosition = () => {
+            let el: HTMLElement | null = null;
+            if (currentStep.target === 'input_url') {
+                el = document.getElementById('tour-amazon-input');
+            } else if (currentStep.target === 'btn_generate') {
+                el = document.getElementById('tour-generate-btn');
+            } else if (currentStep.target === 'link_dashboard') {
+                el = document.querySelector('a[href="/sign-in"]');
+                if (!el) el = document.querySelector('a[href="/dashboard"]');
+            }
 
-        if (currentStep.target === 'input_url') {
-            el = document.getElementById('tour-amazon-input');
-        } else if (currentStep.target === 'btn_generate') {
-            el = document.getElementById('tour-generate-btn');
-        } else if (currentStep.target === 'link_dashboard') {
-            el = document.querySelector('a[href="/sign-in"]'); // Fallback if logged out
-            if (!el) el = document.querySelector('a[href="/dashboard"]');
-        }
-
-        if (el) {
-            const rect = el.getBoundingClientRect();
-            requestAnimationFrame(() => {
+            if (el) {
+                const rect = el.getBoundingClientRect();
                 setPosition({
                     top: rect.top,
                     left: rect.left,
                     width: rect.width,
                     height: rect.height
                 });
-            });
+            }
+        };
 
-            // Scroll to element
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        // Update immediately
+        updatePosition();
+        requestAnimationFrame(updatePosition); // Double check for layout shifts
+
+        // Updates on scroll/resize
+        window.addEventListener('scroll', updatePosition, { passive: true });
+        window.addEventListener('resize', updatePosition);
+
+        return () => {
+            window.removeEventListener('scroll', updatePosition);
+            window.removeEventListener('resize', updatePosition);
+        };
 
     }, [step]);
 
