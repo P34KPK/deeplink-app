@@ -654,7 +654,7 @@ export default function Home() {
                     <CheckoutButton
                       priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
                       label="Upgrade to Pro - $9.99/mo"
-                      className="w-full bg-[#facc15] hover:bg-[#eab308] text-black font-bold border-none shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] transition-all transform hover:scale-[1.02] py-3 text-base"
+                      className="w-full !bg-[#facc15] hover:!bg-[#eab308] text-black font-bold border-none shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] transition-all transform hover:scale-[1.02] py-3 text-base"
                     />
                   </div>
                 </>
