@@ -123,7 +123,7 @@ export default function OnboardingTour() {
             width: '90%',
             maxWidth: '400px'
         };
-    } else if (isMobile || currentTour.target === 'link_dashboard') {
+    } else if (isMobile) {
         // Mobile OR Corner Targets: Always fixed at bottom
         cardStyle = {
             bottom: '24px',
@@ -134,26 +134,27 @@ export default function OnboardingTour() {
             zIndex: 10000
         };
     } else {
-        // Desktop: Follow the element
-        // Clamp logic to prevent overflow could go here, but for now simple centering
-        // If element is too far right, maybe align right?
+        // Desktop: Follow the element with Smart Clamping
+        const cardMaxWidth = 380;
+        const halfCard = cardMaxWidth / 2;
+        const padding = 20;
 
         let leftPos = position.left + (position.width / 2);
         const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
 
-        // Simple clamp to keep center within bounds (padding 20px)
-        const minLeft = 200; // Half of max-width
-        const maxLeft = screenWidth - 200;
+        const minCenter = halfCard + padding;
+        const maxCenter = screenWidth - minCenter;
 
-        if (leftPos < minLeft) leftPos = minLeft;
-        if (leftPos > maxLeft) leftPos = maxLeft;
+        if (leftPos < minCenter) leftPos = minCenter;
+        if (leftPos > maxCenter) leftPos = maxCenter;
 
         cardStyle = {
             top: position.top + position.height + 20,
             left: leftPos,
             transform: 'translateX(-50%)',
             width: '90%',
-            maxWidth: '400px'
+            maxWidth: `${cardMaxWidth}px`,
+            zIndex: 10000
         };
     }
 
