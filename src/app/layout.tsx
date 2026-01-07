@@ -12,6 +12,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "DeepLinkrs - Smart Amazon Deep Links",
   description: "Create smart deep links for Amazon affiliate marketing",
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 import OfflineStatus from "@/components/OfflineStatus";
