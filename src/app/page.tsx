@@ -420,6 +420,7 @@ export default function Home() {
               <label className="text-xs text-muted-foreground ml-1 mb-1 block">Amazon Link</label>
               <div className="flex gap-2">
                 <input
+                  id="tour-amazon-input"
                   type="text"
                   placeholder="Paste Amazon Product Link..."
                   className="input-minimal flex-1"
@@ -590,6 +591,7 @@ export default function Home() {
           </div>
 
           <button
+            id="tour-generate-btn"
             onClick={generateLink}
             disabled={loading || !inputUrl}
             className="btn-primary w-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"

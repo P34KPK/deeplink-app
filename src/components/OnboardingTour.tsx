@@ -6,7 +6,7 @@ import { X, ChevronRight } from 'lucide-react';
 const TOUR_STEPS = [
     {
         title: "Welcome to DeepLinkrs! 🚀",
-        description: "Ready to boost your Amazon commissions? Let's create your first deep link in seconds.",
+        description: "Would you like a quick tour to see how to create a high-converting deep link in seconds?",
         target: "center"
     },
     {
@@ -52,9 +52,9 @@ export default function OnboardingTour() {
         let el: HTMLElement | null = null;
 
         if (currentStep.target === 'input_url') {
-            el = document.querySelector('input[placeholder*="Paste Amazon"]');
+            el = document.getElementById('tour-amazon-input');
         } else if (currentStep.target === 'btn_generate') {
-            el = document.querySelector('button.btn-primary.w-full');
+            el = document.getElementById('tour-generate-btn');
         } else if (currentStep.target === 'link_dashboard') {
             el = document.querySelector('a[href="/sign-in"]'); // Fallback if logged out
             if (!el) el = document.querySelector('a[href="/dashboard"]');
