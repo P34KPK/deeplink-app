@@ -697,6 +697,47 @@ export default function Home() {
                 </div>
               </div>
             </div>
+
+            {/* PRICING COMPARISON */}
+            <div className="mt-16 pt-16 border-t border-white/10">
+              <h2 className="text-3xl font-bold mb-8">Compare Plans</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto text-left">
+
+                {/* FREE */}
+                <div className="p-8 rounded-2xl bg-secondary/10 border border-white/5 flex flex-col">
+                  <h3 className="text-xl font-bold mb-2">Free Starter</h3>
+                  <div className="text-3xl font-bold mb-6">$0<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+                  <ul className="space-y-4 flex-1 mb-8 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-green-500" /> Basic Deep Links</li>
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-green-500" /> 20 Links / Month</li>
+                    <li className="flex items-center gap-3 text-zinc-600"><X className="w-4 h-4" /> No Custom Alias</li>
+                    <li className="flex items-center gap-3 text-zinc-600"><X className="w-4 h-4" /> No AI Studio</li>
+                    <li className="flex items-center gap-3 text-zinc-600"><X className="w-4 h-4" /> No Custom Images</li>
+                    <li className="flex items-center gap-3 text-zinc-600"><X className="w-4 h-4" /> Basic Analytics</li>
+                  </ul>
+                </div>
+
+                {/* PRO */}
+                <div className="p-8 rounded-2xl bg-gradient-to-b from-yellow-500/10 to-orange-500/5 border border-yellow-500/20 flex flex-col relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg">RECOMMENDED</div>
+                  <h3 className="text-xl font-bold mb-2 text-yellow-500">Pro Creator</h3>
+                  <div className="text-3xl font-bold mb-6">$9.99<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+                  <ul className="space-y-4 flex-1 mb-8 text-sm">
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-yellow-500" /> <span className="font-bold text-white">Unlimited</span> Deep Links</li>
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-yellow-500" /> Custom Alias (bit.ly style)</li>
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-pink-500" /> <span className="text-white">AI Studio Mockups</span> ✨</li>
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-yellow-500" /> Custom Image Uploads</li>
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-yellow-500" /> Advanced Analytics</li>
+                    <li className="flex items-center gap-3"><Check className="w-4 h-4 text-yellow-500" /> No Watermark</li>
+                  </ul>
+                  <CheckoutButton
+                    priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
+                    label="Upgrade Now"
+                    className="pc-checkout-btn w-full !bg-[#facc15] hover:!bg-[#eab308] text-black font-bold border-none shadow-[0_0_15px_rgba(250,204,21,0.3)] transition-all"
+                  />
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>
