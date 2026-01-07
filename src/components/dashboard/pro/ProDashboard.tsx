@@ -319,7 +319,7 @@ export default function ProDashboard({
                                 return (
                                     <SortableItem key={id} id={id} className={`${expandedWidgets.includes(id) ? 'col-span-1 md:col-span-2' : ''}`} onToggleSize={['total', 'linktree', 'daily'].includes(id) ? undefined : () => toggleWidgetSize(id)} isExpanded={expandedWidgets.includes(id)}>
                                         {isLocked ? (
-                                            <div className="matte-card p-6 h-full flex flex-col items-center justify-center relative overflow-hidden group">
+                                            <div className="matte-card p-6 h-full min-h-[250px] flex flex-col items-center justify-center relative overflow-hidden group">
 
 
 

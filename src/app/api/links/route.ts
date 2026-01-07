@@ -27,7 +27,13 @@ export async function GET() {
     return NextResponse.json(userLinks);
 }
 
+import { rateLimit } from '@/lib/rate-limit';
+
 export async function POST(req: Request) {
+    // 🛡️ Rate Limit: 30 creations per minute
+    const limiter = await rateLimit(req, { limit: 30, windowMs: 60 * 1000 });
+    if (!limiter.success) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+
     try {
         const user = await currentUser();
         const body = await req.json();

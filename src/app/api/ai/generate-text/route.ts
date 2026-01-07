@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
+    // 🛡️ Rate Limit: 10 requests per minute
+    const limiter = await rateLimit(req, { limit: 10, windowMs: 60 * 1000 });
+    if (!limiter.success) {
+        return new NextResponse('Too Many Requests', { status: 429 });
+    }
+
     try {
         const { product, context, type } = await req.json();
 
