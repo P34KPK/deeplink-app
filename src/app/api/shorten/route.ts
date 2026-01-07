@@ -3,6 +3,7 @@ import { createShortLink } from '@/lib/shortener';
 import { addLink, getLinks, ArchivedLink } from '@/lib/storage'; // Import storage methods
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { isAdmin } from '@/lib/admin-auth';
+import { getUserProfile } from '@/lib/profile-service';
 import Redis from 'ioredis';
 
 const redis = new Redis(process.env.REDIS_URL || '');
@@ -63,10 +64,24 @@ export async function POST(req: Request) {
         }
 
         // --- CREATE LINK ---
+
+        let finalTag = tag;
+        // Fallback: If no tag found in link, and user is logged in, use their Profile Tag
+        if (!finalTag && userId) {
+            try {
+                const profile = await getUserProfile(userId);
+                if (profile?.amazonTag) {
+                    finalTag = profile.amazonTag;
+                    // Clean up tag (remove ?tag= prefix if user pasted accidently)
+                    finalTag = finalTag.replace(/^.*tag=/, '');
+                }
+            } catch (e) { }
+        }
+
         const newSlug = await createShortLink({
             asin,
             domain: domain || 'com',
-            tag,
+            tag: finalTag,
             title,
             userId: userId || undefined,
             image: finalImage

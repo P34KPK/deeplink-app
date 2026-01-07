@@ -23,7 +23,8 @@ const KEYS = {
     DAILY: 'v2:stats:history:daily',
     SLUGS: 'v2:stats:slugs', // Hash: slug -> count
     ASIN_RANK: 'v2:stats:rank:asins', // ZSET: score=clicks, member=asin
-    ASIN_DATA: (asin: string) => `v2:stats:asin:${asin}` // Hash: last_click, android, ios...
+    ASIN_DATA: (asin: string) => `v2:stats:asin:${asin}`, // Hash: last_click, android, ios...
+    AFFILIATE: (userId: string) => `user:${userId}:affiliate` // Hash: clicks, sales, earnings
 };
 
 export async function trackClick(asin: string, userAgent: string, slug?: string, geo?: string, referrer?: string) {
@@ -167,4 +168,40 @@ function convertToIntMap(raw: Record<string, string> | null | undefined) {
         res[k] = parseInt(v);
     }
     return res;
+}
+
+export async function trackAffiliateClick(userId: string) {
+    if (!redis || !userId) return;
+    try {
+        await redis.hincrby(KEYS.AFFILIATE(userId), 'clicks', 1);
+    } catch (e) {
+        console.error('Affiliate click track error', e);
+    }
+}
+
+export async function trackAffiliateSale(userId: string, commission: number = 1.00) {
+    if (!redis || !userId) return;
+    try {
+        const key = KEYS.AFFILIATE(userId);
+        const pipe = redis.pipeline();
+        pipe.hincrby(key, 'sales', 1);
+        pipe.hincrbyfloat(key, 'earnings', commission);
+        await pipe.exec();
+    } catch (e) {
+        console.error('Affiliate sale track error', e);
+    }
+}
+
+export async function getAffiliateStats(userId: string) {
+    if (!redis || !userId) return { clicks: 0, sales: 0, earnings: 0 };
+    try {
+        const data = await redis.hgetall(KEYS.AFFILIATE(userId)) as any;
+        return {
+            clicks: parseInt(data?.clicks || '0'),
+            sales: parseInt(data?.sales || '0'),
+            earnings: parseFloat(data?.earnings || '0')
+        };
+    } catch (e) {
+        return { clicks: 0, sales: 0, earnings: 0 };
+    }
 }

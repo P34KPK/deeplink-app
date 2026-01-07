@@ -2,8 +2,28 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
     try {
-        const { product, context } = await req.json();
+        const { product, context, type } = await req.json();
 
+        // Mode: BIO GENERATOR
+        if (type === 'bio') {
+            const prompt = `Write a short, engaging social media bio (max 150 chars) for an influencer profile.
+            Keywords/Vibe: ${product || 'Lifestyle, Tech, Deals'}.
+            Context: ${context || 'General'}.
+            Include 1-2 emojis. 
+            Output JUST the bio text.`;
+
+            // Reuse logic for fetching (Pollinations preferred for free tier)
+            try {
+                const safePrompt = encodeURIComponent(prompt);
+                const res = await fetch(`https://text.pollinations.ai/${safePrompt}`);
+                const text = await res.text();
+                return NextResponse.json({ result: text.trim() });
+            } catch (e) {
+                return NextResponse.json({ result: "Welcome to my curated shop! 🛍️✨ #Deals" });
+            }
+        }
+
+        // Mode: CAPTION GENERATOR (Default)
         if (!product) {
             return new NextResponse('Product name is required', { status: 400 });
         }

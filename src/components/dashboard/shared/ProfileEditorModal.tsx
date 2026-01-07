@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { X, Settings, Wand2 } from 'lucide-react';
+import ImageCropperModal from '@/components/ImageCropperModal';
 
 interface ProfileEditorModalProps {
     isOpen: boolean;
     onClose: () => void;
     userId: string;
+    onSaveSuccess?: () => void;
 }
 
 interface UserProfile {
@@ -14,22 +16,29 @@ interface UserProfile {
     bio: string;
     avatarUrl?: string;
     backgroundImage?: string;
+    amazonTag?: string; // New!
     socials: {
+        website?: string;
         instagram?: string;
         tiktok?: string;
         youtube?: string;
+        twitter?: string;
+        discord?: string;
+        twitch?: string;
+        facebook?: string;
         [key: string]: string | undefined;
     };
     [key: string]: any; // fallback for loose API structure
 }
 
-export default function ProfileEditorModal({ isOpen, onClose, userId }: ProfileEditorModalProps) {
+export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSuccess }: ProfileEditorModalProps) {
     const [userProfile, setUserProfile] = useState<UserProfile>({
         username: '',
         bio: '',
         socials: {}
     });
     const [pendingImage, setPendingImage] = useState<string | null>(null);
+    const [rawFileImage, setRawFileImage] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -65,6 +74,7 @@ export default function ProfileEditorModal({ isOpen, onClose, userId }: ProfileE
         });
         if (res.ok) {
             alert('Profile updated!');
+            if (onSaveSuccess) onSaveSuccess();
             onClose();
             // TODO: Trigger a refresh of the preview if needed
         }
@@ -108,63 +118,41 @@ export default function ProfileEditorModal({ isOpen, onClose, userId }: ProfileE
                             <div>
                                 <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">Profile Picture</label>
                                 <div className="flex gap-4 items-center">
-                                    <div className="relative group cursor-pointer">
+                                    <div className="relative group cursor-pointer w-14 h-14">
                                         {userProfile.avatarUrl ? (
-                                            <img src={userProfile.avatarUrl} className="w-14 h-14 rounded-full border border-zinc-700 object-cover" alt="Preview" />
+                                            <img src={userProfile.avatarUrl} className="w-full h-full rounded-full border border-zinc-700 object-cover" alt="Preview" />
                                         ) : (
-                                            <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500">
+                                            <div className="w-full h-full rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500">
                                                 <span className="text-xs">?</span>
                                             </div>
                                         )}
-                                        <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                             <span className="text-[8px] text-white font-bold uppercase">Edit</span>
                                         </div>
                                         <input
+                                            id="avatar-upload"
                                             type="file"
                                             accept="image/*"
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0];
                                                 if (file) {
                                                     const reader = new FileReader();
                                                     reader.onload = (readerEvent) => {
-                                                        const img = new Image();
-                                                        img.onload = () => {
-                                                            const canvas = document.createElement('canvas');
-                                                            const MAX_SIZE = 400;
-                                                            let width = img.width;
-                                                            let height = img.height;
-
-                                                            if (width > height) {
-                                                                if (width > MAX_SIZE) {
-                                                                    height *= MAX_SIZE / width;
-                                                                    width = MAX_SIZE;
-                                                                }
-                                                            } else {
-                                                                if (height > MAX_SIZE) {
-                                                                    width *= MAX_SIZE / height;
-                                                                    height = MAX_SIZE;
-                                                                }
-                                                            }
-                                                            canvas.width = width;
-                                                            canvas.height = height;
-                                                            const ctx = canvas.getContext('2d');
-                                                            ctx?.drawImage(img, 0, 0, width, height);
-                                                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                                                            updateProfile('avatarUrl', dataUrl);
-                                                        };
-                                                        img.src = readerEvent.target?.result as string;
+                                                        const result = readerEvent.target?.result as string;
+                                                        if (result) setRawFileImage(result);
                                                     };
                                                     reader.readAsDataURL(file);
                                                 }
+                                                e.target.value = ''; // Allow re-select
                                             }}
                                         />
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-xs text-zinc-400 mb-2">Upload a profile picture. JPG, PNG or GIF.</p>
-                                        <button className="text-[10px] border border-zinc-700 hover:bg-zinc-800 px-3 py-1.5 rounded text-zinc-300 transition-colors pointer-events-none">
-                                            Click orb to upload
-                                        </button>
+                                        <label htmlFor="avatar-upload" className="text-[10px] border border-zinc-700 hover:bg-zinc-800 px-3 py-1.5 rounded text-zinc-300 transition-colors cursor-pointer inline-block">
+                                            Click to Upload
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -174,7 +162,37 @@ export default function ProfileEditorModal({ isOpen, onClose, userId }: ProfileE
                                 <input className="input-minimal w-full py-2 px-3 text-sm bg-zinc-900 border border-zinc-800 rounded-lg focus:border-pink-500 outline-none transition-colors" placeholder="e.g. Sarah's Picks" value={userProfile.username || ''} onChange={e => updateProfile('username', e.target.value)} />
                             </div>
                             <div>
-                                <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">Bio</label>
+                                <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 flex justify-between">
+                                    Bio
+                                    <button
+                                        onClick={async () => {
+                                            if (!userProfile.username) return alert('Enter a display name first!');
+                                            const btn = document.getElementById('bio-magic-btn');
+                                            if (btn) btn.innerHTML = '✨ Writing...';
+
+                                            try {
+                                                const res = await fetch('/api/ai/generate-text', {
+                                                    method: 'POST',
+                                                    body: JSON.stringify({
+                                                        product: userProfile.username, // Reuse product field as "Keywords/Name"
+                                                        context: 'Influencer Bio',
+                                                        type: 'bio'
+                                                    })
+                                                });
+                                                const data = await res.json();
+                                                if (data.result) updateProfile('bio', data.result);
+                                            } catch (e) {
+                                                console.error(e);
+                                            } finally {
+                                                if (btn) btn.innerHTML = '✨ AI Magic';
+                                            }
+                                        }}
+                                        id="bio-magic-btn"
+                                        className="text-[9px] text-pink-500 hover:text-pink-400 font-bold flex items-center gap-1 transition-colors"
+                                    >
+                                        ✨ AI Magic
+                                    </button>
+                                </label>
                                 <textarea className="input-minimal w-full py-2 px-3 text-sm resize-none h-20 bg-zinc-900 border border-zinc-800 rounded-lg focus:border-pink-500 outline-none transition-colors" placeholder="Tell your audience about your style..." value={userProfile.bio || ''} onChange={e => updateProfile('bio', e.target.value)} />
                             </div>
 
@@ -184,10 +202,28 @@ export default function ProfileEditorModal({ isOpen, onClose, userId }: ProfileE
                                     <label className="text-[10px] text-zinc-500 uppercase font-bold block">Page Theme</label>
                                     <span className="text-[9px] text-pink-500 font-bold border border-pink-500/20 bg-pink-500/10 px-1.5 rounded">INFLUENCER UNLOCK</span>
                                 </div>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {['#000000', '#1a1a2e', '#2e1a1a', '#1a2e1a'].map(color => (
-                                        <div key={color} className="h-8 rounded cursor-pointer border border-white/10 hover:border-white/50 transition-colors relative" style={{ backgroundColor: color }}>
-                                            {/* Selection Logic would go here */}
+                                <div className="grid grid-cols-6 gap-2">
+                                    {[
+                                        { v: '#000000', n: 'Black' }, { v: '#ffffff', n: 'White' },
+                                        { v: '#1a1a2e', n: 'Midnight' }, { v: '#27272a', n: 'Zinc' },
+                                        { v: '#f4f4f5', n: 'Light Gray' }, { v: '#e1e1e1', n: 'Silver' },
+                                        { v: '#f97316', n: 'Orange' }, { v: '#ef4444', n: 'Red' },
+                                        { v: '#ec4899', n: 'Pink' }, { v: '#a855f7', n: 'Purple' },
+                                        { v: '#3b82f6', n: 'Blue' }, { v: '#10b981', n: 'Green' },
+                                        // Gradients
+                                        { v: 'linear-gradient(to bottom right, #4f46e5, #ec4899)', n: 'Sunset' },
+                                        { v: 'linear-gradient(to bottom right, #22c1c3, #fdbb2d)', n: 'Summer' },
+                                        { v: 'linear-gradient(to bottom right, #ff00cc, #333399)', n: 'Neon' },
+                                        { v: 'linear-gradient(to bottom right, #000000, #434343)', n: 'Dark Steel' }
+                                    ].map(theme => (
+                                        <div
+                                            key={theme.v}
+                                            className={`h-8 rounded cursor-pointer border transition-all relative group ${userProfile.theme === theme.v ? 'border-white ring-2 ring-pink-500 ring-offset-2 ring-offset-zinc-900 z-10' : 'border-white/10 hover:border-white/50'}`}
+                                            style={{ background: theme.v }}
+                                            onClick={() => updateProfile('theme', theme.v)}
+                                            title={theme.n}
+                                        >
+                                            {userProfile.theme === theme.v && <div className="absolute inset-0 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white shadow-sm"></div></div>}
                                         </div>
                                     ))}
                                     <button onClick={generateBackground} className="col-span-4 mt-1 flex items-center justify-center gap-2 py-2 rounded border border-dashed border-zinc-700 hover:border-pink-500 hover:text-pink-500 text-zinc-500 text-xs transition-colors group">
@@ -254,24 +290,47 @@ export default function ProfileEditorModal({ isOpen, onClose, userId }: ProfileE
                                 </div>
                             </div>
 
+                            <div className="pt-2">
+                                <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">Amazon Associate Tag (Important!)</label>
+                                <div className="flex items-center gap-2 bg-zinc-900 px-3 rounded-lg border border-purple-500/30 focus-within:border-purple-500 transition-colors">
+                                    <span className="text-purple-400 text-xs font-bold whitespace-nowrap">Store ID</span>
+                                    <div className="h-4 w-[1px] bg-zinc-800 mx-1"></div>
+                                    <input
+                                        className="bg-transparent border-none outline-none text-xs w-full py-2.5 text-white placeholder-zinc-600"
+                                        placeholder="e.g. sebastien-20"
+                                        value={userProfile.amazonTag || ''}
+                                        onChange={e => updateProfile('amazonTag', e.target.value)}
+                                    />
+                                </div>
+                                <p className="text-[9px] text-zinc-500 mt-1">
+                                    <span className="text-purple-400 font-bold">*Fallback:</span> If we cannot detect a tag in your pasted link, we automatically use this one to ensure you get paid.
+                                </p>
+                            </div>
+
                             <div className="space-y-3 pt-2">
                                 <label className="text-[10px] text-zinc-500 uppercase font-bold block">Social Links</label>
-                                <div className="grid grid-cols-1 gap-3">
-                                    <div className="flex items-center gap-2 bg-zinc-900 px-3 rounded-lg border border-zinc-800">
-                                        <span className="text-zinc-500 text-xs">Instagram</span>
-                                        <div className="h-4 w-[1px] bg-zinc-800 mx-1"></div>
-                                        <input className="bg-transparent border-none outline-none text-xs w-full py-2.5" placeholder="Profile URL" value={userProfile.socials?.instagram || ''} onChange={e => updateSocial('instagram', e.target.value)} />
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-zinc-900 px-3 rounded-lg border border-zinc-800">
-                                        <span className="text-zinc-500 text-xs">TikTok</span>
-                                        <div className="h-4 w-[1px] bg-zinc-800 mx-1"></div>
-                                        <input className="bg-transparent border-none outline-none text-xs w-full py-2.5" placeholder="Profile URL" value={userProfile.socials?.tiktok || ''} onChange={e => updateSocial('tiktok', e.target.value)} />
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-zinc-900 px-3 rounded-lg border border-zinc-800">
-                                        <span className="text-zinc-500 text-xs">YouTube</span>
-                                        <div className="h-4 w-[1px] bg-zinc-800 mx-1"></div>
-                                        <input className="bg-transparent border-none outline-none text-xs w-full py-2.5" placeholder="Channel URL" value={userProfile.socials?.youtube || ''} onChange={e => updateSocial('youtube', e.target.value)} />
-                                    </div>
+                                <div className="grid grid-cols-1 gap-3 max-h-[240px] overflow-y-auto custom-scrollbar pr-1">
+                                    {[
+                                        { id: 'website', label: 'Website' },
+                                        { id: 'instagram', label: 'Instagram' },
+                                        { id: 'tiktok', label: 'TikTok' },
+                                        { id: 'youtube', label: 'YouTube' },
+                                        { id: 'twitter', label: 'X / Twitter' },
+                                        { id: 'discord', label: 'Discord' },
+                                        { id: 'twitch', label: 'Twitch' },
+                                        { id: 'facebook', label: 'Facebook' },
+                                    ].map(social => (
+                                        <div key={social.id} className="flex items-center gap-2 bg-zinc-900 px-3 rounded-lg border border-zinc-800 focus-within:border-zinc-700 transition-colors">
+                                            <span className="text-zinc-500 text-xs w-16 shrink-0 font-medium">{social.label}</span>
+                                            <div className="h-4 w-[1px] bg-zinc-800 mx-1"></div>
+                                            <input
+                                                className="bg-transparent border-none outline-none text-xs w-full py-2.5 text-zinc-200 placeholder-zinc-700"
+                                                placeholder={social.id === 'discord' ? 'Invite Link or User' : 'Profile URL'}
+                                                value={userProfile.socials?.[social.id] || ''}
+                                                onChange={e => updateSocial(social.id, e.target.value)}
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </>
@@ -287,6 +346,18 @@ export default function ProfileEditorModal({ isOpen, onClose, userId }: ProfileE
                     </button>
                 </div>
             </div>
-        </div>
+
+
+            {/* Image Cropper */}
+            <ImageCropperModal
+                isOpen={!!rawFileImage}
+                imageSrc={rawFileImage}
+                onClose={() => setRawFileImage(null)}
+                onSave={(cropped) => {
+                    updateProfile('avatarUrl', cropped);
+                    setRawFileImage(null);
+                }}
+            />
+        </div >
     );
 }

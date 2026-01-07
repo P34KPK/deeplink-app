@@ -1,6 +1,8 @@
+
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe';
+import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
     try {
@@ -18,6 +20,9 @@ export async function POST(req: Request) {
         }
 
         const settingsUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+        const cookieStore = await cookies();
+        const referrerId = cookieStore.get('deeplink_ref')?.value;
 
         const session = await stripe.checkout.sessions.create({
             // payment_method_types: ['card'], // Commented out to allow Dashboard configuration
@@ -40,10 +45,12 @@ export async function POST(req: Request) {
             },
             metadata: {
                 userId,
+                referrerId: referrerId || null
             },
             subscription_data: mode === 'subscription' ? {
                 metadata: {
                     userId,
+                    referrerId: referrerId || null
                 },
             } : undefined,
         });

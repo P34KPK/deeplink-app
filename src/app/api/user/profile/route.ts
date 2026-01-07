@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getUserProfile, saveUserProfile } from '@/lib/user-profile';
+import { getUserProfile, saveUserProfile } from '@/lib/profile-service';
 import { auth } from '@clerk/nextjs/server';
 
 export async function GET(req: Request) {

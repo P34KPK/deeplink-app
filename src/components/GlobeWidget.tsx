@@ -3,7 +3,7 @@
 import createGlobe from 'cobe';
 import { useEffect, useRef } from 'react';
 
-export default function GlobeWidget({ className }: { className?: string }) {
+export default function GlobeWidget({ className, markers = [] }: { className?: string, markers?: any[] }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
@@ -24,12 +24,7 @@ export default function GlobeWidget({ className }: { className?: string }) {
             baseColor: [0.3, 0.3, 0.3],
             markerColor: [0.1, 0.8, 1], // Cyan markers
             glowColor: [0.5, 0.5, 0.5], // Subtle glow
-            markers: [
-                // Example markers (could be dynamic later)
-                { location: [40.7128, -74.0060], size: 0.1 }, // NY
-                { location: [48.8566, 2.3522], size: 0.1 }, // Paris
-                { location: [35.6762, 139.6503], size: 0.1 }, // Tokyo
-            ],
+            markers: markers, // Real markers (empty by default)
             onRender: (state) => {
                 // Called on every animation frame.
                 // state.phi = phi

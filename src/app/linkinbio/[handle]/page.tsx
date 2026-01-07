@@ -18,7 +18,7 @@ type LinkData = {
 
 export default function UserBioPage() {
     const params = useParams();
-    const userId = params?.userId as string;
+    const handle = params?.handle as string;
 
     const [links, setLinks] = useState<LinkData[]>([]);
     const [user, setUser] = useState<any>(null);
@@ -31,9 +31,10 @@ export default function UserBioPage() {
     const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
     useEffect(() => {
-        if (!userId) return;
+        if (!handle) return;
 
-        fetch(`/api/public/u/${userId}`)
+        // API supports both userId and handle resolution
+        fetch(`/api/public/u/${handle}`)
             .then(res => {
                 if (!res.ok) throw new Error('Profile not found');
                 return res.json();
@@ -52,7 +53,7 @@ export default function UserBioPage() {
                 setError('Could not load profile.');
             })
             .finally(() => setLoading(false));
-    }, [userId]);
+    }, [handle]);
 
     useEffect(() => {
         if (!searchQuery) {

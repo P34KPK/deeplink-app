@@ -3,7 +3,7 @@
 
 import { ExternalLink, Copy, QrCode, Download, X, Edit } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
 
 interface LinkTreeWidgetProps {
@@ -15,10 +15,22 @@ interface LinkTreeWidgetProps {
 
 export default function LinkTreeWidget({ userId, username, className, onEditProfile }: LinkTreeWidgetProps) {
     const [showQr, setShowQr] = useState(false);
-    // Only access window in useEffect or safe check to avoid hydration mismatch
-    // But basic origin check is usually fine in client components if safe
+    const [handle, setHandle] = useState<string | null>(null);
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const bioUrl = `${origin}/u/${userId}`;
+
+    // Fetch handle
+    useEffect(() => {
+        if (!userId) return;
+        fetch(`/api/public/u/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.user?.handle) setHandle(data.user.handle);
+            })
+            .catch(console.error);
+    }, [userId]);
+
+    const displayId = handle || userId;
+    const bioUrl = `${origin}/linkinbio/${displayId}`;
 
     const copyLink = () => {
         navigator.clipboard.writeText(bioUrl);
@@ -101,7 +113,7 @@ export default function LinkTreeWidget({ userId, username, className, onEditProf
 
             <div className="bg-secondary/30 rounded-lg p-3 mb-4 flex items-center justify-between border border-white/5 group hover:border-pink-500/30 transition-colors">
                 <code className="text-xs text-muted-foreground truncate flex-1 font-mono pr-2">
-                    {origin}/u/<span className="text-foreground font-bold">{userId}</span>
+                    {origin}/linkinbio/<span className="text-foreground font-bold">{displayId}</span>
                 </code>
                 <button
                     onClick={copyLink}
@@ -122,14 +134,15 @@ export default function LinkTreeWidget({ userId, username, className, onEditProf
                         <span className="mt-0.5">Edit</span>
                     </button>
                 )}
-                <Link
-                    href={`/u/${userId}`}
+                <a
+                    href={`/linkinbio/${displayId}`}
                     target="_blank"
+                    rel="noopener noreferrer"
                     className={`h-9 rounded-md text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-b from-zinc-800 to-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all shadow-sm active:scale-95 ${!onEditProfile ? 'col-span-1' : ''}`}
                 >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span className="mt-0.5">View</span>
-                </Link>
+                </a>
                 <button
                     onClick={() => {
                         if (navigator.share) {

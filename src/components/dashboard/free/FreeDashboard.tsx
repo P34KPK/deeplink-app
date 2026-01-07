@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Activity, Link as LinkIcon, Megaphone, BarChart3 } from 'lucide-react';
 import CheckoutButton from '@/components/CheckoutButton';
+import AffiliateWidget from '@/components/dashboard/shared/AffiliateWidget';
 import { useState } from 'react';
 
 type FreeDashboardProps = {
@@ -8,11 +9,12 @@ type FreeDashboardProps = {
     history: any[];
     handleCopy: (id: string, url: string) => void;
     copiedId: string | null;
+    userId: string;
 };
 
 import UsageNotifier from '@/components/dashboard/free/UsageNotifier';
 
-export default function FreeDashboard({ stats, history, handleCopy, copiedId }: FreeDashboardProps) {
+export default function FreeDashboard({ stats, history, handleCopy, copiedId, userId }: FreeDashboardProps) {
     const { limits, usage } = stats;
     const clicksPercent = Math.min((usage.clicks / limits.clicks) * 100, 100);
     const linksPercent = Math.min((usage.links / limits.links) * 100, 100);
@@ -49,7 +51,7 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId }: 
                             Generate Link
                         </Link>
                         <CheckoutButton
-                            priceId="price_1SlioPLHxI2XHxZmhqxD5lKb"
+                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
                             label="Upgrade to PRO"
                             className="btn-primary bg-primary text-primary-foreground text-sm px-4 py-2 shadow-lg hover:shadow-primary/20"
                         />
@@ -112,6 +114,11 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId }: 
                     </div>
                 </div>
 
+                {/* Affiliate Program Widget */}
+                <div className="h-[200px]">
+                    <AffiliateWidget userId={userId} stats={stats.affiliate} />
+                </div>
+
                 {/* Permanent Upgrade CTA Card */}
                 <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -141,7 +148,7 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId }: 
 
                     <div className="relative z-10 w-full md:w-auto">
                         <CheckoutButton
-                            priceId="price_1SlioPLHxI2XHxZmhqxD5lKb"
+                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
                             label="Upgrade Now"
                             className="w-full md:w-auto btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-3 shadow-lg hover:shadow-yellow-500/20 transition-all"
                         />
@@ -201,7 +208,7 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId }: 
                     <div className="p-4 bg-secondary/20 text-center border-t border-border">
                         <span className="text-xs text-muted-foreground mr-2">Want to see who is clicking?</span>
                         <CheckoutButton
-                            priceId="price_1SlioPLHxI2XHxZmhqxD5lKb"
+                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
                             label="Go PRO"
                             className="text-xs text-primary font-bold hover:underline bg-transparent p-0 h-auto text-sky-500"
                         />

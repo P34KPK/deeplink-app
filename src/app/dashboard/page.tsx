@@ -90,23 +90,34 @@ export default function Dashboard() {
     const [aiModal, setAiModal] = useState<{ open: boolean, title: string, link: string }>({ open: false, title: '', link: '' }); // AI Writer
     const [widgetOrder, setWidgetOrder] = useState<string[]>([]);
     const [showProfileEditor, setShowProfileEditor] = useState(false);
+    const [profileVersion, setProfileVersion] = useState(0);
     // AI Mockup State
-    const [mockupModal, setMockupModal] = useState<{ open: boolean; linkId: string; url: string; title: string } | null>(null);
+    const [mockupModal, setMockupModal] = useState<{ open: boolean; linkId: string; url: string; title: string; image?: string } | null>(null);
 
     // Load persisted layout
     useEffect(() => {
-        const saved = localStorage.getItem('dashboard_layout_v1');
+        // Updated Order: Identity Top -> Money -> Stats (v6)
+        const defaultOrder = ['identity', 'gamification', 'affiliate', 'favorites', 'simulator', 'prime', 'trends', 'devices', 'locations', 'browsers', 'referrers', 'total', 'copywriter', 'viral_studio', 'linktree', 'daily'];
+        const saved = localStorage.getItem('dashboard_layout_v6');
         if (saved) {
             try {
-                setWidgetOrder(JSON.parse(saved));
+                let parsedOrder = JSON.parse(saved);
+                // Ensure all default widgets are present in the loaded order
+                defaultOrder.forEach(widget => {
+                    if (!parsedOrder.includes(widget)) {
+                        parsedOrder.push(widget);
+                    }
+                });
+                setWidgetOrder(parsedOrder);
             } catch (e) {
-                // Fallback dict
-                setWidgetOrder(['gamification', 'total', 'linktree', 'simulator', 'prime', 'devices', 'locations', 'browsers', 'referrers', 'daily', 'trends']);
+                // Fallback to default if parsing fails
+                setWidgetOrder(defaultOrder);
             }
         } else {
-            setWidgetOrder(['gamification', 'total', 'linktree', 'simulator', 'prime', 'devices', 'locations', 'browsers', 'referrers', 'daily', 'trends']);
+            setWidgetOrder(defaultOrder);
         }
     }, []);
+
 
     // Agent C: Commission Simulator State
     const [simPrice, setSimPrice] = useState(25); // Avg Product Price
@@ -192,7 +203,7 @@ export default function Dashboard() {
                 const oldIndex = items.indexOf(active.id as string);
                 const newIndex = items.indexOf(over?.id as string);
                 const newOrder = arrayMove(items, oldIndex, newIndex);
-                localStorage.setItem('dashboard_layout_v1', JSON.stringify(newOrder));
+                localStorage.setItem('dashboard_layout_v5', JSON.stringify(newOrder));
                 return newOrder;
             });
         }
@@ -267,17 +278,8 @@ export default function Dashboard() {
         return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Failed to load analytics.</div>;
     }
 
-    // --- FREE PLAN DASHBOARD ---
-    if (stats.plan === 'free') {
-        return (
-            <FreeDashboard
-                stats={stats}
-                history={history}
-                handleCopy={handleCopy}
-                copiedId={copiedId}
-            />
-        );
-    }
+    // --- UNIFIED DASHBOARD (Free users treated as Pro with locks) ---
+    // if (stats.plan === 'free') { ... } // Removed explicit split
 
     // --- PRO DASHBOARD ---
     return (
@@ -292,6 +294,7 @@ export default function Dashboard() {
                 onEditProfile={() => setShowProfileEditor(true)}
                 setAiModal={setAiModal}
                 setMockupModal={setMockupModal}
+                profileVersion={profileVersion}
             />
 
             {/* Profile Editor Modal */}
@@ -299,6 +302,7 @@ export default function Dashboard() {
                 isOpen={showProfileEditor}
                 onClose={() => setShowProfileEditor(false)}
                 userId={userId || ''}
+                onSaveSuccess={() => setProfileVersion(v => v + 1)}
             />
 
             {aiModal.open && (
@@ -314,6 +318,8 @@ export default function Dashboard() {
                 onClose={() => setMockupModal(null)}
                 productTitle={mockupModal?.title || ''}
                 productUrl={mockupModal?.url || ''}
+                productImage={mockupModal?.image}
+                links={history}
             />
         </>
     );

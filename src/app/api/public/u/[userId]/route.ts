@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getLinks } from '@/lib/storage'; // Standardized Storage
-import { getUserProfile } from '@/lib/user-profile';
+import { getUserProfile, getUserIdByHandle } from '@/lib/profile-service';
 import { isBanned } from '@/lib/ban-system';
 
 export async function GET(
@@ -8,7 +8,13 @@ export async function GET(
     { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
-        const { userId } = await params;
+        let { userId } = await params;
+
+        // Resolve Handle if applicable
+        if (userId && !userId.startsWith('user_')) {
+            const resolved = await getUserIdByHandle(userId);
+            if (resolved) userId = resolved;
+        }
 
         if (!userId) {
             return new NextResponse("User ID is required", { status: 400 });

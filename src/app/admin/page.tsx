@@ -18,6 +18,9 @@ import AdminBroadcast from '@/components/AdminBroadcast';
 import GamificationWidget from '@/components/GamificationWidget';
 import VaultWidget from '@/components/VaultWidget';
 import GlobeWidget from '@/components/GlobeWidget';
+import SystemTerminal from '@/components/admin/SystemTerminal';
+import BlackBoxWidget from '@/components/admin/BlackBoxWidget';
+import PanicControl from '@/components/admin/PanicControl';
 
 function SortableItem(props: any) {
     const {
@@ -26,18 +29,37 @@ function SortableItem(props: any) {
         setNodeRef,
         transform,
         transition,
+        isDragging
     } = useSortable({ id: props.id });
 
     const style = {
-        transform: CSS.Transform.toString(transform),
+        transform: CSS.Translate.toString(transform),
         transition,
+        zIndex: isDragging ? 100 : 'auto',
         touchAction: 'none'
     };
 
     return (
-        <div ref={setNodeRef} style={style} className={`h-full ${props.className || ''}`}>
-            {/* Visual Drag Handle Wrapper - Only the handle inside should trigger drag if not overlapping content */}
-            <div className="h-full relative" {...attributes} {...listeners}>
+        <div ref={setNodeRef} style={style} className={`h-full ${props.className || ''} group ${isDragging ? 'opacity-80' : ''}`}>
+            <div className="h-full relative">
+                {/* Unified Pro-Style Drag Handle & Resize */}
+                <div className="absolute top-2 right-2 z-50 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-black/60 backdrop-blur rounded-lg border border-white/10 shadow-xl">
+                    {props.onToggle && (
+                        <button
+                            onMouseDown={(e) => { e.stopPropagation(); props.onToggle(e); }}
+                            className="p-1 hover:bg-white/20 rounded text-zinc-400 hover:text-white transition-colors"
+                            title="Resize Widget"
+                        >
+                            {(props.size === 'big' || props.size === 'wide' || props.size === 'tall') ?
+                                <Minimize2 className="w-3 h-3" /> :
+                                <Maximize2 className="w-3 h-3" />
+                            }
+                        </button>
+                    )}
+                    <div {...attributes} {...listeners} className="p-1 cursor-grab active:cursor-grabbing text-zinc-400 hover:text-white transition-colors" title="Drag to move">
+                        <GripHorizontal className="w-4 h-4" />
+                    </div>
+                </div>
                 {props.children}
             </div>
         </div>
@@ -56,7 +78,7 @@ export default function AdminDashboard() {
     const [selectedUser, setSelectedUser] = useState<string | null>(null); // For User Mini-Dashboard
 
     // Agent E State (Pro Widgets) + Agent A (War Room, Security)
-    const [widgetOrder, setWidgetOrder] = useState(['ai_analyst', 'total_chart', 'daily_chart', 'devices_pie', 'geo_map', 'linktree', 'gamification', 'pulse', 'godmode', 'simulator', 'inbox', 'security', 'vault', 'broadcast', 'warroom']);
+    const [widgetOrder, setWidgetOrder] = useState(['black_box', 'system_terminal', 'panic_control', 'ai_analyst', 'total_chart', 'daily_chart', 'devices_pie', 'geo_map', 'linktree', 'gamification', 'pulse', 'godmode', 'simulator', 'inbox', 'security', 'vault', 'broadcast', 'warroom']);
     const [widgetSizes, setWidgetSizes] = useState<Record<string, string>>({
         map: 'big',
         pulse: 'wide',
@@ -69,18 +91,21 @@ export default function AdminDashboard() {
         linktree: 'tall',
         warroom: 'big',
         vault: 'small',
-        broadcast: 'wide'
+        broadcast: 'wide',
+        system_terminal: 'wide',
+        black_box: 'tall',
+        panic_control: 'small'
     });
     const [broadcastMsg, setBroadcastMsg] = useState('');
     const [flaggedUsers, setFlaggedUsers] = useState<any[]>([]);
 
     // Load persisted layout
     useEffect(() => {
-        const savedOrder = localStorage.getItem('admin_widget_order');
+        const savedOrder = localStorage.getItem('admin_widget_order_v2');
         if (savedOrder) {
             try { setWidgetOrder(JSON.parse(savedOrder)); } catch (e) { console.error(e); }
         }
-        const savedSizes = localStorage.getItem('admin_widget_sizes');
+        const savedSizes = localStorage.getItem('admin_widget_sizes_v2');
         if (savedSizes) {
             try { setWidgetSizes(JSON.parse(savedSizes)); } catch (e) { console.error(e); }
         }
@@ -95,7 +120,7 @@ export default function AdminDashboard() {
             const current = prev[id] || 'small';
             const nextIndex = (sizes.indexOf(current) + 1) % sizes.length;
             const newSizes = { ...prev, [id]: sizes[nextIndex] };
-            localStorage.setItem('admin_widget_sizes', JSON.stringify(newSizes));
+            localStorage.setItem('admin_widget_sizes_v2', JSON.stringify(newSizes));
             return newSizes;
         });
     };
@@ -198,7 +223,7 @@ export default function AdminDashboard() {
                 const oldIndex = items.indexOf(active.id as string);
                 const newIndex = items.indexOf(over?.id as string);
                 const newOrder = arrayMove(items, oldIndex, newIndex);
-                localStorage.setItem('admin_widget_order', JSON.stringify(newOrder));
+                localStorage.setItem('admin_widget_order_v2', JSON.stringify(newOrder));
                 return newOrder;
             });
         }
@@ -239,11 +264,14 @@ export default function AdminDashboard() {
 
     const fetchData = () => {
         setLoading(true);
-        fetch('/api/admin/stats', {
+        fetch(`/api/admin/stats?t=${Date.now()}`, {
             headers: { 'x-admin-key': localStorage.getItem('admin_session') || '' }
         })
             .then(res => res.json())
-            .then(setData)
+            .then(d => {
+                console.log("Admin Data Received:", d);
+                setData(d);
+            })
             .catch(console.error)
             .finally(() => setLoading(false));
     };
@@ -401,170 +429,7 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* SUPER ADMIN WORKSPACE */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="matte-card p-8 border-primary/20 bg-primary/5">
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            ⚡️ Quick Generator
-                        </h2>
-                        <div className="space-y-4">
-                            <input
-                                type="text"
-                                placeholder="Paste Amazon Link..."
-                                className="input-minimal bg-background"
-                                value={inputUrl}
-                                onChange={(e) => setInputUrl(e.target.value)}
-                            />
-                            <div className="flex gap-4">
-                                <input
-                                    type="text"
-                                    placeholder="Title (Optional)"
-                                    className="input-minimal bg-background"
-                                    value={inputTitle}
-                                    onChange={(e) => setInputTitle(e.target.value)}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Alias (Optional)"
-                                    className="input-minimal bg-background"
-                                    value={inputSlug}
-                                    onChange={(e) => setInputSlug(e.target.value)}
-                                />
-                            </div>
-                            <button
-                                onClick={generateLink}
-                                disabled={genLoading || !inputUrl}
-                                className="btn-primary w-full"
-                            >
-                                {genLoading ? 'Processing...' : 'Generate Secure Link'}
-                            </button>
-                            {generatedLink && (
-                                <div className="p-4 bg-background rounded border border-green-500/30 text-green-400 text-center font-mono text-sm break-all select-all cursor-pointer hover:bg-green-500/10 transition-colors" title="Click to copy">
-                                    {generatedLink}
-                                </div>
-                            )}
-                            {genError && <p className="text-red-500 text-sm">{genError}</p>}
-                        </div>
-                    </div>
 
-                    <div className="space-y-6">
-                        <div className="matte-card p-6 border-blue-500/20 bg-blue-500/5">
-                            <h3 className="text-sm font-medium text-blue-400 uppercase mb-2">My Session Stats</h3>
-                            <div className="text-4xl font-bold">{data?.totalLinks || 0}</div>
-                            <p className="text-xs text-muted-foreground mt-2">Links generated system-wide.</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* --- NEW: User Profile Customization --- */}
-                <div id="profile-editor" className="matte-card p-8 mb-8 border-purple-500/20 bg-purple-500/5 transition-all outline-none focus-within:ring-2 focus-within:ring-purple-500/50">
-                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-purple-400">
-                        ✨ Customize Your Bio Page
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Display Name</label>
-                                <input type="text" value={profName} onChange={e => setProfName(e.target.value)} placeholder="E.g. Sebastien's Picks" className="input-minimal w-full bg-background" />
-                            </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Bio Description</label>
-                                <textarea value={profBio} onChange={e => setProfBio(e.target.value)} placeholder="Tell your audience who you are..." className="input-minimal w-full min-h-[80px] bg-background" />
-                            </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Avatar URL</label>
-                                <input type="text" value={profAvatar} onChange={e => setProfAvatar(e.target.value)} placeholder="https://..." className="input-minimal w-full bg-background" />
-                            </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Background Image URL (Optional)</label>
-                                <input type="text" value={profBg} onChange={e => setProfBg(e.target.value)} placeholder="https://..." className="input-minimal w-full bg-background" />
-                            </div>
-                            <div>
-                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Social Links (Instagram, TikTok, X)</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <input type="text" value={profSocials.instagram || ''} onChange={e => setProfSocials({ ...profSocials, instagram: e.target.value })} placeholder="Instagram URL" className="input-minimal bg-background text-xs" />
-                                    <input type="text" value={profSocials.tiktok || ''} onChange={e => setProfSocials({ ...profSocials, tiktok: e.target.value })} placeholder="TikTok URL" className="input-minimal bg-background text-xs" />
-                                    <input type="text" value={profSocials.twitter || ''} onChange={e => setProfSocials({ ...profSocials, twitter: e.target.value })} placeholder="X (Twitter) URL" className="input-minimal bg-background text-xs" />
-                                </div>
-                            </div>
-
-                            {/* Theme Presets */}
-                            <div>
-                                <label className="text-xs text-muted-foreground uppercase font-bold mb-2 block">Quick Theme Presets (Unlock Levels)</label>
-                                <div className="grid grid-cols-4 gap-2">
-                                    <button onClick={() => {
-                                        setProfBio("Just getting started sharing my finds!");
-                                        setProfAvatar("");
-                                    }} className="text-[10px] bg-slate-800 hover:bg-slate-700 py-2 rounded text-slate-300">Rookie</button>
-
-                                    <button onClick={() => {
-                                        setProfBio("Pro curator. Daily deals dropped here. ⚡️");
-                                        setProfAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=Pro");
-                                    }} className="text-[10px] bg-blue-900/40 hover:bg-blue-800/60 py-2 rounded text-blue-300 border border-blue-500/20">Pro</button>
-
-                                    <button onClick={() => {
-                                        setProfBio("Influencer Picks 🌟 Follow for exclusive drops.");
-                                        setProfAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=Influencer");
-                                    }} className="text-[10px] bg-purple-900/40 hover:bg-purple-800/60 py-2 rounded text-purple-300 border border-purple-500/20">Influencer</button>
-
-                                    <button onClick={() => {
-                                        setProfBio("👑 TITAN STATUS. The 1%. Join the movement.");
-                                        setProfAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=Titan");
-                                    }} className="text-[10px] bg-amber-900/40 hover:bg-amber-800/60 py-2 rounded text-amber-300 border border-amber-500/20 font-bold">TITAN</button>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => {
-                                    fetch('/api/user/profile', {
-                                        method: 'POST',
-                                        body: JSON.stringify({
-                                            userId: 'p34k',
-                                            username: profName,
-                                            bio: profBio,
-                                            avatar: profAvatar,
-                                            backgroundImage: profBg,
-                                            socials: profSocials
-                                        }),
-                                        headers: { 'Content-Type': 'application/json' }
-                                    }).then(() => alert('Profile Updated Successfully! 🚀\n\nVisit your public page to see changes.'));
-                                }}
-                                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded font-bold w-full transition-all shadow-lg hover:shadow-purple-500/25 flex items-center justify-center gap-2 mt-4"
-                            >
-                                <Sparkles className="w-4 h-4" />
-                                Save & Publish Bio
-                            </button>
-                        </div>
-                        <div className="flex flex-col items-center justify-center p-6 bg-black/40 rounded-xl border border-white/5 relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-                            {profBg ? (
-                                <div className="absolute inset-0 bg-cover bg-center opacity-50 transition-opacity duration-500" style={{ backgroundImage: `url(${profBg})` }} />
-                            ) : (
-                                <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none" />
-                            )}
-
-                            <div className="z-10 text-center space-y-4">
-                                <div className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2">Live Preview</p>
-                                    <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-[3px] shadow-xl">
-                                        <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                                            {profAvatar && profAvatar !== '/logo.png' ?
-                                                <img src={profAvatar} alt="Avatar" className="w-full h-full object-cover" /> :
-                                                <span className="text-4xl">👤</span>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div className="mt-2 font-bold">{profName}</div>
-                                    <div className="text-xs text-zinc-400 max-w-[200px] truncate">{profBio}</div>
-                                </div>
-
-                                <a href="/u/p34k" target="_blank" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full text-sm font-bold hover:scale-105 transition-transform">
-                                    Visit Public Page ↗
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <div className="border-t border-border pt-8 my-8">
                     <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
@@ -581,7 +446,13 @@ export default function AdminDashboard() {
                         <SortableContext items={widgetOrder} strategy={rectSortingStrategy}>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                                 {widgetOrder.map((id) => (
-                                    <SortableItem key={id} id={id} className={getSizeClass(id)}>
+                                    <SortableItem
+                                        key={id}
+                                        id={id}
+                                        className={getSizeClass(id)}
+                                        onToggle={(e: any) => toggleWidgetSize(id, e)}
+                                        size={widgetSizes[id] || 'small'}
+                                    >
 
                                         {/* NEW: Total Traffic (Pro Style) */}
                                         {id === 'total_chart' && (
@@ -1127,6 +998,48 @@ export default function AdminDashboard() {
                                                 <VaultWidget />
                                             </div>
                                         )}
+
+                                        {/* NEW: System Terminal (Matrix) */}
+                                        {id === 'system_terminal' && (
+                                            <div className="h-full relative group">
+                                                <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                                    <div className="p-1.5 text-white/20 cursor-grab active:cursor-grabbing hover:text-white/60 transition-colors" title="Drag to move">
+                                                        <GripHorizontal className="w-3 h-3" />
+                                                    </div>
+                                                    <button
+                                                        onMouseDown={(e) => toggleWidgetSize(id, e)}
+                                                        className="p-1 hover:bg-green-500/20 rounded text-green-500/50 hover:text-green-500 transition-colors"
+                                                    >
+                                                        <Maximize2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                                <SystemTerminal data={data} />
+                                            </div>
+                                        )}
+
+                                        {/* NEW: Black Box (AI Ops) */}
+                                        {id === 'black_box' && (
+                                            <div className="h-full relative group">
+                                                <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                                    <div className="p-1.5 text-white/20 cursor-grab active:cursor-grabbing hover:text-white/60 transition-colors" title="Drag to move">
+                                                        <GripHorizontal className="w-3 h-3" />
+                                                    </div>
+                                                </div>
+                                                <BlackBoxWidget />
+                                            </div>
+                                        )}
+
+                                        {/* NEW: Panic Control */}
+                                        {id === 'panic_control' && (
+                                            <div className="h-full relative group">
+                                                <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                                    <div className="p-1.5 text-zinc-500/20 cursor-grab active:cursor-grabbing hover:text-zinc-500/60 transition-colors" title="Drag to move">
+                                                        <GripHorizontal className="w-3 h-3" />
+                                                    </div>
+                                                </div>
+                                                <PanicControl />
+                                            </div>
+                                        )}
                                     </SortableItem>
                                 ))}
                             </div>
@@ -1156,6 +1069,11 @@ export default function AdminDashboard() {
                                     {(() => {
                                         // Use server-aggregated users if available, otherwise fallback (or empty)
                                         const usersList = data?.users || [];
+
+                                        // DEBUG VISUALIZATION
+                                        if (!usersList.length) {
+                                            console.log('Zero users found, debug info:', data);
+                                        }
 
                                         // If empty
                                         if (usersList.length === 0) {
@@ -1200,6 +1118,9 @@ export default function AdminDashboard() {
                                                 </td>
                                                 <td className="px-6 py-4 text-muted-foreground text-xs">{new Date(user.lastDate).toLocaleDateString()} {new Date(user.lastDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                                                 <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
+                                                    <Link href={`/admin/users/${user.userId || 'unknown'}`} className="p-2 hover:bg-purple-500/20 text-muted-foreground hover:text-purple-500 rounded transition-colors" title="View Dashboard">
+                                                        <Activity className="w-4 h-4" />
+                                                    </Link>
                                                     <button className="p-2 hover:bg-red-500/20 text-muted-foreground hover:text-red-500 rounded transition-colors" title="Ban User" onClick={() => alert('Ban logic here')}>
                                                         <Ban className="w-4 h-4" />
                                                     </button>
@@ -1244,13 +1165,13 @@ export default function AdminDashboard() {
                                             <td className="px-6 py-4 font-mono text-xs opacity-50">{link.asin}</td>
                                             <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
                                                 {link.userId && (
-                                                    <button
-                                                        onClick={() => setSelectedUser(link.userId)}
+                                                    <Link
+                                                        href={`/admin/users/${link.userId}`}
                                                         className="text-xs border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 px-2 py-1.5 rounded transition-colors"
-                                                        title="View User Stats"
+                                                        title="View Dashboard"
                                                     >
                                                         Stats
-                                                    </button>
+                                                    </Link>
                                                 )}
                                                 <button
                                                     onClick={() => {
@@ -1268,6 +1189,170 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </div >
+                {/* SUPER ADMIN WORKSPACE */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+                    <div className="matte-card p-8 border-primary/20 bg-primary/5">
+                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                            ⚡️ Quick Generator
+                        </h2>
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Paste Amazon Link..."
+                                className="input-minimal bg-background"
+                                value={inputUrl}
+                                onChange={(e) => setInputUrl(e.target.value)}
+                            />
+                            <div className="flex gap-4">
+                                <input
+                                    type="text"
+                                    placeholder="Title (Optional)"
+                                    className="input-minimal bg-background"
+                                    value={inputTitle}
+                                    onChange={(e) => setInputTitle(e.target.value)}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Alias (Optional)"
+                                    className="input-minimal bg-background"
+                                    value={inputSlug}
+                                    onChange={(e) => setInputSlug(e.target.value)}
+                                />
+                            </div>
+                            <button
+                                onClick={generateLink}
+                                disabled={genLoading || !inputUrl}
+                                className="btn-primary w-full"
+                            >
+                                {genLoading ? 'Processing...' : 'Generate Secure Link'}
+                            </button>
+                            {generatedLink && (
+                                <div className="p-4 bg-background rounded border border-green-500/30 text-green-400 text-center font-mono text-sm break-all select-all cursor-pointer hover:bg-green-500/10 transition-colors" title="Click to copy">
+                                    {generatedLink}
+                                </div>
+                            )}
+                            {genError && <p className="text-red-500 text-sm">{genError}</p>}
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="matte-card p-6 border-blue-500/20 bg-blue-500/5">
+                            <h3 className="text-sm font-medium text-blue-400 uppercase mb-2">My Session Stats</h3>
+                            <div className="text-4xl font-bold">{data?.totalLinks || 0}</div>
+                            <p className="text-xs text-muted-foreground mt-2">Links generated system-wide.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- NEW: User Profile Customization --- */}
+                <div id="profile-editor" className="matte-card p-8 mb-8 border-purple-500/20 bg-purple-500/5 transition-all outline-none focus-within:ring-2 focus-within:ring-purple-500/50">
+                    <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-purple-400">
+                        ✨ Customize Your Bio Page
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Display Name</label>
+                                <input type="text" value={profName} onChange={e => setProfName(e.target.value)} placeholder="E.g. Sebastien's Picks" className="input-minimal w-full bg-background" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Bio Description</label>
+                                <textarea value={profBio} onChange={e => setProfBio(e.target.value)} placeholder="Tell your audience who you are..." className="input-minimal w-full min-h-[80px] bg-background" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Avatar URL</label>
+                                <input type="text" value={profAvatar} onChange={e => setProfAvatar(e.target.value)} placeholder="https://..." className="input-minimal w-full bg-background" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Background Image URL (Optional)</label>
+                                <input type="text" value={profBg} onChange={e => setProfBg(e.target.value)} placeholder="https://..." className="input-minimal w-full bg-background" />
+                            </div>
+                            <div>
+                                <label className="text-xs text-muted-foreground uppercase font-bold mb-1 block">Social Links (Instagram, TikTok, X)</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <input type="text" value={profSocials.instagram || ''} onChange={e => setProfSocials({ ...profSocials, instagram: e.target.value })} placeholder="Instagram URL" className="input-minimal bg-background text-xs" />
+                                    <input type="text" value={profSocials.tiktok || ''} onChange={e => setProfSocials({ ...profSocials, tiktok: e.target.value })} placeholder="TikTok URL" className="input-minimal bg-background text-xs" />
+                                    <input type="text" value={profSocials.twitter || ''} onChange={e => setProfSocials({ ...profSocials, twitter: e.target.value })} placeholder="X (Twitter) URL" className="input-minimal bg-background text-xs" />
+                                </div>
+                            </div>
+
+                            {/* Theme Presets */}
+                            <div>
+                                <label className="text-xs text-muted-foreground uppercase font-bold mb-2 block">Quick Theme Presets (Unlock Levels)</label>
+                                <div className="grid grid-cols-4 gap-2">
+                                    <button onClick={() => {
+                                        setProfBio("Just getting started sharing my finds!");
+                                        setProfAvatar("");
+                                    }} className="text-[10px] bg-slate-800 hover:bg-slate-700 py-2 rounded text-slate-300">Rookie</button>
+
+                                    <button onClick={() => {
+                                        setProfBio("Pro curator. Daily deals dropped here. ⚡️");
+                                        setProfAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=Pro");
+                                    }} className="text-[10px] bg-blue-900/40 hover:bg-blue-800/60 py-2 rounded text-blue-300 border border-blue-500/20">Pro</button>
+
+                                    <button onClick={() => {
+                                        setProfBio("Influencer Picks 🌟 Follow for exclusive drops.");
+                                        setProfAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=Influencer");
+                                    }} className="text-[10px] bg-purple-900/40 hover:bg-purple-800/60 py-2 rounded text-purple-300 border border-purple-500/20">Influencer</button>
+
+                                    <button onClick={() => {
+                                        setProfBio("👑 TITAN STATUS. The 1%. Join the movement.");
+                                        setProfAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=Titan");
+                                    }} className="text-[10px] bg-amber-900/40 hover:bg-amber-800/60 py-2 rounded text-amber-300 border border-amber-500/20 font-bold">TITAN</button>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    fetch('/api/user/profile', {
+                                        method: 'POST',
+                                        body: JSON.stringify({
+                                            userId: 'p34k',
+                                            username: profName,
+                                            bio: profBio,
+                                            avatar: profAvatar,
+                                            backgroundImage: profBg,
+                                            socials: profSocials
+                                        }),
+                                        headers: { 'Content-Type': 'application/json' }
+                                    }).then(() => alert('Profile Updated Successfully! 🚀\n\nVisit your public page to see changes.'));
+                                }}
+                                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded font-bold w-full transition-all shadow-lg hover:shadow-purple-500/25 flex items-center justify-center gap-2 mt-4"
+                            >
+                                <Sparkles className="w-4 h-4" />
+                                Save & Publish Bio
+                            </button>
+                        </div>
+                        <div className="flex flex-col items-center justify-center p-6 bg-black/40 rounded-xl border border-white/5 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+                            {profBg ? (
+                                <div className="absolute inset-0 bg-cover bg-center opacity-50 transition-opacity duration-500" style={{ backgroundImage: `url(${profBg})` }} />
+                            ) : (
+                                <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 to-transparent pointer-events-none" />
+                            )}
+
+                            <div className="z-10 text-center space-y-4">
+                                <div className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2">Live Preview</p>
+                                    <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-[3px] shadow-xl">
+                                        <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+                                            {profAvatar && profAvatar !== '/logo.png' ?
+                                                <img src={profAvatar} alt="Avatar" className="w-full h-full object-cover" /> :
+                                                <span className="text-4xl">👤</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 font-bold">{profName}</div>
+                                    <div className="text-xs text-zinc-400 max-w-[200px] truncate">{profBio}</div>
+                                </div>
+
+                                <a href="/u/p34k" target="_blank" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-full text-sm font-bold hover:scale-105 transition-transform">
+                                    Visit Public Page ↗
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div >
 
             {/* USER MINI DASHBOARD MODAL */}

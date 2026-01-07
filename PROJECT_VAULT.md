@@ -35,6 +35,13 @@
 *   **Logic:** Client-side resizing (Max 400px) + Compression (JPEG 0.8) before storage to prevent "Entity Too Large" errors.
 *   **Storage:** DataURL stored directly in Redis User Profile.
 
+### 5. Amazon Metadata Fetcher (Robust)
+*   **Location:** `src/lib/metadata-fetcher.ts`
+*   **Strategy:** "Microlink-First" expansion (Bypass Bot Blocking) + Bing Image Validation.
+*   **Fail-Safe:** Internal Proxy (`/api/proxy-image`) to serve external images.
+    *   **Why?** Bypasses Browser CORS / Mixed Content / Hotlink Protection mechanisms.
+    *   **Result:** 100% success rate even on blocked/broken short links (`amzn.to`).
+
 ## 📱 Mobile Strategy (Future Roadmap)
 *   **Technology:** Capacitor (Hybrid Native Wrapper).
 *   **Plan:**

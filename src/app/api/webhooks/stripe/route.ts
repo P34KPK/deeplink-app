@@ -43,6 +43,12 @@ export async function POST(req: Request) {
                 ),
             },
         });
+
+        // Track Affiliate Sale
+        if (session.metadata.referrerId) {
+            const { trackAffiliateSale } = await import('@/lib/analytics');
+            await trackAffiliateSale(session.metadata.referrerId, 1.00);
+        }
     }
 
     if (event.type === 'invoice.payment_succeeded') {

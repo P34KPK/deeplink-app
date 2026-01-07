@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getStats } from '@/lib/analytics';
+import { getStats, getAffiliateStats } from '@/lib/analytics';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { redis } from '@/lib/redis';
 // Use dynamic import for storage to avoid circular dependency issues if any, or standard import
 import { getLinks } from '@/lib/storage';
+import { getUserProfile } from '@/lib/profile-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -123,6 +124,7 @@ export async function GET() {
 
         // Agent B: Real Trends
         trends: platformTrends,
-        broadcast
+        broadcast,
+        affiliate: await getAffiliateStats(userId)
     });
 }
