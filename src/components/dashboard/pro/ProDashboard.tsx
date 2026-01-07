@@ -285,9 +285,9 @@ export default function ProDashboard({
                         <div className="w-full bg-secondary h-3 rounded-full overflow-hidden">
                             <div
                                 className={`h-full transition-all duration-500 ${(stats.usage?.clicks || 0) >= 200 ? 'bg-red-500' :
-                                        (stats.usage?.clicks || 0) >= 150 ? 'bg-orange-500' :
-                                            (stats.usage?.clicks || 0) >= 100 ? 'bg-yellow-500' :
-                                                'bg-green-500'
+                                    (stats.usage?.clicks || 0) >= 150 ? 'bg-orange-500' :
+                                        (stats.usage?.clicks || 0) >= 100 ? 'bg-yellow-500' :
+                                            'bg-green-500'
                                     }`}
                                 style={{ width: `${Math.min(((stats.usage?.clicks || 0) / 200) * 100, 100)}%` }}
                             ></div>
@@ -298,6 +298,13 @@ export default function ProDashboard({
                                 {(stats.usage?.clicks || 0) >= 200 ? 'Limit Reached. Upgrade now.' : 'Renewable every month'}
                             </span>
                         </p>
+                        <div className="mt-4">
+                            <CheckoutButton
+                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
+                                label="Upgrade to Pro - $12/mo"
+                                className="w-full bg-[#facc15] hover:bg-[#eab308] text-black font-bold border-none shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] transition-all transform hover:scale-[1.02]"
+                            />
+                        </div>
                     </div>
                 )}
 
