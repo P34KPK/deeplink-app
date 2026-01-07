@@ -29,7 +29,7 @@ export default clerkMiddleware(async (auth, req) => {
     const hostname = req.headers.get("host"); // e.g. "promo.sebastien.com" or "localhost:3000"
 
     // Define your main domains
-    const mainDomains = ["localhost:3000", "deeplinkrs.app", "deeplink-app.vercel.app"];
+    const mainDomains = ["localhost:3000", "deeplinkrs.app", "deeplink-app.vercel.app", "deeplink-app-seven.vercel.app"];
     const isCustomDomain = hostname && !mainDomains.some(d => hostname.includes(d));
 
     if (isCustomDomain) {
