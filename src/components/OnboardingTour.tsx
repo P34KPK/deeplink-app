@@ -29,6 +29,14 @@ const TOUR_STEPS = [
 export default function OnboardingTour() {
     const [step, setStep] = useState(-1); // -1 = loading check
     const [position, setPosition] = useState({ top: 0, left: 0, width: 0, height: 0 });
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         const seen = localStorage.getItem('hasSeenTourV1');
@@ -100,9 +108,57 @@ export default function OnboardingTour() {
     const currentTour = TOUR_STEPS[step];
     const isCentered = currentTour.target === 'center';
 
+
+
+    // ... (rest of render)
+
+    // Calculate Card Position
+    let cardStyle: React.CSSProperties = {};
+
+    if (isCentered) {
+        cardStyle = {
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '90%',
+            maxWidth: '400px'
+        };
+    } else if (isMobile) {
+        // Mobile: Always fixed at bottom
+        cardStyle = {
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '90%',
+            maxWidth: '400px'
+        };
+    } else {
+        // Desktop: Follow the element
+        // Clamp logic to prevent overflow could go here, but for now simple centering
+        // If element is too far right, maybe align right?
+
+        let leftPos = position.left + (position.width / 2);
+        const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
+
+        // Simple clamp to keep center within bounds (padding 20px)
+        const minLeft = 200; // Half of max-width
+        const maxLeft = screenWidth - 200;
+
+        if (leftPos < minLeft) leftPos = minLeft;
+        if (leftPos > maxLeft) leftPos = maxLeft;
+
+        cardStyle = {
+            top: position.top + position.height + 20,
+            left: leftPos,
+            transform: 'translateX(-50%)',
+            width: '90%',
+            maxWidth: '400px'
+        };
+    }
+
     return (
         <div className="fixed inset-0 z-[9999] pointer-events-none">
-            {/* Backdrop with Hole (Spotlight effect) */}
+            {/* ... Backdrop logic remains same ... */}
             {!isCentered && (
                 <>
                     <div className="absolute inset-0 bg-black/60 transition-all duration-300"
@@ -134,7 +190,6 @@ export default function OnboardingTour() {
                 </>
             )}
 
-            {/* Centered Backdrop */}
             {isCentered && (
                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm pointer-events-auto" />
             )}
@@ -142,13 +197,7 @@ export default function OnboardingTour() {
             {/* Tooltip Card */}
             <div
                 className="pointer-events-auto absolute transition-all duration-500 ease-out"
-                style={{
-                    top: isCentered ? '50%' : position.top + position.height + 20,
-                    left: isCentered ? '50%' : position.left + (position.width / 2),
-                    transform: isCentered ? 'translate(-50%, -50%)' : 'translateX(-50%)',
-                    width: '90%',
-                    maxWidth: '400px'
-                }}
+                style={cardStyle}
             >
                 <div className="matte-card bg-card border border-primary/20 p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-300">
                     <button
