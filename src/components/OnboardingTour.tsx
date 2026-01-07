@@ -20,7 +20,7 @@ const TOUR_STEPS = [
         target: "btn_generate"
     },
     {
-        title: "Step 3: Track & Grow",
+        title: "Step 3: Manage & Grow",
         description: "View your links and analytics here. Upgrade to Pro for more!",
         target: "link_dashboard"
     }
@@ -123,16 +123,15 @@ export default function OnboardingTour() {
             width: '90%',
             maxWidth: '400px'
         };
-    } else if (isMobile || currentTour.target === 'link_dashboard' || currentTour.target === 'input_url') {
+    } else if (isMobile || currentTour.target === 'link_dashboard') {
         // Mobile OR Corner Targets: Always fixed at bottom
-        // We include input_url too just to be safe and consistent, or just link_dashboard
-        // Let's force it for specific tricky targets or small screens
         cardStyle = {
-            bottom: '20px',
+            bottom: '24px',
             left: '50%',
             transform: 'translateX(-50%)',
             width: '90%',
-            maxWidth: '400px'
+            maxWidth: '380px',
+            zIndex: 10000
         };
     } else {
         // Desktop: Follow the element
