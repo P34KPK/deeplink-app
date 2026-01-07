@@ -51,7 +51,7 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId, us
                             Generate Link
                         </Link>
                         <CheckoutButton
-                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
+                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1Smzf6LHxI2XHxZmwFo8js50'}
                             label="Upgrade to PRO"
                             className="btn-primary bg-primary text-primary-foreground text-sm px-4 py-2 shadow-lg hover:shadow-primary/20"
                         />
@@ -199,7 +199,7 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId, us
 
                     <div className="relative z-10 w-full md:w-auto">
                         <CheckoutButton
-                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
+                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1Smzf6LHxI2XHxZmwFo8js50'}
                             label="Upgrade Now"
                             className="w-full md:w-auto btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-3 shadow-lg hover:shadow-yellow-500/20 transition-all"
                         />

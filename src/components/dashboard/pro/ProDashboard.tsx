@@ -300,7 +300,7 @@ export default function ProDashboard({
                         </p>
                         <div className="mt-4">
                             <CheckoutButton
-                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
+                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1Smzf6LHxI2XHxZmwFo8js50'}
                                 label="Upgrade to Pro - $9.99/mo"
                                 className="w-full !bg-[#facc15] hover:!bg-[#eab308] text-black font-bold border-none shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] transition-all transform hover:scale-[1.02]"
                             />
@@ -330,7 +330,7 @@ export default function ProDashboard({
                                                     <h3 className="font-bold text-sm uppercase tracking-wider mb-2">{id}</h3>
                                                     <div className="text-[10px] font-bold bg-pink-500/10 text-pink-500 border border-pink-500/20 px-2 py-0.5 rounded uppercase mb-4">Pro User Only</div>
                                                     <CheckoutButton
-                                                        priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
+                                                        priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1Smzf6LHxI2XHxZmwFo8js50'}
                                                         label="Unlock"
                                                         className="h-8 text-xs px-4"
                                                     />
