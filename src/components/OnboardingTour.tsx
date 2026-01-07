@@ -75,17 +75,28 @@ export default function OnboardingTour() {
             }
         };
 
+        // Scroll Performance Optimization: Ticking
+        let ticking = false;
+        const onScrollOrResize = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    updatePosition();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+
         // Update immediately
         updatePosition();
-        requestAnimationFrame(updatePosition); // Double check for layout shifts
 
-        // Updates on scroll/resize
-        window.addEventListener('scroll', updatePosition, { passive: true });
-        window.addEventListener('resize', updatePosition);
+        // Updates on scroll/resize using optimized handler
+        window.addEventListener('scroll', onScrollOrResize, { passive: true });
+        window.addEventListener('resize', onScrollOrResize, { passive: true });
 
         return () => {
-            window.removeEventListener('scroll', updatePosition);
-            window.removeEventListener('resize', updatePosition);
+            window.removeEventListener('scroll', onScrollOrResize);
+            window.removeEventListener('resize', onScrollOrResize);
         };
 
     }, [step]);
