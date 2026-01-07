@@ -123,8 +123,10 @@ export default function OnboardingTour() {
             width: '90%',
             maxWidth: '400px'
         };
-    } else if (isMobile) {
-        // Mobile: Always fixed at bottom
+    } else if (isMobile || currentTour.target === 'link_dashboard' || currentTour.target === 'input_url') {
+        // Mobile OR Corner Targets: Always fixed at bottom
+        // We include input_url too just to be safe and consistent, or just link_dashboard
+        // Let's force it for specific tricky targets or small screens
         cardStyle = {
             bottom: '20px',
             left: '50%',
