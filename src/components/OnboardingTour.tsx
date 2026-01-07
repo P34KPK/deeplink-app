@@ -53,7 +53,7 @@ export default function OnboardingTour() {
             } else if (currentStep.target === 'btn_generate') {
                 el = document.getElementById('tour-generate-btn');
             } else if (currentStep.target === 'link_dashboard') {
-                el = document.getElementById('tour-dashboard-actions');
+                el = document.getElementById('tour-my-links-nav');
             }
 
             if (el) {

@@ -326,7 +326,15 @@ export default function Home() {
         <ThemeToggle />
       </div>
       <div className="absolute top-4 left-4 z-50 flex items-center gap-4">
-        {/* Admin Access is now Stealth Mode (Direct URL only) */}
+        <Link
+          id="tour-my-links-nav"
+          href="/dashboard"
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <BarChart3 className="w-4 h-4" />
+          <span className="hidden sm:inline">My Links</span>
+        </Link>
+
         <SignedOut>
           <Link
             href="/sign-in"
@@ -337,18 +345,6 @@ export default function Home() {
         </SignedOut>
         <SignedIn>
           <div className="flex items-center gap-4 mr-4">
-            {/* User Links */}
-            {isPro && (
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-                title="My Links"
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span>My Links</span>
-              </Link>
-            )}
-            {/* Explicit Sign Out Text */}
             <div className="hidden md:block">
               <SignOutButton>
                 <button className="text-sm font-medium text-muted-foreground hover:text-red-500 transition-colors">
@@ -626,20 +622,7 @@ export default function Home() {
 
           <div id="tour-dashboard-actions" className="mt-8 space-y-3 pt-6 border-t border-border">
             <SignedOut>
-              <Link
-                href="/sign-in"
-                className="w-full bg-card hover:bg-accent border border-border text-muted-foreground hover:text-foreground py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:shadow"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                View My Links
-              </Link>
-              <Link
-                href="/sign-in"
-                className="w-full bg-card hover:bg-accent border border-border text-muted-foreground hover:text-foreground py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium shadow-sm hover:shadow"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                View Analytics Dashboard
-              </Link>
+              {/* Clean interface for visitors: No extra buttons here, rely on top nav */}
             </SignedOut>
 
             <SignedIn>
