@@ -12,17 +12,90 @@ interface ProfileEditorModalProps {
     isPro?: boolean;
 }
 
-// ... imports
+interface UserProfile {
+    username: string;
+    bio: string;
+    avatarUrl?: string;
+    backgroundImage?: string;
+    amazonTag?: string; // New!
+    socials: {
+        website?: string;
+        instagram?: string;
+        tiktok?: string;
+        youtube?: string;
+        twitter?: string;
+        discord?: string;
+        twitch?: string;
+        facebook?: string;
+        [key: string]: string | undefined;
+    };
+    [key: string]: any; // fallback for loose API structure
+}
 
 export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSuccess, isPro = false }: ProfileEditorModalProps) {
-    // ... existing state
+    const [userProfile, setUserProfile] = useState<UserProfile>({
+        username: '',
+        bio: '',
+        socials: {}
+    });
+    const [pendingImage, setPendingImage] = useState<string | null>(null);
+    const [rawFileImage, setRawFileImage] = useState<string | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    // ... existing functions (updateProfile, updateSocial, saveProfile, generateBackground)
+    useEffect(() => {
+        if (isOpen && userId) {
+            setLoading(true);
+            fetch('/api/user/profile')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && !data.error) setUserProfile(data);
+                })
+                .catch(err => console.error("Failed to load profile", err))
+                .finally(() => setLoading(false));
+        }
+    }, [isOpen, userId]);
+
+    const updateProfile = (field: keyof UserProfile, value: any) => {
+        setUserProfile((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const updateSocial = (platform: string, value: string) => {
+        setUserProfile((prev) => ({
+            ...prev,
+            socials: { ...prev.socials, [platform]: value }
+        }));
+    };
+
+    const saveProfile = async () => {
+        const res = await fetch('/api/user/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userProfile)
+        });
+        if (res.ok) {
+            alert('Profile updated!');
+            if (onSaveSuccess) onSaveSuccess();
+            onClose();
+        }
+    };
+
+    const generateBackground = () => {
+        const prompt = window.prompt("✨ AI Background Generator\n\nDescribe the vibe you want (e.g., 'cyberpunk city neon rain', 'pastel clouds aesthetic'):", "aesthetic gradient abstract");
+        if (prompt === null) return;
+
+        setIsGenerating(true);
+        const finalPrompt = prompt || "aesthetic gradient abstract";
+        const seed = Math.floor(Math.random() * 1000000);
+
+        const proxyUrl = `/api/ai/generate-image?prompt=${encodeURIComponent(finalPrompt)}&seed=${seed}`;
+
+        setPendingImage(proxyUrl);
+    };
 
     const handleAiBio = async () => {
         if (!isPro) return alert("AI Bio writing is a PRO feature. Please upgrade to unlock.");
         if (!userProfile.username) return alert('Enter a display name first!');
-        // ... rest of logic
         const btn = document.getElementById('bio-magic-btn');
         if (btn) btn.innerHTML = '✨ Writing...';
 
@@ -30,7 +103,7 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
             const res = await fetch('/api/ai/generate-text', {
                 method: 'POST',
                 body: JSON.stringify({
-                    product: userProfile.username,
+                    product: userProfile.username, // Reuse product field as "Keywords/Name"
                     context: 'Influencer Bio',
                     type: 'bio'
                 })
@@ -122,18 +195,17 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                                         {!isPro && <span className="mr-0.5">🔒</span>}
                                         ✨ AI Magic
                                     </button>
-                                </label >
+                                </label>
                                 <textarea className="input-minimal w-full py-2 px-3 text-sm resize-none h-20 bg-zinc-900 border border-zinc-800 rounded-lg focus:border-pink-500 outline-none transition-colors" placeholder="Tell your audience about your style..." value={userProfile.bio || ''} onChange={e => updateProfile('bio', e.target.value)} />
-                            </div >
+                            </div>
 
                             {/* Theme Customization Section */}
-                            < div >
+                            <div>
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="text-[10px] text-zinc-500 uppercase font-bold block">Page Theme</label>
                                     <span className="text-[9px] text-pink-500 font-bold border border-pink-500/20 bg-pink-500/10 px-1.5 rounded">INFLUENCER UNLOCK</span>
                                 </div>
                                 <div className="grid grid-cols-6 gap-2">
-                                    {/* ... Colors ... */}
                                     {[
                                         { v: '#000000', n: 'Black' }, { v: '#ffffff', n: 'White' },
                                         { v: '#1a1a2e', n: 'Midnight' }, { v: '#27272a', n: 'Zinc' },
@@ -226,7 +298,7 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                                         </div>
                                     )}
                                 </div>
-                            </div >
+                            </div>
 
                             <div className="pt-2">
                                 <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">Amazon Associate Tag (Important!)</label>
@@ -272,9 +344,8 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                                 </div>
                             </div>
                         </>
-                    )
-                    }
-                </div >
+                    )}
+                </div>
 
                 <div className="pt-4 flex gap-3">
                     <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-transparent border border-zinc-700 hover:bg-zinc-800 transition-colors">
@@ -284,11 +355,11 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                         Save Changes
                     </button>
                 </div>
-            </div >
+            </div>
 
 
             {/* Image Cropper */}
-            < ImageCropperModal
+            <ImageCropperModal
                 isOpen={!!rawFileImage}
                 imageSrc={rawFileImage}
                 onClose={() => setRawFileImage(null)}
@@ -297,6 +368,6 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                     setRawFileImage(null);
                 }}
             />
-        </div >
+        </div>
     );
 }
