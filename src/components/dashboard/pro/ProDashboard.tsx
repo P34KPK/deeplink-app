@@ -250,16 +250,56 @@ export default function ProDashboard({
                 )}
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">Analytics Dashboard <span className="bg-[#27272a] text-white text-[10px] px-2.5 py-1 rounded-full font-bold uppercase relative top-0.5 shadow-sm">PRO</span></h1>
+                    <div className="flex flex-col gap-2">
+                        <Link href="/" className="self-start text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mb-1 transition-colors">
+                            <span>←</span> My Link (Generator)
+                        </Link>
+                        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+                            Analytics Dashboard
+                            {stats.plan === 'pro' ? (
+                                <span className="bg-[#27272a] text-white text-[10px] px-2.5 py-1 rounded-full font-bold uppercase relative top-0.5 shadow-sm">PRO</span>
+                            ) : (
+                                <span className="bg-secondary text-muted-foreground text-[10px] px-2.5 py-1 rounded-full font-bold uppercase relative top-0.5 border border-border">FREE</span>
+                            )}
+                        </h1>
                         <p className="text-muted-foreground mt-1">Real-time performance metrics for <span className='text-zinc-300'>@{userId}</span></p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button onClick={handleExportPDF} className="flex items-center gap-2 text-xs border border-border bg-card hover:bg-secondary px-3 py-2 rounded transition-colors"><Download className="w-4 h-4" /><span>Export</span></button>
                         <div className="text-right hidden md:block mr-4"><p className="text-xs text-muted-foreground uppercase font-semibold">Last Activity</p><p className="text-sm font-mono text-primary">{getLastActivity()}</p></div>
-                        <Link href="/" className="btn-primary text-sm px-4 py-2">Back to Generator</Link>
                     </div>
                 </div>
+
+                {/* Free Plan Limits Widget */}
+                {stats.plan === 'free' && (
+                    <div className="matte-card p-6 border-l-4 border-l-green-500 animate-fade-down">
+                        <div className="flex justify-between items-end mb-4">
+                            <div>
+                                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">Monthly Clicks Remaining</h3>
+                                <div className="text-3xl font-bold font-mono">
+                                    {Math.max(0, 200 - (stats.usage?.clicks || 0))} <span className="text-lg text-muted-foreground font-normal">/ 200</span>
+                                </div>
+                            </div>
+                            <Activity className="w-6 h-6 text-muted-foreground opacity-50" />
+                        </div>
+                        <div className="w-full bg-secondary h-3 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full transition-all duration-500 ${(stats.usage?.clicks || 0) >= 200 ? 'bg-red-500' :
+                                        (stats.usage?.clicks || 0) >= 150 ? 'bg-orange-500' :
+                                            (stats.usage?.clicks || 0) >= 100 ? 'bg-yellow-500' :
+                                                'bg-green-500'
+                                    }`}
+                                style={{ width: `${Math.min(((stats.usage?.clicks || 0) / 200) * 100, 100)}%` }}
+                            ></div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-3 flex justify-between">
+                            <span>{new Date().toLocaleString('default', { month: 'long' })} Cycle</span>
+                            <span className={(stats.usage?.clicks || 0) >= 200 ? 'text-red-500 font-bold' : ''}>
+                                {(stats.usage?.clicks || 0) >= 200 ? 'Limit Reached. Upgrade now.' : 'Renewable every month'}
+                            </span>
+                        </p>
+                    </div>
+                )}
 
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={widgetOrder} strategy={rectSortingStrategy}>
