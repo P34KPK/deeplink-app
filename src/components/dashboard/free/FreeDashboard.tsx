@@ -58,7 +58,7 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId, us
                     </div>
                 </div>
 
-                {/* Usage Limits Grid */}
+                {/* Usage Limits Grid (Functional) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Clicks Usage */}
                     <div className="matte-card p-6">
@@ -114,51 +114,14 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId, us
                     </div>
                 </div>
 
-                {/* Affiliate Program Widget */}
-                <div className="h-[200px]">
-                    <AffiliateWidget userId={userId} stats={stats.affiliate} />
-                </div>
-
-                {/* Permanent Upgrade CTA Card */}
-                <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <BarChart3 className="w-32 h-32 text-yellow-500" />
-                    </div>
-
-                    <div className="relative z-10">
-                        <h3 className="text-xl font-bold text-yellow-500 mb-2">Unlock Full Potential</h3>
-                        <p className="text-muted-foreground mb-4 max-w-md">
-                            Remove all limits and get deep insights into your audience.
-                        </p>
-                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                            <li className="flex items-center gap-2">
-                                <span className="text-green-500">✓</span> Unlimited Links
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="text-green-500">✓</span> Full Device Analytics
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="text-green-500">✓</span> Unlimited Clicks
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="text-green-500">✓</span> Priority Support
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div className="relative z-10 w-full md:w-auto">
-                        <CheckoutButton
-                            priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
-                            label="Upgrade Now"
-                            className="w-full md:w-auto btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-3 shadow-lg hover:shadow-yellow-500/20 transition-all"
-                        />
-                    </div>
-                </div>
-
-                {/* Simple Link List (No Stats) */}
+                {/* Link List (Functional - Promoted to Top) */}
                 <div className="matte-card overflow-hidden">
-                    <div className="p-6 border-b border-border bg-card/50">
+                    <div className="p-6 border-b border-border bg-card/50 flex flex-col md:flex-row justify-between md:items-center gap-4">
                         <h3 className="text-lg font-semibold">My Links</h3>
+                        <div className="flex items-center gap-2 text-xs bg-secondary/50 px-3 py-1.5 rounded-full border border-border">
+                            <span className="font-semibold text-primary">Free Plan:</span>
+                            <span className="text-muted-foreground">Max 20 Links/Month (Accumulable)</span>
+                        </div>
                     </div>
                     {history.length === 0 ? (
                         <div className="p-12 text-center text-muted-foreground">
@@ -205,14 +168,47 @@ export default function FreeDashboard({ stats, history, handleCopy, copiedId, us
                             </table>
                         </div>
                     )}
-                    <div className="p-4 bg-secondary/20 text-center border-t border-border">
-                        <span className="text-xs text-muted-foreground mr-2">Want to see who is clicking?</span>
+                </div>
+
+                {/* Permanent Upgrade CTA Card (Locked/Promo - Moved to Bottom) */}
+                <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <BarChart3 className="w-32 h-32 text-yellow-500" />
+                    </div>
+
+                    <div className="relative z-10">
+                        <h3 className="text-xl font-bold text-yellow-500 mb-2">Unlock Full Potential</h3>
+                        <p className="text-muted-foreground mb-4 max-w-md">
+                            Remove all limits and get deep insights into your audience.
+                        </p>
+                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm">
+                            <li className="flex items-center gap-2">
+                                <span className="text-green-500">✓</span> Unlimited Links
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="text-green-500">✓</span> Full Device Analytics
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="text-green-500">✓</span> Unlimited Clicks
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="text-green-500">✓</span> Priority Support
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div className="relative z-10 w-full md:w-auto">
                         <CheckoutButton
                             priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID!}
-                            label="Go PRO"
-                            className="text-xs text-primary font-bold hover:underline bg-transparent p-0 h-auto text-sky-500"
+                            label="Upgrade Now"
+                            className="w-full md:w-auto btn-primary bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-3 shadow-lg hover:shadow-yellow-500/20 transition-all"
                         />
                     </div>
+                </div>
+
+                {/* Affiliate Program Widget (Moved to Bottom) */}
+                <div className="h-[200px]">
+                    <AffiliateWidget userId={userId} stats={stats.affiliate} />
                 </div>
             </div>
         </main>
