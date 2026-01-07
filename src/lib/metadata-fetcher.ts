@@ -123,7 +123,7 @@ export async function fetchAmazonMetadata(url: string, providedAsin?: string, fo
 
     // 6. Finalize
     if (finalImage || finalTitle) {
-        const result = { image: finalImage, title: finalTitle };
+        const result = { image: finalImage || undefined, title: finalTitle };
         // Cache valid results
         if (redis) await redis.set(cacheKey, JSON.stringify(result), 'EX', 60 * 60 * 24 * 7);
         return result;
