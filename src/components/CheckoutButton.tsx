@@ -27,10 +27,16 @@ export default function CheckoutButton({ priceId, label = "Subscribe", className
 
             const data = await response.json();
 
+            if (data.error) {
+                alert(`Checkout Error: ${data.error}`);
+                console.error("Checkout Error:", data.error);
+                return;
+            }
+
             if (data.url) {
                 window.location.href = data.url;
             } else {
-                console.error("Failed to create checkout session");
+                alert("Something went wrong. Please try again.");
             }
         } catch (error) {
             console.error("Error during checkout:", error);
