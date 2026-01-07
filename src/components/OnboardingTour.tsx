@@ -64,8 +64,8 @@ export default function OnboardingTour() {
             const rect = el.getBoundingClientRect();
             requestAnimationFrame(() => {
                 setPosition({
-                    top: rect.top + window.scrollY,
-                    left: rect.left + window.scrollX,
+                    top: rect.top,
+                    left: rect.left,
                     width: rect.width,
                     height: rect.height
                 });
