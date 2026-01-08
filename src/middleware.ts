@@ -28,6 +28,12 @@ export default clerkMiddleware(async (auth, req) => {
     const url = req.nextUrl;
     const hostname = req.headers.get("host"); // e.g. "promo.sebastien.com" or "localhost:3000"
 
+    // FORCE HTTPS (Production Only)
+    const proto = req.headers.get("x-forwarded-proto");
+    if (proto === "http" && hostname && !hostname.includes("localhost")) {
+        return Response.redirect(`https://${hostname}${url.pathname}${url.search}`, 301);
+    }
+
     // Define your main domains
     const mainDomains = ["localhost:3000", "deeplinkrs.app", "deeplinkrs.com", "www.deeplinkrs.com", "deeplink-app.vercel.app", "deeplink-app-seven.vercel.app"];
     const isCustomDomain = hostname && !mainDomains.some(d => hostname.includes(d));
