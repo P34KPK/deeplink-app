@@ -311,6 +311,37 @@ export default function ProDashboard({
                     </div>
                 )}
 
+                <div className="matte-card overflow-hidden">
+                    <div className="p-6 border-b border-border bg-card/50"><h3 className="text-lg font-semibold">My Links Performance</h3></div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-secondary/30 text-xs text-muted-foreground uppercase tracking-wider"><tr><th className="px-6 py-4"></th><th className="px-6 py-4">Date</th><th className="px-6 py-4">Title</th><th className="px-6 py-4 text-right">Hits</th><th className="px-6 py-4 text-right">Action</th></tr></thead>
+                            <tbody className="text-sm divide-y divide-border">
+                                {history.slice().reverse().map((link) => {
+                                    const slug = (link.generated || '').split('/').pop() || '';
+                                    const hits = stats?.statsBySlug?.[slug] || 0;
+                                    return (
+                                        <tr key={link.id} className="hover:bg-secondary/20 transition-colors">
+                                            <td className="px-6 py-4"><button onClick={() => toggleFavorite(link.id, link.favorite || false)}><Heart className={`w-4 h-4 ${link.favorite ? 'text-white fill-white' : 'text-muted-foreground'}`} /></button></td>
+                                            <td className="px-6 py-4 text-muted-foreground text-xs">{new Date(link.date).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4 font-medium">{link.title}</td>
+                                            <td className="px-6 py-4 text-right"><span className={`px-2 py-1 rounded text-xs font-bold ${hits > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>{hits}</span></td>
+                                            <td className="px-6 py-4 text-right flex justify-end gap-2">
+                                                <button onClick={() => setAiModal({ open: true, title: link.title, link: link.generated || '' })} className="p-1.5 bg-purple-500/10 text-purple-400 rounded"><Sparkles className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => setMockupModal({ open: true, linkId: link.id, url: link.original, title: link.title, image: link.image })} className="p-1.5 bg-pink-500/10 text-pink-400 rounded"><Camera className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => handleDeleteLink(link.id)} className="p-1.5 bg-red-500/10 text-red-400 rounded"><Trash className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => checkLink(link.id, link.original)} className={`p-1.5 rounded ${health[link.id] === 'ok' ? 'text-green-500 bg-green-500/10' : 'text-muted-foreground'}`}><Activity className="w-3 h-3" /></button>
+                                                <button onClick={() => setQrLink(link.generated)} className="p-1.5 text-muted-foreground rounded hover:bg-secondary"><QrCode className="w-3 h-3" /></button>
+                                                <button onClick={() => handleCopy(link.id, link.generated)} className={`text-xs border px-3 py-1.5 rounded ${copiedId === link.id ? 'bg-green-500 text-white' : ''}`}>{copiedId === link.id ? 'Copied!' : 'Copy'}</button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={widgetOrder} strategy={rectSortingStrategy}>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -503,36 +534,7 @@ export default function ProDashboard({
 
 
 
-                <div className="matte-card overflow-hidden">
-                    <div className="p-6 border-b border-border bg-card/50"><h3 className="text-lg font-semibold">My Links Performance</h3></div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-secondary/30 text-xs text-muted-foreground uppercase tracking-wider"><tr><th className="px-6 py-4"></th><th className="px-6 py-4">Date</th><th className="px-6 py-4">Title</th><th className="px-6 py-4 text-right">Hits</th><th className="px-6 py-4 text-right">Action</th></tr></thead>
-                            <tbody className="text-sm divide-y divide-border">
-                                {history.slice().reverse().map((link) => {
-                                    const slug = (link.generated || '').split('/').pop() || '';
-                                    const hits = stats?.statsBySlug?.[slug] || 0;
-                                    return (
-                                        <tr key={link.id} className="hover:bg-secondary/20 transition-colors">
-                                            <td className="px-6 py-4"><button onClick={() => toggleFavorite(link.id, link.favorite || false)}><Heart className={`w-4 h-4 ${link.favorite ? 'text-white fill-white' : 'text-muted-foreground'}`} /></button></td>
-                                            <td className="px-6 py-4 text-muted-foreground text-xs">{new Date(link.date).toLocaleDateString()}</td>
-                                            <td className="px-6 py-4 font-medium">{link.title}</td>
-                                            <td className="px-6 py-4 text-right"><span className={`px-2 py-1 rounded text-xs font-bold ${hits > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>{hits}</span></td>
-                                            <td className="px-6 py-4 text-right flex justify-end gap-2">
-                                                <button onClick={() => setAiModal({ open: true, title: link.title, link: link.generated || '' })} className="p-1.5 bg-purple-500/10 text-purple-400 rounded"><Sparkles className="w-3.5 h-3.5" /></button>
-                                                <button onClick={() => setMockupModal({ open: true, linkId: link.id, url: link.original, title: link.title, image: link.image })} className="p-1.5 bg-pink-500/10 text-pink-400 rounded"><Camera className="w-3.5 h-3.5" /></button>
-                                                <button onClick={() => handleDeleteLink(link.id)} className="p-1.5 bg-red-500/10 text-red-400 rounded"><Trash className="w-3.5 h-3.5" /></button>
-                                                <button onClick={() => checkLink(link.id, link.original)} className={`p-1.5 rounded ${health[link.id] === 'ok' ? 'text-green-500 bg-green-500/10' : 'text-muted-foreground'}`}><Activity className="w-3 h-3" /></button>
-                                                <button onClick={() => setQrLink(link.generated)} className="p-1.5 text-muted-foreground rounded hover:bg-secondary"><QrCode className="w-3 h-3" /></button>
-                                                <button onClick={() => handleCopy(link.id, link.generated)} className={`text-xs border px-3 py-1.5 rounded ${copiedId === link.id ? 'bg-green-500 text-white' : ''}`}>{copiedId === link.id ? 'Copied!' : 'Copy'}</button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+
 
                 <div className="flex justify-center pt-8 border-t border-border mt-12">
                     <button onClick={handleManageSubscription} className="text-xs text-muted-foreground hover:text-white opacity-60 hover:opacity-100 flex items-center gap-2 transition-all">
