@@ -35,7 +35,7 @@
     "react-dom": "19.2.3",
     "react-qr-code": "^2.0.18",
     "recharts": "^3.6.0",
-    "stripe": "^20.1.0",
+    "stripe": "^20.1.2",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {

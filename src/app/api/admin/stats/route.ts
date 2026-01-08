@@ -67,94 +67,70 @@ export async function GET(req: Request) {
     // 4. Calculate User Roster (Server Side Aggregation on ALL links)
     const userMap: Record<string, any> = {};
 
-    // Known VIPs / Subscriptions (Manual Override)
-    // Known VIPs / Subscriptions (Manual Override)
-    const VIP_PLANS: Record<string, string> = {
-        'p34k.productions@gmail.com': 'Admin / Founder',
-        'stacyadds@gmail.com': 'Pro Member',
+    // Helper to get plan from Redis
+    const getPlanFromRedis = async (userId: string) => {
+        if (!redis) return 'Free Tier';
+        const plan = await redis.get(`user:${userId}:plan`);
+        if (plan === 'pro') return 'Pro Member';
+        // Check legacy VIP list just in case
+        return 'Free Tier';
     };
 
-    /*
     // Fetch real users from Clerk
     try {
         const client = await clerkClient();
         const { data: formUsers } = await client.users.getUserList({ limit: 100 });
 
-        formUsers.forEach(u => {
+        // Parallel Plan Check
+        const userPromises = formUsers.map(async (u) => {
             const email = u.emailAddresses[0]?.emailAddress;
             if (email) {
+                let plan = await getPlanFromRedis(u.id);
+                // Admin Override
+                if (email === 'p34k.productions@gmail.com') plan = 'Admin / Founder';
+
                 userMap[email] = {
                     email: email,
                     userId: u.id,
                     count: 0,
                     lastDate: u.lastSignInAt || u.createdAt,
                     status: 'Active',
-                    plan: VIP_PLANS[email] || 'Free Tier',
+                    plan: plan,
                     image: u.imageUrl
                 };
             }
         });
+        await Promise.all(userPromises);
+
     } catch (e: any) {
         console.error("Failed to fetch Clerk users", e);
         (global as any).clerkError = e.message || 'Unknown Clerk Error';
-
-        // Fallback: Populate with specific users if failing (Local Dev Mode without Keys)
-        if (!userMap['p34k.productions@gmail.com']) {
-            userMap['p34k.productions@gmail.com'] = { email: 'p34k.productions@gmail.com', userId: 'user_p34k_fallback', count: 0, lastDate: 1735689600000, status: 'Active (Fallback)', plan: 'Admin / Founder' };
-        }
     }
-    */
 
-    // Augment with link stats
-    allLinks.forEach(link => {
+    // Augment with link stats (for users not in Clerk list or to count links)
+    // Note: If user was in Clerk list, we just update count/date. If not (guest), we create new entry.
+    for (const link of allLinks) {
         const email = link.userEmail || 'Guest / Anonymous';
         if (!userMap[email]) {
-            // If user not in Clerk (e.g. guest or deleted), created ad-hoc entry
             userMap[email] = {
                 email: email,
-                userId: link.userId, // Keep one ID for reference
+                userId: link.userId,
                 count: 0,
                 lastDate: 0,
                 status: 'Guest',
-                plan: VIP_PLANS[email] || 'Free Tier'
+                plan: 'Free Tier'
             };
         }
 
         userMap[email].count++;
         // Update last activity if link creation is newer than login
-        if (link.date && link.date > userMap[email].lastDate) {
+        if (link.date && (!userMap[email].lastDate || link.date > userMap[email].lastDate)) {
             userMap[email].lastDate = link.date;
         }
-    });
-
-    // FORCE VIPs (Safety Net)
-    // If they were missed by Clerk OR Link scanning, force them in now.
-    const FORCE_USERS = [
-        { email: 'p34k.productions@gmail.com', id: 'user_p34k_admin', plan: 'Admin / Founder' },
-        { email: 'stacyadds@gmail.com', id: 'user_stacy_pro', plan: 'Pro Member' }
-    ];
-
-    FORCE_USERS.forEach(force => {
-        if (!userMap[force.email]) {
-            userMap[force.email] = {
-                email: force.email,
-                userId: force.id,
-                count: 0,
-                lastDate: Date.now(),
-                status: 'Active (Forced)',
-                plan: force.plan
-            };
-        }
-    });
+    }
 
     // Convert to sorted array
     let users = Object.values(userMap).sort((a, b) => b.lastDate - a.lastDate);
-
-    // EMERGENCY DEBUG: HARDCODE IF EMPTY
-    // No debug users
-    if (users.length === 0) {
-        // Keeping it empty is correct behavior for fresh install
-    }
 
     return NextResponse.json({
         totalLinks,
@@ -165,7 +141,7 @@ export async function GET(req: Request) {
         users,
         globalStats,
         debug: {
-            clerkUsersFetched: Object.keys(userMap).length, // simple proxy
+            clerkUsersFetched: Object.keys(userMap).length,
             clerkError: (global as any).clerkError
         }
     });
