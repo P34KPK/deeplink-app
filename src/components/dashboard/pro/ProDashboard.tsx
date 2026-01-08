@@ -303,8 +303,8 @@ export default function ProDashboard({
                         </p>
                         <div className="mt-4">
                             <CheckoutButton
-                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_1Smzf6LHxI2XHxZmwFo8js50'}
-                                label="Upgrade to Pro - $9.99/mo"
+                                priceId={process.env.NEXT_PUBLIC_STRIPE_PRICE_ID || 'price_REPLACE_WITH_REAL_ID_FROM_STRIPE'}
+                                // Note: 'price_unlock_themes_99' in your screenshot is NOT a valid ID. Get the real one (starts with price_...) from Stripe Dashboard.
                                 className="w-full !bg-[#facc15] hover:!bg-[#eab308] text-black font-bold border-none shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] transition-all transform hover:scale-[1.02]"
                             />
                         </div>
