@@ -36,7 +36,8 @@ export default function CheckoutButton({ priceId, label = "Subscribe", className
             if (data.url) {
                 window.location.href = data.url;
             } else {
-                alert("Something went wrong. Please try again.");
+                console.error("Stripe Session Creation Failed:", data);
+                alert(`Payment configuration error. Please check if Price ID (${priceId?.substring(0, 10)}...) is valid in Stripe Dashboard.\n\nError: ${data.error || 'Unknown'}`);
             }
         } catch (error) {
             console.error("Error during checkout:", error);

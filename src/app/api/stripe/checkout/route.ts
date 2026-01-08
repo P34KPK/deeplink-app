@@ -37,7 +37,7 @@ export async function POST(req: Request) {
             cancel_url: `${settingsUrl}/dashboard?canceled=true`,
             customer_email: user.emailAddresses[0].emailAddress,
             automatic_tax: {
-                enabled: true,
+                enabled: false,
             },
             billing_address_collection: 'required', // Required for tax calculation
             metadata: {
