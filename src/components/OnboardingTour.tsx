@@ -114,7 +114,7 @@ export default function OnboardingTour() {
         localStorage.setItem('hasSeenTourV1', 'true');
     };
 
-    if (step < 0) return null;
+    if (step < 0 || isMobile) return null;
 
     const currentTour = TOUR_STEPS[step];
     const isCentered = currentTour.target === 'center';
