@@ -9,8 +9,8 @@ export default function InAppBrowserGuard({ children }: { children: React.ReactN
     const pathname = usePathname();
 
     useEffect(() => {
-        // Safe check for pathname - if it's a deep link, DO NOT BLOCK
-        if (pathname?.includes('/amzn/') || pathname?.includes('/go/')) return;
+        // Safe check for pathname - if it's a deep link OR the landing page, DO NOT BLOCK
+        if (pathname?.includes('/amzn/') || pathname?.includes('/go/') || pathname === '/') return;
 
         // eslint-disable-next-line
         const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
