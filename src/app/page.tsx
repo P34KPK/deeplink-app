@@ -322,9 +322,6 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center py-12 p-6 bg-background text-foreground transition-colors duration-300">
       <OnboardingTour />
       {/* Authentication & Navigation */}
-      <div className="absolute top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
       <div className="absolute top-4 left-4 z-50 flex items-center gap-4">
         <Link
           id="tour-my-links-nav"
@@ -357,7 +354,7 @@ export default function Home() {
         </SignedIn>
       </div>
 
-      <div className="matte-card p-8 md:p-12 w-full max-w-xl animate-fade shadow-xl">
+      <div className="matte-card p-6 md:p-12 w-full max-w-xl animate-fade shadow-xl">
         <div className="mb-10 flex flex-col items-center justify-center">
           <div className="relative w-48 h-24 mb-8">
             {/* Dynamic Logo Strategy: Single White Logo with CSS Inversion Filter */}
