@@ -223,7 +223,10 @@ export default function ProDashboard({
         }
     };
 
-    const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
         if (active.id !== over?.id) {
