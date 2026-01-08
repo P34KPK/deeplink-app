@@ -57,9 +57,9 @@ export async function GET() {
         }
     });
 
-    if (isSuperUser) {
-        myTotalClicks = Math.max(myTotalClicks, 15420); // Force Titan Level
-    }
+    // if (isSuperUser) {
+    //     myTotalClicks = Math.max(myTotalClicks, 15420); // Force Titan Level (Disabled for Beta Accuracy)
+    // }
 
     // 5. Build Top Links for User (My Products)
     // Shows aggregate ASIN performance for products the user is linking to
