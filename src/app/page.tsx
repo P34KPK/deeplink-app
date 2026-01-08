@@ -253,8 +253,12 @@ export default function Home() {
       }
 
       let chosenImage = undefined;
+
+      // Allow Auto/Scraped Image for EVERYONE
+      if (imageOption === 'auto') chosenImage = scrapedImage || undefined;
+
+      // Only allow Custom/AI if Pro (Double Check)
       if (isPro) {
-        if (imageOption === 'auto') chosenImage = scrapedImage || undefined;
         if (imageOption === 'custom') chosenImage = customImageUrl || undefined;
         if (imageOption === 'ai') chosenImage = aiMockupUrl || undefined;
       }

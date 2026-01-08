@@ -34,8 +34,9 @@ export async function POST(req: Request) {
             if (userEmail === 'p34k.productions@gmail.com') plan = 'pro';
         }
 
-        // Only PRO users can use custom images
-        const finalImage = (plan === 'pro' && image) ? image : undefined;
+        // Allow images for all users (Frontend handles Locking of Custom Uploads)
+        // We want Free users to have the Amazon Product Image.
+        const finalImage = image || undefined;
 
         // If not authenticated and not a verified admin, BLOCK.
         if (!userId && !isVerifiedAdmin) {
@@ -104,7 +105,8 @@ export async function POST(req: Request) {
             asin,
             title: title || 'Untitled Product',
             description: '', // Optional
-            date: Date.now()
+            date: Date.now(),
+            image: finalImage
         };
 
         // If it's the Admin doing it manually, we might want to tag it?
