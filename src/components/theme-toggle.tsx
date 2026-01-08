@@ -3,15 +3,22 @@
 import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
+import { usePathname } from "next/navigation"
 
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme()
     const [mounted, setMounted] = React.useState(false)
+    const pathname = usePathname();
 
     // Avoid hydration mismatch
     React.useEffect(() => {
         setMounted(true)
     }, [])
+
+    // Don't render the global toggle on Link in Bio pages (they have their own custom toggle)
+    if (pathname?.startsWith('/linkinbio')) {
+        return null;
+    }
 
     if (!mounted) {
         return (

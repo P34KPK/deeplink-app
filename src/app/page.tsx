@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Link as LinkIcon, Copy, Check, BarChart3, LayoutDashboard, Activity, Wand2, DollarSign, Image as ImageIcon, RefreshCw, Camera, Upload, ShoppingBag, X } from "lucide-react";
 import { ThemeToggle } from '@/components/theme-toggle';
 import OnboardingTour from '@/components/OnboardingTour';
@@ -22,6 +23,7 @@ import { SignedIn, SignedOut, UserButton, useAuth, SignOutButton } from "@clerk/
 
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
   const [inputUrl, setInputUrl] = useState('');
 
   const [inputTitle, setInputTitle] = useState('');
@@ -42,6 +44,7 @@ export default function Home() {
   const [history, setHistory] = useState<ArchivedLink[]>([]);
   const [isPro, setIsPro] = useState(false);
   const [clicksUsed, setClicksUsed] = useState(0);
+  const [isAndroid, setIsAndroid] = useState(false);
 
   // Bug Report State
   const [reportOpen, setReportOpen] = useState(false);
@@ -140,6 +143,13 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [inputUrl, isPro]);
 
+  // Detect Android for Layout adjustments
+  useEffect(() => {
+    if (typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent)) {
+      setIsAndroid(true);
+    }
+  }, []);
+
   // Load history on mount (ONLY if signed in)
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
@@ -204,6 +214,10 @@ export default function Home() {
   }, [isLoaded, isSignedIn]);
 
   const generateLink = async () => {
+    if (!isSignedIn) {
+      router.push('/sign-in');
+      return;
+    }
     setError('');
     setGeneratedLink('');
     setLoading(true);
@@ -390,7 +404,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid ${isAndroid ? 'grid-cols-1 gap-6' : 'grid-cols-2 gap-4'}`}>
               <div>
                 <label className="text-xs text-muted-foreground ml-1 mb-1 block">Description</label>
                 <input
@@ -621,11 +635,11 @@ export default function Home() {
 
           <button
             id="tour-generate-btn"
-            onClick={generateLink}
-            disabled={loading || !inputUrl}
+            onClick={!isSignedIn ? () => router.push('/sign-in') : generateLink}
+            disabled={loading || (!inputUrl && isSignedIn)}
             className="btn-primary w-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
           >
-            {loading ? 'Processing...' : 'Generate Deep Link'}
+            {!isSignedIn ? 'Sign in to Create Link' : (loading ? 'Processing...' : 'Generate Deep Link')}
           </button>
 
           {error && (

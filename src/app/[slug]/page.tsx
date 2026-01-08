@@ -3,9 +3,10 @@ import { notFound } from 'next/navigation';
 import { redis } from '@/lib/redis';
 import { getLinks } from '@/lib/storage';
 import { getShortLink } from '@/lib/shortener';
-import { getStats } from '@/lib/analytics';
+import { getStats, trackClick } from '@/lib/analytics';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import { headers } from 'next/headers';
 
 import { fetchAmazonMetadata } from '@/lib/metadata-fetcher';
 
@@ -108,12 +109,25 @@ export default async function ShortLinkPage({ params }: { params: Promise<{ slug
         }
     }
 
+    // --- SERVER SIDE TRACKING (Agent B - Robustness) ---
+    // Extract headers for accurate tracking before any client-side redirect happens
+    const headerList = await headers();
+    const userAgent = headerList.get('user-agent');
+    const referer = headerList.get('referer');
+    const geo = headerList.get('x-vercel-ip-country') || 'unknown';
+
+    if (data.asin) {
+        // Fire and forget (or await just to be sure)
+        await trackClick(data.asin, userAgent || '', slug, geo, referer || '');
+    }
+
     return (
         <DeepLinkRedirect
             asin={data.asin}
             tag={data.tag}
             domain={data.domain}
             slug={slug}
+            skipTracking={true}
         />
     );
 }

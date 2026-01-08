@@ -24,7 +24,10 @@ const KEYS = {
     SLUGS: 'v2:stats:slugs', // Hash: slug -> count
     ASIN_RANK: 'v2:stats:rank:asins', // ZSET: score=clicks, member=asin
     ASIN_DATA: (asin: string) => `v2:stats:asin:${asin}`, // Hash: last_click, android, ios...
-    AFFILIATE: (userId: string) => `user:${userId}:affiliate` // Hash: clicks, sales, earnings
+    AFFILIATE: (userId: string) => `user:${userId}:affiliate`, // Hash: clicks, sales, earnings
+    SLUG_DAILY: (slug: string) => `v2:stats:history:slug:${slug}`, // Hash: date -> count
+    ASIN_LOCATIONS: (asin: string) => `v2:stats:asin:${asin}:locations`, // Hash: country -> count
+    ASIN_REFERRERS: (asin: string) => `v2:stats:asin:${asin}:referrers` // Hash: domain -> count
 };
 
 export async function trackClick(asin: string, userAgent: string, slug?: string, geo?: string, referrer?: string) {
@@ -42,6 +45,7 @@ export async function trackClick(asin: string, userAgent: string, slug?: string,
     // 2. Slug Stats
     if (slug) {
         pipeline.hincrby(KEYS.SLUGS, slug, 1);
+        pipeline.hincrby(KEYS.SLUG_DAILY(slug), today, 1);
     }
 
     // 3. User Agent Parsing
@@ -65,12 +69,14 @@ export async function trackClick(asin: string, userAgent: string, slug?: string,
 
     if (geo && geo !== 'unknown') {
         pipeline.hincrby(KEYS.LOCATIONS, geo.toUpperCase(), 1);
+        pipeline.hincrby(KEYS.ASIN_LOCATIONS(asin), geo.toUpperCase(), 1);
     }
 
     if (referrer) {
         try {
             const hostname = new URL(referrer).hostname.replace('www.', '');
             pipeline.hincrby(KEYS.REFERRERS, hostname, 1);
+            pipeline.hincrby(KEYS.ASIN_REFERRERS(asin), hostname, 1);
         } catch { }
     }
 
@@ -79,6 +85,7 @@ export async function trackClick(asin: string, userAgent: string, slug?: string,
     pipeline.hset(asinKey, 'last_click', timestamp);
     pipeline.hincrby(asinKey, 'total', 1);
     pipeline.hincrby(asinKey, device, 1); // Increment specific device count for this ASIN
+    pipeline.hincrby(asinKey, browser, 1); // Increment specific browser count for this ASIN
 
     // 6. ASIN Leaderboard
     pipeline.zincrby(KEYS.ASIN_RANK, 1, asin);
@@ -203,5 +210,132 @@ export async function getAffiliateStats(userId: string) {
         };
     } catch (e) {
         return { clicks: 0, sales: 0, earnings: 0 };
+    }
+}
+
+export async function getSlugDailyHistory(slugs: string[]): Promise<Record<string, number>> {
+    if (!redis || slugs.length === 0) return {};
+    try {
+        const pipeline = redis.pipeline();
+        slugs.forEach(slug => pipeline.hgetall(KEYS.SLUG_DAILY(slug)));
+        const results = await pipeline.exec();
+
+        const aggregated: Record<string, number> = {};
+        results?.forEach((res) => {
+            if (!res) return;
+            const [err, days] = res;
+            if (!err && days) {
+                Object.entries(days as Record<string, string>).forEach(([date, count]) => {
+                    aggregated[date] = (aggregated[date] || 0) + parseInt(count);
+                });
+            }
+        });
+        return aggregated;
+    } catch (e) {
+        console.error("Error fetching slug history", e);
+        return {};
+    }
+}
+
+export async function getUserDeviceStats(asins: string[]) {
+    if (!redis || asins.length === 0) return { android: 0, ios: 0, desktop: 0, other: 0 };
+    try {
+        const pipeline = redis.pipeline();
+        asins.forEach(asin => pipeline.hgetall(KEYS.ASIN_DATA(asin)));
+        const results = await pipeline.exec();
+
+        const stats = { android: 0, ios: 0, desktop: 0, other: 0 };
+        results?.forEach((res) => {
+            if (!res) return;
+            const [err, data] = res as [any, any];
+            if (!err && data) {
+                stats.android += parseInt(data.android || '0');
+                stats.ios += parseInt(data.ios || '0');
+                stats.desktop += parseInt(data.desktop || '0');
+                stats.other += parseInt(data.other || '0');
+            }
+        });
+        return stats;
+    } catch (e) {
+        console.error("Error fetching device stats", e);
+        return { android: 0, ios: 0, desktop: 0, other: 0 };
+    }
+}
+
+export async function getUserBrowserStats(asins: string[]) {
+    if (!redis || asins.length === 0) return {};
+    try {
+        const pipeline = redis.pipeline();
+        asins.forEach(asin => pipeline.hgetall(KEYS.ASIN_DATA(asin)));
+        const results = await pipeline.exec();
+
+        const stats: Record<string, number> = {
+            'Instagram App': 0, 'Facebook App': 0, 'Chrome': 0,
+            'Safari': 0, 'Firefox': 0, 'Edge': 0, 'Other': 0
+        };
+
+        results?.forEach((res) => {
+            if (!res) return;
+            const [err, data] = res as [any, any];
+            if (!err && data) {
+                Object.keys(stats).forEach(browser => {
+                    if (data[browser]) {
+                        stats[browser] += parseInt(data[browser]);
+                    }
+                });
+            }
+        });
+        return stats;
+    } catch (e) {
+        console.error("Error fetching browser stats", e);
+        return {};
+    }
+}
+
+export async function getUserLocationStats(asins: string[]): Promise<Record<string, number>> {
+    if (!redis || asins.length === 0) return {};
+    try {
+        const pipeline = redis.pipeline();
+        asins.forEach(asin => pipeline.hgetall(KEYS.ASIN_LOCATIONS(asin)));
+        const results = await pipeline.exec();
+
+        const stats: Record<string, number> = {};
+        results?.forEach((res) => {
+            if (!res) return;
+            const [err, data] = res as [any, any];
+            if (!err && data) {
+                Object.entries(data as Record<string, string>).forEach(([country, count]) => {
+                    stats[country] = (stats[country] || 0) + parseInt(count);
+                });
+            }
+        });
+        return stats;
+    } catch (e) {
+        console.error("Error fetching location stats", e);
+        return {};
+    }
+}
+
+export async function getUserReferrerStats(asins: string[]): Promise<Record<string, number>> {
+    if (!redis || asins.length === 0) return {};
+    try {
+        const pipeline = redis.pipeline();
+        asins.forEach(asin => pipeline.hgetall(KEYS.ASIN_REFERRERS(asin)));
+        const results = await pipeline.exec();
+
+        const stats: Record<string, number> = {};
+        results?.forEach((res) => {
+            if (!res) return;
+            const [err, data] = res as [any, any];
+            if (!err && data) {
+                Object.entries(data as Record<string, string>).forEach(([domain, count]) => {
+                    stats[domain] = (stats[domain] || 0) + parseInt(count);
+                });
+            }
+        });
+        return stats;
+    } catch (e) {
+        console.error("Error fetching referrer stats", e);
+        return {};
     }
 }

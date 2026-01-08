@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getStats, getAffiliateStats } from '@/lib/analytics';
+import { getStats, getAffiliateStats, getSlugDailyHistory, getUserDeviceStats, getUserBrowserStats, getUserLocationStats, getUserReferrerStats } from '@/lib/analytics';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { redis } from '@/lib/redis';
 // Use dynamic import for storage to avoid circular dependency issues if any, or standard import
@@ -64,10 +64,6 @@ export async function GET() {
         }
     });
 
-    // if (isSuperUser) {
-    //     myTotalClicks = Math.max(myTotalClicks, 15420); // Force Titan Level (Disabled for Beta Accuracy)
-    // }
-
     // 5. Build Top Links for User (My Products)
     // Shows aggregate ASIN performance for products the user is linking to
     const myTopLinks = Object.entries(globalStats.topLinks || {})
@@ -104,9 +100,14 @@ export async function GET() {
         console.error("Broadcast fetch error", e);
     }
 
-    // 8. Construct Response
-    // Note: dailyClicks and devices are reset to empty for now to enforce isolation 
-    // (Global logs cannot be safely attributed to user retroactively in v3)
+    // 8. Fetch User Specific Daily History & Device/Browser/Location/Referrer Stats
+    const dailyClicks = await getSlugDailyHistory(Array.from(userSlugs));
+    const userDeviceStats = await getUserDeviceStats(Array.from(userAsins));
+    const userBrowserStats = await getUserBrowserStats(Array.from(userAsins));
+    const userLocationStats = await getUserLocationStats(Array.from(userAsins));
+    const userReferrerStats = await getUserReferrerStats(Array.from(userAsins));
+
+    // 9. Construct Response
     return NextResponse.json({
         plan,
         usage: {
@@ -119,12 +120,12 @@ export async function GET() {
         totalClicks: myTotalClicks,
         globalLastClick: Date.now(), // Realtime
 
-        // Privacy: Return empty sets to avoid leaking global traffic data
-        dailyClicks: {},
-        devices: { android: 0, ios: 0, desktop: 0, other: 0 },
-        locations: {},
-        browsers: {},
-        referrers: {},
+        // Real User Data
+        dailyClicks,
+        devices: userDeviceStats,
+        locations: userLocationStats,
+        browsers: userBrowserStats,
+        referrers: userReferrerStats,
 
         // User's specific top links
         topLinks: myTopLinks,

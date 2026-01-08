@@ -6,6 +6,9 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import InAppBrowserGuard from "@/components/InAppBrowserGuard";
 import ErrorMonitor from "@/components/ErrorMonitor";
+import { LanguageProvider } from "@/lib/i18n";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import OfflineStatus from "@/components/OfflineStatus";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,8 +21,6 @@ export const metadata: Metadata = {
     apple: '/favicon.png',
   },
 };
-
-import OfflineStatus from "@/components/OfflineStatus";
 
 export default function RootLayout({
   children,
@@ -38,15 +39,20 @@ export default function RootLayout({
           >
             <OfflineStatus />
             <ErrorMonitor />
-            <InAppBrowserGuard>
-              <div className="fixed top-4 right-4 z-50">
-                <ThemeToggle />
-              </div>
-              {children}
-            </InAppBrowserGuard>
+            <LanguageProvider>
+              <InAppBrowserGuard>
+                <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+                  <LanguageSwitcher />
+                  <ThemeToggle />
+                </div>
+                {children}
+              </InAppBrowserGuard>
+            </LanguageProvider>
           </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
   );
 }
+// Force Rebuild v2
+

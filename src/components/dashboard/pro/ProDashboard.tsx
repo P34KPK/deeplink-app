@@ -22,6 +22,7 @@ import LinkTreeWidget from '@/components/LinkTreeWidget';
 import IdentityWidget from '@/components/IdentityWidget';
 import AffiliateWidget from '@/components/dashboard/shared/AffiliateWidget';
 import CheckoutButton from '@/components/CheckoutButton';
+import { useLanguage } from '@/lib/i18n';
 
 type ProDashboardProps = {
     stats: any;
@@ -53,6 +54,7 @@ export default function ProDashboard({
     bypassLock = false
 }: ProDashboardProps) {
 
+    const { t } = useLanguage();
     const [expandedWidgets, setExpandedWidgets] = useState<string[]>(['daily', 'trends']);
     const [qrLink, setQrLink] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('overview');
@@ -255,10 +257,10 @@ export default function ProDashboard({
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div className="flex flex-col gap-2">
                         <Link href="/" className="self-start text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mb-1 transition-colors">
-                            <span>←</span> My Link (Generator)
+                            <span>←</span> {t('create_link')}
                         </Link>
                         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                            Analytics Dashboard
+                            {t('dashboard')}
                             {stats.plan === 'pro' ? (
                                 <span className="bg-[#27272a] text-white text-[10px] px-2.5 py-1 rounded-full font-bold uppercase relative top-0.5 shadow-sm">PRO</span>
                             ) : (
@@ -268,8 +270,8 @@ export default function ProDashboard({
                         <p className="text-muted-foreground mt-1">Real-time performance metrics for <span className='text-zinc-300'>@{userId}</span></p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button onClick={handleExportPDF} className="flex items-center gap-2 text-xs border border-border bg-card hover:bg-secondary px-3 py-2 rounded transition-colors"><Download className="w-4 h-4" /><span>Export</span></button>
-                        <div className="text-right hidden md:block mr-4"><p className="text-xs text-muted-foreground uppercase font-semibold">Last Activity</p><p className="text-sm font-mono text-primary">{getLastActivity()}</p></div>
+                        <button onClick={handleExportPDF} className="flex items-center gap-2 text-xs border border-border bg-card hover:bg-secondary px-3 py-2 rounded transition-colors"><Download className="w-4 h-4" /><span>{t('save')}</span></button>
+                        <div className="text-right hidden md:block mr-4"><p className="text-xs text-muted-foreground uppercase font-semibold">{t('last_activity')}</p><p className="text-sm font-mono text-primary">{getLastActivity()}</p></div>
                     </div>
                 </div>
 
@@ -312,7 +314,7 @@ export default function ProDashboard({
                 )}
 
                 <div className="matte-card overflow-hidden">
-                    <div className="p-6 border-b border-border bg-card/50"><h3 className="text-lg font-semibold">My Links Performance</h3></div>
+                    <div className="p-6 border-b border-border bg-card/50"><h3 className="text-lg font-semibold">{t('my_links')}</h3></div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="bg-secondary/30 text-xs text-muted-foreground uppercase tracking-wider"><tr><th className="px-6 py-4"></th><th className="px-6 py-4">Date</th><th className="px-6 py-4">Title</th><th className="px-6 py-4 text-right">Hits</th><th className="px-6 py-4 text-right">Action</th></tr></thead>
@@ -469,7 +471,7 @@ export default function ProDashboard({
                                                                             <stop offset="95%" stopColor="#fff" stopOpacity={0} />
                                                                         </linearGradient>
                                                                     </defs>
-                                                                    <RechartsTooltip contentStyle={{ backgroundColor: '#111', border: '1px solid #333' }} />
+                                                                    <RechartsTooltip contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                                                                     <Area type="monotone" dataKey="clicks" stroke="#fff" fill="url(#colorClicks)" strokeWidth={2} />
                                                                 </AreaChart>
                                                             </ResponsiveContainer>
@@ -485,7 +487,7 @@ export default function ProDashboard({
                                                                     <Pie data={deviceData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5} dataKey="value">
                                                                         {deviceData.map((e, i) => <Cell key={i} fill={e.name === 'No Data' ? '#333' : COLORS[i % COLORS.length]} stroke="none" />)}
                                                                     </Pie>
-                                                                    <RechartsTooltip contentStyle={{ backgroundColor: '#111', border: '1px solid #333' }} />
+                                                                    <RechartsTooltip contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                                                                 </PieChart>
                                                             </ResponsiveContainer>
                                                         </div>
@@ -502,7 +504,7 @@ export default function ProDashboard({
                                                                     <Pie data={browserData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} dataKey="value">
                                                                         {browserData.map((e, i) => <Cell key={i} fill={e.name === 'No Data' ? '#333' : COLORS[i % COLORS.length]} stroke="none" />)}
                                                                     </Pie>
-                                                                    <RechartsTooltip contentStyle={{ backgroundColor: '#111', border: '1px solid #333' }} />
+                                                                    <RechartsTooltip contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
                                                                 </PieChart>
                                                             </ResponsiveContainer>
                                                         </div>

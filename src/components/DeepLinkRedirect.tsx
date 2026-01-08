@@ -8,9 +8,10 @@ interface DeepLinkRedirectProps {
     tag?: string | null;
     domain?: string | null;
     slug: string;
+    skipTracking?: boolean;
 }
 
-export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: DeepLinkRedirectProps) {
+export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug, skipTracking = false }: DeepLinkRedirectProps) {
     // Intelligent Geo-Redirect (Agent B)
     const [effectiveDomain, setEffectiveDomain] = useState(domain || 'com');
     const [flag, setFlag] = useState('🇺🇸'); // Default US
@@ -112,6 +113,7 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
     // Legacy tracking (moved to mount to avoid double-count, or keep here?)
     // Let's keep tracking separate to avoid duplicate counts during re-renders.
     useEffect(() => {
+        if (skipTracking) return;
         if (asin) {
             fetch('/api/track', {
                 method: 'POST',
@@ -126,7 +128,7 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug }: De
                 keepalive: true
             }).catch(err => console.error('Tracking failed', err));
         }
-    }, [asin, slug, countryCode]);
+    }, [asin, slug, countryCode, skipTracking]);
 
     const handleManualClick = () => {
         if (isAndroid) {
