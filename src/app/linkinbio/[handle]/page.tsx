@@ -184,6 +184,31 @@ export default function UserBioPage() {
                             <a href={user.socials.facebook} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-blue-600 transition-colors`}><Facebook className="w-5 h-5" /></a>
                         )}
                     </div>
+
+                    {/* Custom Links (Dynamic) */}
+                    {user?.customLinks && user.customLinks.length > 0 && (
+                        <div className="w-full flex flex-col gap-2 mt-6 animate-in slide-in-from-bottom-2 fade-in duration-500">
+                            {user.customLinks.map((link: any) => (
+                                <a
+                                    key={link.id}
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`
+                                        w-full py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg
+                                        flex items-center justify-center gap-2
+                                        ${isDark
+                                            ? 'bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-white hover:border-pink-500/50 hover:shadow-pink-500/10'
+                                            : 'bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 hover:border-pink-500/30'
+                                        }
+                                    `}
+                                >
+                                    <span>{link.label}</span>
+                                    <ExternalLink className="w-3.5 h-3.5 opacity-50" />
+                                </a>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Search Bar */}

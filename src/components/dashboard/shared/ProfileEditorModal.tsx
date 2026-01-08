@@ -29,6 +29,7 @@ interface UserProfile {
         facebook?: string;
         [key: string]: string | undefined;
     };
+    customLinks?: { id: string, label: string, url: string }[];
     [key: string]: any; // fallback for loose API structure
 }
 
@@ -345,6 +346,66 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                             </div>
                         </>
                     )}
+                    {/* Custom Links Section */}
+                    <div className="pt-2 border-t border-zinc-800 mt-2">
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-[10px] text-zinc-500 uppercase font-bold">Custom Links</label>
+                            <button
+                                onClick={() => {
+                                    const newLinks = [...(userProfile.customLinks || [])];
+                                    newLinks.push({ id: Date.now().toString(), label: '', url: '' });
+                                    updateProfile('customLinks', newLinks);
+                                }}
+                                className="text-[9px] font-bold bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-2 py-1 rounded transition-colors flex items-center gap-1"
+                            >
+                                <span>+</span> Add Link
+                            </button>
+                        </div>
+
+                        <div className="space-y-2 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
+                            {(userProfile.customLinks || []).map((link: any, idx: number) => (
+                                <div key={link.id || idx} className="flex flex-col gap-1 bg-zinc-900/50 p-2 rounded border border-zinc-800/50">
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            className="flex-1 bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-xs text-white placeholder-zinc-600 focus:border-pink-500 outline-none"
+                                            placeholder="Label (e.g. My Portfolio)"
+                                            value={link.label}
+                                            onChange={(e) => {
+                                                const newLinks = [...(userProfile.customLinks || [])];
+                                                newLinks[idx] = { ...newLinks[idx], label: e.target.value };
+                                                updateProfile('customLinks', newLinks);
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                const newLinks = userProfile.customLinks.filter((_: any, i: number) => i !== idx);
+                                                updateProfile('customLinks', newLinks);
+                                            }}
+                                            className="p-1.5 text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                                            title="Remove"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                    <input
+                                        className="w-full bg-zinc-900/50 border-none outline-none text-[10px] text-zinc-400 placeholder-zinc-700 px-2 font-mono"
+                                        placeholder="https://"
+                                        value={link.url}
+                                        onChange={(e) => {
+                                            const newLinks = [...(userProfile.customLinks || [])];
+                                            newLinks[idx] = { ...newLinks[idx], url: e.target.value };
+                                            updateProfile('customLinks', newLinks);
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                            {(!userProfile.customLinks || userProfile.customLinks.length === 0) && (
+                                <div className="text-center py-4 border border-dashed border-zinc-800 rounded-lg">
+                                    <p className="text-[10px] text-zinc-600">No custom links added yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="pt-4 flex gap-3">
