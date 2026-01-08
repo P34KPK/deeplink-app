@@ -378,7 +378,7 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                                         />
                                         <button
                                             onClick={() => {
-                                                const newLinks = userProfile.customLinks.filter((_: any, i: number) => i !== idx);
+                                                const newLinks = (userProfile.customLinks || []).filter((_: any, i: number) => i !== idx);
                                                 updateProfile('customLinks', newLinks);
                                             }}
                                             className="p-1.5 text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
