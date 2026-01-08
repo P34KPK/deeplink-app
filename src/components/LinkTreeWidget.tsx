@@ -124,21 +124,12 @@ export default function LinkTreeWidget({ userId, username, className, onEditProf
                 </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 mt-auto">
-                {onEditProfile && (
-                    <button
-                        onClick={onEditProfile}
-                        className="h-9 rounded-md text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-b from-zinc-800 to-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all shadow-sm active:scale-95"
-                    >
-                        <Edit className="w-3.5 h-3.5" />
-                        <span className="mt-0.5">Edit</span>
-                    </button>
-                )}
+            <div className="grid grid-cols-2 gap-2 mt-auto">
                 <a
                     href={`/linkinbio/${displayId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`h-9 rounded-md text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-b from-zinc-800 to-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all shadow-sm active:scale-95 ${!onEditProfile ? 'col-span-1' : ''}`}
+                    className="h-9 rounded-md text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-b from-zinc-800 to-zinc-900 border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all shadow-sm active:scale-95"
                 >
                     <ExternalLink className="w-3.5 h-3.5" />
                     <span className="mt-0.5">View</span>
@@ -151,7 +142,7 @@ export default function LinkTreeWidget({ userId, username, className, onEditProf
                             copyLink();
                         }
                     }}
-                    className={`h-9 rounded-md text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-b from-pink-500 to-pink-600 border border-pink-400 hover:border-pink-300 text-white shadow-lg shadow-pink-500/20 active:scale-95 transition-all ${!onEditProfile ? 'col-span-2' : ''}`}
+                    className="h-9 rounded-md text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-b from-pink-500 to-pink-600 border border-pink-400 hover:border-pink-300 text-white shadow-lg shadow-pink-500/20 active:scale-95 transition-all"
                 >
                     <span className="mt-0.5">Share</span>
                 </button>
