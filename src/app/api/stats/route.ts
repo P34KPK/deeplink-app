@@ -22,7 +22,7 @@ export async function GET() {
 
     // Check Admin Override
     const email = user.primaryEmailAddress?.emailAddress;
-    const isSuperUser = email === 'p34k.productions@gmail.com' || email === 'stacyadd@gmail.com';
+    const isSuperUser = email === 'p34k.productions@gmail.com' || email?.includes('stacyadd') || email?.includes('babygansta77');
 
     try {
         const storedPlan = await redis?.get(planKey);
