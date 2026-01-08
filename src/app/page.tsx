@@ -449,17 +449,24 @@ export default function Home() {
             <input type="file" id="file-upload" className="hidden" onChange={handleFileUpload} accept="image/*" />
 
             {/* PRO IMAGE SELECTION */}
-            {/* PRO IMAGE SELECTION - REDESIGNED */}
-            {isPro && (inputUrl.length > 0 || customImageUrl || imageOption === 'custom') && (
+            {/* PRO IMAGE SELECTION - NOW VISIBLE BUT LOCKED FOR FREE */}
+            {(inputUrl.length > 0 || customImageUrl || imageOption === 'custom') && (
               <div className="mt-8 space-y-3 animate-in slide-in-from-bottom-8 fade-in duration-700 ease-out fill-mode-forwards">
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
                     <ImageIcon className="w-3 h-3 text-purple-400" />
                     <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Social Mockup Studio</span>
                   </div>
-                  <span className="text-[9px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full shadow-lg shadow-purple-500/20">
-                    PRO STUDIO
-                  </span>
+                  {isPro ? (
+                    <span className="text-[9px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-0.5 rounded-full shadow-lg shadow-purple-500/20">
+                      PRO STUDIO
+                    </span>
+                  ) : (
+                    <div className="flex items-center gap-1.5 bg-zinc-800 border border-zinc-700 rounded-full px-2 py-0.5">
+                      <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div>
+                      <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wide">Preview Mode</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* MAIN STUDIO CARD */}
@@ -485,7 +492,7 @@ export default function Home() {
                   {/* TOOLBAR OVERLAY */}
                   <div className="absolute bottom-4 left-4 right-4 p-2 bg-black/60 backdrop-blur-xl border border-white/10 rounded-lg flex items-center gap-2 shadow-2xl">
 
-                    {/* 1. AMAZON PRODUCT */}
+                    {/* 1. AMAZON PRODUCT (Always available if scraped) */}
                     <button
                       onClick={() => setImageOption('auto')}
                       disabled={!scrapedImage}
@@ -495,25 +502,50 @@ export default function Home() {
                       <span className="text-[10px] uppercase font-bold tracking-wide">Product</span>
                     </button>
 
-                    {/* 2. UPLOAD */}
+                    {/* 2. UPLOAD (Locked for Free) */}
                     <button
-                      onClick={() => document.getElementById('file-upload')?.click()}
+                      onClick={() => {
+                        if (isPro) {
+                          document.getElementById('file-upload')?.click();
+                        } else {
+                          // Trigger Checkout
+                          const btn = document.querySelector('.pc-checkout-btn') as HTMLButtonElement;
+                          if (btn) {
+                            btn.click();
+                            alert("✨ Upgrade to PRO to upload custom images!");
+                          } else {
+                            alert("✨ Upgrade to PRO to upload custom images!");
+                          }
+                        }
+                      }}
                       className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 transition-all ${imageOption === 'custom' ? 'bg-white text-black font-bold shadow-lg' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}
                     >
-                      <Upload className="w-3.5 h-3.5" />
+                      {!isPro && <div className="w-3 h-3 text-yellow-500"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>}
                       <span className="text-[10px] uppercase font-bold tracking-wide">Upload</span>
                     </button>
 
                     <div className="w-px h-4 bg-white/20 mx-1"></div>
 
-                    {/* 3. AI STUDIO */}
+                    {/* 3. AI STUDIO (Locked for Free) */}
                     <button
-                      onClick={() => setImageOption('ai')}
+                      onClick={() => {
+                        if (isPro) {
+                          setImageOption('ai');
+                        } else {
+                          const btn = document.querySelector('.pc-checkout-btn') as HTMLButtonElement;
+                          if (btn) {
+                            btn.click();
+                            alert("✨ Upgrade to PRO to unlock AI Magic!");
+                          } else {
+                            alert("✨ Upgrade to PRO to unlock AI Magic!");
+                          }
+                        }
+                      }}
                       className={`flex-[1.2] py-2 px-3 rounded-md flex items-center justify-center gap-2 transition-all relative overflow-hidden ${imageOption === 'ai' ? 'text-white font-bold' : 'text-pink-400 hover:text-pink-300 hover:bg-pink-500/10'}`}
                     >
                       {imageOption === 'ai' && <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-purple-600 opacity-100"></div>}
                       <div className="relative flex items-center gap-2">
-                        <Wand2 className="w-3.5 h-3.5" />
+                        {!isPro && <div className="w-3 h-3 text-yellow-500 mr-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>}
                         <span className="text-[10px] uppercase font-bold tracking-wide">AI Studio</span>
                       </div>
                     </button>
