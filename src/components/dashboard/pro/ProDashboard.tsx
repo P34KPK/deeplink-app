@@ -293,7 +293,7 @@ export default function ProDashboard({
                             ></div>
                         </div>
                         <p className="text-xs text-muted-foreground mt-3 flex justify-between">
-                            <span>{new Date().toLocaleString('default', { month: 'long' })} Cycle</span>
+                            <span>{new Date().toLocaleString('en-US', { month: 'long' })} Cycle</span>
                             <span className={(stats.usage?.clicks || 0) >= 200 ? 'text-red-500 font-bold' : ''}>
                                 {(stats.usage?.clicks || 0) >= 200 ? 'Limit Reached. Upgrade now.' : 'Renewable every month'}
                             </span>
