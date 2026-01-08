@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ExternalLink, ShoppingBag, Share2, Search, CheckCircle2, Instagram, Twitter, Youtube, Facebook, ArrowUpRight, Sun, Moon } from 'lucide-react';
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 type LinkData = {
     id: string;
@@ -106,18 +107,21 @@ export default function UserBioPage() {
 
     return (
         <div
-            className={`min-h-screen w-full relative transition-colors duration-500 font-sans ${isDark ? 'bg-[#050505] text-white' : 'bg-[#fafafa] text-black'}`}
+            className={`min-h-screen w-full relative transition-colors duration-500 font-sans ${isDark ? 'text-white' : 'text-black'}`}
             style={{ color: isDark ? 'white' : 'black' }}
         >
 
             {/* Background Ambient Effects */}
-            <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+            <div
+                className="fixed inset-0 z-0 overflow-hidden pointer-events-none transition-all duration-700"
+                style={{ background: user?.theme ? user.theme : (isDark ? '#050505' : '#fafafa') }}
+            >
                 {user?.backgroundImage ? (
                     <>
                         <div className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 ${isDark ? 'opacity-30' : 'opacity-15'}`} style={{ backgroundImage: `url(${user.backgroundImage})`, filter: 'blur(40px)' }} />
                         <div className={`absolute inset-0 ${isDark ? 'bg-black/60' : 'bg-white/60'}`} />
                     </>
-                ) : (
+                ) : !user?.theme && (
                     <>
                         {/* Dynamic Orbs based on Theme */}
                         <div className={`absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] rounded-full blur-[150px] mix-blend-screen animate-pulse ${isDark ? 'bg-purple-900 opacity-40' : 'bg-purple-300 opacity-30 mix-blend-multiply'}`} style={{ animationDuration: '8s' }} />
@@ -126,8 +130,9 @@ export default function UserBioPage() {
                 )}
             </div>
 
-            {/* Theme Toggle (Fixed Top Right) */}
-            <div className="fixed top-6 right-6 z-50">
+            {/* Theme & Language Toggles (Fixed Top Right) */}
+            <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
+                <LanguageSwitcher ignoreRoute={true} />
                 <button
                     onClick={toggleTheme}
                     className={`p-3 rounded-full backdrop-blur-md shadow-lg border transition-all hover:scale-105 active:scale-95 ${isDark ? 'bg-zinc-900/80 border-white/10 text-white hover:bg-zinc-800' : 'bg-white/80 border-zinc-200 text-black hover:bg-zinc-50'}`}
@@ -293,21 +298,29 @@ export default function UserBioPage() {
                                         `}
                                     >
                                         {/* Image Container */}
-                                        <div className={`
-                                                relative w-32 sm:w-full shrink-0 sm:aspect-[4/3] overflow-hidden
-                                                ${isDark ? 'bg-zinc-800' : 'bg-gray-100'}
-                                            `}>
-                                            {link.image ? (
-                                                <img
-                                                    src={link.image}
-                                                    alt={link.title}
-                                                    className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${!isDark && 'mix-blend-multiply opacity-95'}`}
-                                                />
-                                            ) : (
-                                                <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900">
-                                                    <ShoppingBag className="opacity-20 w-8 h-8" />
-                                                </div>
-                                            )}
+                                        <div className="relative w-32 h-32 sm:h-auto sm:w-full shrink-0 sm:aspect-[4/3] overflow-hidden flex items-center justify-center p-2 bg-white">
+                                            {/* Fallback Icon (Always rendered behind) */}
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-100 z-0 opacity-50">
+                                                <ShoppingBag className="w-8 h-8 text-black mb-1" />
+                                                <span className="text-[10px] font-bold text-zinc-500">NO IMAGE</span>
+                                                {/* Debug: Show ASIN to confirm it exists */}
+                                                <span className="text-[8px] font-mono text-zinc-400 mt-0.5">{link.asin || 'MISSING ASIN'}</span>
+                                            </div>
+
+                                            {/* Image (Rendered on top) */}
+                                            <img
+                                                src={link.image || (link.asin ? `/api/proxy-image?url=${encodeURIComponent(`https://www.amazon.com/dp/${link.asin}`)}&v=${Date.now()}` : '')}
+                                                referrerPolicy="no-referrer"
+                                                alt={link.title}
+                                                className="absolute inset-0 w-full h-full object-contain transition-transform duration-700 group-hover:scale-110 z-10"
+                                                onLoad={(e) => {
+                                                    // Amazon returns 1x1 pixel tracking GIF for invalid ASINs. Hide it to show fallback.
+                                                    if (e.currentTarget.naturalWidth === 1) {
+                                                        e.currentTarget.style.display = 'none';
+                                                    }
+                                                }}
+                                                onError={(e) => e.currentTarget.style.display = 'none'}
+                                            />
 
                                             {/* Top Right Tag */}
                                             {link.tags && link.tags.length > 0 && (

@@ -21,8 +21,11 @@ type ArchivedLink = {
 
 import { SignedIn, SignedOut, UserButton, useAuth, SignOutButton } from "@clerk/nextjs";
 
+import { useLanguage } from '@/lib/i18n';
+
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
+  const { t } = useLanguage();
   const router = useRouter();
   const [inputUrl, setInputUrl] = useState('');
 
@@ -347,7 +350,7 @@ export default function Home() {
           className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <BarChart3 className="w-4 h-4" />
-          <span className="hidden sm:inline">My Links</span>
+          <span className="hidden sm:inline">{t('my_links')}</span>
         </Link>
 
         <SignedOut>
@@ -363,7 +366,7 @@ export default function Home() {
             <div className="hidden md:block">
               <SignOutButton>
                 <button className="text-sm font-medium text-muted-foreground hover:text-red-500 transition-colors">
-                  Sign Out
+                  {t('logout')}
                 </button>
               </SignOutButton>
             </div>
@@ -374,18 +377,19 @@ export default function Home() {
 
       <div className="matte-card p-6 md:p-12 w-full max-w-xl animate-fade shadow-xl">
         <div className="mb-10 flex flex-col items-center justify-center">
-          <div className="relative w-48 h-24 mb-8">
+          <div className="relative w-[173px] h-[86px] mb-8">
             {/* Dynamic Logo Strategy: Single White Logo with CSS Inversion Filter */}
             <Image
               src="/logo.png"
               alt="DeepLinkrs Logo"
-              width={192}
-              height={96}
+              width={173}
+              height={86}
               className="object-contain transition-all duration-300"
               style={{ filter: 'var(--logo-filter)' }}
               priority
             />
           </div>
+          <h1 className="sr-only">DeepLinkrs - The #1 Amazon Deep Linking Tool and Link in Bio for Influencers</h1>
           <p className="text-sm text-muted-foreground mt-2">
             Amazon Affiliate Deep Linking Tool
           </p>
@@ -639,7 +643,7 @@ export default function Home() {
             disabled={loading || (!inputUrl && isSignedIn)}
             className="btn-primary w-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
           >
-            {!isSignedIn ? 'Sign in to Create Link' : (loading ? 'Processing...' : 'Generate Deep Link')}
+            {!isSignedIn ? t('create_link') : (loading ? 'Processing...' : t('generate'))}
           </button>
 
           {error && (
@@ -784,7 +788,7 @@ export default function Home() {
       </div>
       {/* Footer Branding */}
       <div className="mt-12 flex flex-col items-center gap-4 opacity-50 hover:opacity-100 transition-opacity">
-        <div className="relative w-24 h-8">
+        <a href="https://www.p34k.com" target="_blank" rel="noopener noreferrer" className="relative w-24 h-8 hover:scale-105 transition-transform">
           <Image
             src="/p34k-logo.png"
             alt="P34K Logo"
@@ -792,7 +796,7 @@ export default function Home() {
             className="object-contain"
             style={{ filter: 'var(--logo-filter)' }}
           />
-        </div>
+        </a>
         <div className="flex gap-4 text-xs text-muted-foreground">
           <a href="mailto:info@p34k.com" className="hover:text-foreground">Contact</a>
           <button onClick={() => setReportOpen(true)} className="hover:text-foreground">Report Bug</button>

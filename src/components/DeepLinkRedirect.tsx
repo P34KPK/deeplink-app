@@ -22,7 +22,34 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug, skip
     useEffect(() => {
         if (!asin) return;
 
-        const getLocalAmazonDomain = () => {
+        const getLocalAmazonDomain = async () => {
+            // 1. Try IP-based Geolocation (Most Accurate)
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                if (res.ok) {
+                    const data = await res.json();
+                    const country = data.country_code; // e.g. "CA", "FR"
+
+                    switch (country) {
+                        case 'CA': return { d: 'ca', f: '🇨🇦', c: 'CA' };
+                        case 'GB': return { d: 'co.uk', f: '🇬🇧', c: 'GB' };
+                        case 'DE': return { d: 'de', f: '🇩🇪', c: 'DE' };
+                        case 'FR': return { d: 'fr', f: '🇫🇷', c: 'FR' };
+                        case 'IT': return { d: 'it', f: '🇮🇹', c: 'IT' };
+                        case 'ES': return { d: 'es', f: '🇪🇸', c: 'ES' };
+                        case 'AU': return { d: 'com.au', f: '🇦🇺', c: 'AU' };
+                        case 'JP': return { d: 'co.jp', f: '🇯🇵', c: 'JP' };
+                        case 'IN': return { d: 'in', f: '🇮🇳', c: 'IN' };
+                        case 'BR': return { d: 'com.br', f: '🇧🇷', c: 'BR' };
+                        case 'MX': return { d: 'com.mx', f: '🇲🇽', c: 'MX' };
+                        // Add more as needed
+                    }
+                }
+            } catch (e) {
+                // console.warn("Geo IP failed, falling back to Timezone");
+            }
+
+            // 2. Fallback to Timezone (Fast, Zero-Network)
             try {
                 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
                 if (tz.includes('Europe/London')) return { d: 'co.uk', f: '🇬🇧', c: 'GB' };
@@ -40,22 +67,22 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug, skip
             }
         };
 
-        // 1. Detect Environment
-        const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-        const android = /android/i.test(userAgent);
-        const ios = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+        // Detect Environment & Country
+        const init = async () => {
+            const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+            const android = /android/i.test(userAgent);
+            const ios = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
 
-        // 2. Detect Country (Geo-Redirect)
-        const { d, f, c } = getLocalAmazonDomain();
+            const { d, f, c } = await getLocalAmazonDomain();
 
-        // Batch update to avoid flash/warnings
-        requestAnimationFrame(() => {
             setIsAndroid(android);
             setIsIOS(ios);
             setEffectiveDomain(d);
             setFlag(f);
             setCountryCode(c);
-        });
+        };
+
+        init();
 
         // Note: URLs (webUrl, appUrl) will update on next render when string state changes.
         // We trigger the redirect logic ONLY after domain is settled or if we want to proceed immediately.

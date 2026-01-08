@@ -2,18 +2,25 @@
 
 import { useLanguage } from "@/lib/i18n";
 import { Globe } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ ignoreRoute = false }: { ignoreRoute?: boolean }) {
     const { language, setLanguage } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const pathname = usePathname();
 
     const languages = [
         { code: 'en', label: 'English', flag: '🇺🇸' },
         { code: 'fr', label: 'Français', flag: '🇫🇷' },
         { code: 'es', label: 'Español', flag: '🇪🇸' }
     ] as const;
+
+    // Don't render global switcher on Link in Bio pages (handled locally)
+    if (!ignoreRoute && pathname?.startsWith('/linkinbio')) {
+        return null;
+    }
 
     const currentLang = languages.find(l => l.code === language);
 

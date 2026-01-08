@@ -206,23 +206,70 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                                     <label className="text-[10px] text-zinc-500 uppercase font-bold block">Page Theme</label>
                                     <span className="text-[9px] text-pink-500 font-bold border border-pink-500/20 bg-pink-500/10 px-1.5 rounded">INFLUENCER UNLOCK</span>
                                 </div>
-                                <div className="grid grid-cols-6 gap-2">
+                                <div className="grid grid-cols-6 gap-2 max-h-[180px] overflow-y-auto custom-scrollbar pr-2 pb-2">
                                     {[
-                                        { v: '#000000', n: 'Black' }, { v: '#ffffff', n: 'White' },
-                                        { v: '#1a1a2e', n: 'Midnight' }, { v: '#27272a', n: 'Zinc' },
-                                        { v: '#f4f4f5', n: 'Light Gray' }, { v: '#e1e1e1', n: 'Silver' },
-                                        { v: '#f97316', n: 'Orange' }, { v: '#ef4444', n: 'Red' },
-                                        { v: '#ec4899', n: 'Pink' }, { v: '#a855f7', n: 'Purple' },
-                                        { v: '#3b82f6', n: 'Blue' }, { v: '#10b981', n: 'Green' },
-                                        // Gradients
-                                        { v: 'linear-gradient(to bottom right, #4f46e5, #ec4899)', n: 'Sunset' },
-                                        { v: 'linear-gradient(to bottom right, #22c1c3, #fdbb2d)', n: 'Summer' },
-                                        { v: 'linear-gradient(to bottom right, #ff00cc, #333399)', n: 'Neon' },
-                                        { v: 'linear-gradient(to bottom right, #000000, #434343)', n: 'Dark Steel' }
+                                        // Monochrome
+                                        { v: '#000000', n: 'Pure Black' },
+                                        { v: '#ffffff', n: 'Pure White' },
+                                        { v: '#18181b', n: 'Zinc' },
+                                        { v: '#27272a', n: 'Dark Zinc' },
+                                        { v: '#52525b', n: 'Mid Zinc' },
+                                        { v: '#a1a1aa', n: 'Light Zinc' },
+                                        // Vibrants
+                                        { v: '#ef4444', n: 'Red' },
+                                        { v: '#f97316', n: 'Orange' },
+                                        { v: '#eab308', n: 'Yellow' },
+                                        { v: '#84cc16', n: 'Lime' },
+                                        { v: '#22c55e', n: 'Green' },
+                                        { v: '#10b981', n: 'Emerald' },
+                                        { v: '#14b8a6', n: 'Teal' },
+                                        { v: '#06b6d4', n: 'Cyan' },
+                                        { v: '#0ea5e9', n: 'Sky' },
+                                        { v: '#3b82f6', n: 'Blue' },
+                                        { v: '#6366f1', n: 'Indigo' },
+                                        { v: '#8b5cf6', n: 'Violet' },
+                                        { v: '#d946ef', n: 'Fuchsia' },
+                                        { v: '#ec4899', n: 'Pink' },
+                                        { v: '#f43f5e', n: 'Rose' },
+                                        // Dark Tech
+                                        { v: '#020617', n: 'Slate 950' },
+                                        { v: '#0f172a', n: 'Slate 900' },
+                                        // Gradients - Warm
+                                        { v: 'linear-gradient(to right, #f83600 0%, #f9d423 100%)', n: 'Fire' },
+                                        { v: 'linear-gradient(to right, #f9d423 0%, #ff4e50 100%)', n: 'Sunset' },
+                                        { v: 'linear-gradient(to top, #ff0844 0%, #ffb199 100%)', n: 'Love' },
+                                        { v: 'linear-gradient(to right, #ffecd2 0%, #fcb69f 100%)', n: 'Peach' },
+                                        { v: 'linear-gradient(120deg, #f6d365 0%, #fda085 100%)', n: 'Warmth' },
+                                        { v: 'linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%)', n: 'Spring' },
+                                        // Gradients - Cool
+                                        { v: 'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)', n: 'Malibu' },
+                                        { v: 'linear-gradient(to right, #43e97b 0%, #38f9d7 100%)', n: 'Mint' },
+                                        { v: 'linear-gradient(to top, #00c6fb 0%, #005bea 100%)', n: 'Royal' },
+                                        { v: 'linear-gradient(to right, #fa709a 0%, #fee140 100%)', n: 'Soft' },
+                                        { v: 'linear-gradient(120deg, #89f7fe 0%, #66a6ff 100%)', n: 'Cloudy' },
+                                        { v: 'linear-gradient(to top, #30cfd0 0%, #330867 100%)', n: 'Deep Sea' },
+                                        { v: 'linear-gradient(to top, #a18cd1 0%, #fbc2eb 100%)', n: 'Lavender' },
+                                        { v: 'linear-gradient(to top, #96fbc4 0%, #f9f586 100%)', n: 'Weed' },
+                                        // Gradients - Dark/Space
+                                        { v: 'linear-gradient(to right, #0f2027, #203a43, #2c5364)', n: 'Space' },
+                                        { v: 'linear-gradient(to right, #2b5876 0%, #4e4376 100%)', n: 'Cosmic' },
+                                        { v: 'linear-gradient(to top, #09203f 0%, #537895 100%)', n: 'Midnight City' },
+                                        { v: 'linear-gradient(to right, #434343 0%, #000000 100%)', n: 'Noir' },
+                                        { v: 'linear-gradient(to right, #868f96 0%, #596164 100%)', n: 'Metal' },
+                                        { v: 'linear-gradient(to right, #6a11cb 0%, #2575fc 100%)', n: 'Purple Haze' },
+                                        { v: 'linear-gradient(to right, #b24592, #f15f79)', n: 'Grapefruit' },
+                                        { v: 'linear-gradient(to right, #c2e59c, #64b3f4)', n: 'Green Blue' },
+                                        // Special
+                                        { v: 'linear-gradient(to right, #ECE9E6, #FFFFFF)', n: 'Clean' },
+                                        { v: 'linear-gradient(to bottom, #323232 0%, #3F3F3F 40%, #1C1C1C 150%), linear-gradient(to top, rgba(255,255,255,0.40) 0%, rgba(0,0,0,0.25) 200%)', n: 'Metal 2' },
+                                        { v: 'conic-gradient(at center top, rgb(139, 92, 246), rgb(236, 72, 153), rgb(239, 68, 68))', n: 'Conic' },
+                                        { v: 'radial-gradient(circle at 50% 50%, #4a90e2, #9013fe)', n: 'Orb' },
+                                        { v: 'linear-gradient(45deg, #12c2e9, #c471ed, #f64f59)', n: 'JShine' },
+                                        { v: 'linear-gradient(to right, #7f00ff, #e100ff)', n: 'Violet' },
                                     ].map(theme => (
                                         <div
                                             key={theme.v}
-                                            className={`h-8 rounded cursor-pointer border transition-all relative group ${userProfile.theme === theme.v ? 'border-white ring-2 ring-pink-500 ring-offset-2 ring-offset-zinc-900 z-10' : 'border-white/10 hover:border-white/50'}`}
+                                            className={`h-8 rounded-full md:rounded cursor-pointer border transition-all relative group flex-shrink-0 ${userProfile.theme === theme.v ? 'border-white ring-2 ring-pink-500 ring-offset-2 ring-offset-zinc-900 z-10 scale-105' : 'border-white/10 hover:border-white/50'}`}
                                             style={{ background: theme.v }}
                                             onClick={() => updateProfile('theme', theme.v)}
                                             title={theme.n}
@@ -230,76 +277,77 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                                             {userProfile.theme === theme.v && <div className="absolute inset-0 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-white shadow-sm"></div></div>}
                                         </div>
                                     ))}
-                                    <button
-                                        onClick={() => {
-                                            if (!isPro) return alert("AI Background Generation is a PRO feature.");
-                                            generateBackground();
-                                        }}
-                                        className={`col-span-4 mt-1 flex items-center justify-center gap-2 py-2 rounded border border-dashed text-xs transition-colors group ${!isPro ? 'border-zinc-800 text-zinc-600 bg-zinc-900/50 cursor-not-allowed' : 'border-zinc-700 hover:border-pink-500 hover:text-pink-500 text-zinc-500'}`}
-                                    >
-                                        {!isPro ? <span className="mr-1">🔒</span> : <Wand2 className="w-3 h-3 group-hover:animate-pulse" />}
-                                        <span>{userProfile.backgroundImage ? 'Generate New Background' : 'Generate with AI'}</span>
-                                        {!isPro && <span className="ml-1 text-[8px] bg-zinc-800 px-1 rounded border border-zinc-700">PRO</span>}
-                                    </button>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (!isPro) return alert("AI Background Generation is a PRO feature.");
+                                        generateBackground();
+                                    }}
+                                    className={`col-span-4 mt-1 flex items-center justify-center gap-2 py-2 rounded border border-dashed text-xs transition-colors group ${!isPro ? 'border-zinc-800 text-zinc-600 bg-zinc-900/50 cursor-not-allowed' : 'border-zinc-700 hover:border-pink-500 hover:text-pink-500 text-zinc-500'}`}
+                                >
+                                    {!isPro ? <span className="mr-1">🔒</span> : <Wand2 className="w-3 h-3 group-hover:animate-pulse" />}
+                                    <span>{userProfile.backgroundImage ? 'Generate New Background' : 'Generate with AI'}</span>
+                                    {!isPro && <span className="ml-1 text-[8px] bg-zinc-800 px-1 rounded border border-zinc-700">PRO</span>}
+                                </button>
 
-                                    {/* Pending Approval UI */}
-                                    {(pendingImage || isGenerating) && (
-                                        <div className="col-span-4 mt-2 p-3 bg-zinc-900 border border-zinc-800 rounded-lg animate-in fade-in zoom-in-95 duration-200">
-                                            <p className="text-[10px] text-zinc-400 mb-2 uppercase font-bold text-center">Preview</p>
-                                            <div className="h-64 rounded-lg bg-zinc-950 mb-3 border border-zinc-700 shadow-inner relative overflow-hidden flex items-center justify-center">
-                                                {pendingImage && (
-                                                    <img
-                                                        src={pendingImage}
-                                                        alt="AI Preview"
-                                                        className={`w-full h-full object-contain transition-opacity duration-500 ${isGenerating ? 'opacity-0' : 'opacity-100'}`}
-                                                        onLoad={() => setIsGenerating(false)}
-                                                        onError={() => {
-                                                            console.error("AI Image failed to load");
-                                                            setIsGenerating(false);
-                                                            setPendingImage(null);
-                                                        }}
-                                                    />
-                                                )}
-                                                {isGenerating && (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/50 backdrop-blur-sm z-10">
-                                                        <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => { setPendingImage(null); setIsGenerating(false); }}
-                                                    className="flex-1 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-400 transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    disabled={isGenerating}
-                                                    onClick={() => {
-                                                        updateProfile('backgroundImage', pendingImage);
+                                {/* Pending Approval UI */}
+                                {(pendingImage || isGenerating) && (
+                                    <div className="col-span-4 mt-2 p-3 bg-zinc-900 border border-zinc-800 rounded-lg animate-in fade-in zoom-in-95 duration-200">
+                                        <p className="text-[10px] text-zinc-400 mb-2 uppercase font-bold text-center">Preview</p>
+                                        <div className="h-64 rounded-lg bg-zinc-950 mb-3 border border-zinc-700 shadow-inner relative overflow-hidden flex items-center justify-center">
+                                            {pendingImage && (
+                                                <img
+                                                    src={pendingImage}
+                                                    alt="AI Preview"
+                                                    className={`w-full h-full object-contain transition-opacity duration-500 ${isGenerating ? 'opacity-0' : 'opacity-100'}`}
+                                                    onLoad={() => setIsGenerating(false)}
+                                                    onError={() => {
+                                                        console.error("AI Image failed to load");
+                                                        setIsGenerating(false);
                                                         setPendingImage(null);
                                                     }}
-                                                    className={`flex-1 py-1.5 rounded text-xs font-bold text-black transition-colors shadow-lg shadow-green-500/20 ${isGenerating ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
-                                                >
-                                                    {isGenerating ? 'Generating...' : 'Apply Background'}
-                                                </button>
-                                            </div>
+                                                />
+                                            )}
+                                            {isGenerating && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/50 backdrop-blur-sm z-10">
+                                                    <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-
-                                    {/* Active Background UI */}
-                                    {userProfile.backgroundImage && !pendingImage && (
-                                        <div className="col-span-4 mt-2 h-20 rounded-lg bg-cover bg-center border border-zinc-800 relative group overflow-hidden" style={{ backgroundImage: `url(${userProfile.backgroundImage})` }}>
-                                            <button onClick={() => updateProfile('backgroundImage', '')} className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <X className="w-3 h-3" />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => { setPendingImage(null); setIsGenerating(false); }}
+                                                className="flex-1 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-400 transition-colors"
+                                            >
+                                                Cancel
                                             </button>
-                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                <span className="bg-black/40 backdrop-blur px-2 py-1 rounded text-[10px] text-white font-bold">Active Background</span>
-                                            </div>
+                                            <button
+                                                disabled={isGenerating}
+                                                onClick={() => {
+                                                    updateProfile('backgroundImage', pendingImage);
+                                                    setPendingImage(null);
+                                                }}
+                                                className={`flex-1 py-1.5 rounded text-xs font-bold text-black transition-colors shadow-lg shadow-green-500/20 ${isGenerating ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
+                                            >
+                                                {isGenerating ? 'Generating...' : 'Apply Background'}
+                                            </button>
                                         </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
+
+                                {/* Active Background UI */}
+                                {userProfile.backgroundImage && !pendingImage && (
+                                    <div className="col-span-4 mt-2 h-20 rounded-lg bg-cover bg-center border border-zinc-800 relative group overflow-hidden" style={{ backgroundImage: `url(${userProfile.backgroundImage})` }}>
+                                        <button onClick={() => updateProfile('backgroundImage', '')} className="absolute top-1 right-1 p-1 bg-black/50 rounded-full hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <span className="bg-black/40 backdrop-blur px-2 py-1 rounded text-[10px] text-white font-bold">Active Background</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
+
 
                             <div className="pt-2">
                                 <label className="text-[10px] text-zinc-500 uppercase font-bold mb-1.5 block">Amazon Associate Tag (Important!)</label>
@@ -429,6 +477,6 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                     setRawFileImage(null);
                 }}
             />
-        </div>
+        </div >
     );
 }
