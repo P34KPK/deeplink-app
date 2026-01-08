@@ -44,6 +44,14 @@ export async function POST(req: Request) {
             },
         });
 
+        // UPDATE REDIS PLAN (Fix for Dashboard not syncing)
+        const { redis } = await import('@/lib/redis');
+        if (redis) {
+            const planKey = `user:${session.metadata.userId}:plan`;
+            await redis.set(planKey, 'pro');
+            console.log(`[Stripe Webhook] Upgraded user ${session.metadata.userId} to PRO in Redis`);
+        }
+
         // Track Affiliate Sale
         if (session.metadata.referrerId) {
             const { trackAffiliateSale } = await import('@/lib/analytics');
