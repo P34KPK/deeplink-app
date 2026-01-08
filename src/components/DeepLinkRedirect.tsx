@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 
 interface DeepLinkRedirectProps {
@@ -139,22 +139,32 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug, skip
 
     // Legacy tracking (moved to mount to avoid double-count, or keep here?)
     // Let's keep tracking separate to avoid duplicate counts during re-renders.
+    // Reliable Tracking Logic
+    const hasTracked = useRef(false);
+
     useEffect(() => {
-        if (skipTracking) return;
-        if (asin) {
-            fetch('/api/track', {
-                method: 'POST',
-                body: JSON.stringify({
-                    asin,
-                    userAgent: navigator.userAgent,
-                    slug,
-                    geo: countryCode,
-                    referrer: document.referrer || ''
-                }),
-                headers: { 'Content-Type': 'application/json' },
-                keepalive: true
-            }).catch(err => console.error('Tracking failed', err));
-        }
+        if (skipTracking || !asin) return;
+
+        // Prevent double tracking if dependencies change (like countryCode update)
+        // We only track ONCE per session/mount using the best available data at that moment.
+        // Since countryCode might be 'pending', we accept that for the sake of ensuring the click is counted.
+        if (hasTracked.current) return;
+
+        hasTracked.current = true;
+
+        fetch('/api/telemetry', {
+            method: 'POST',
+            body: JSON.stringify({
+                asin,
+                userAgent: navigator.userAgent,
+                slug,
+                geo: countryCode || 'US', // Best effort
+                referrer: document.referrer || ''
+            }),
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true
+        }).catch(err => console.error('Telemetry failed', err));
+
     }, [asin, slug, countryCode, skipTracking]);
 
     const handleManualClick = () => {
