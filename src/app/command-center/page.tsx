@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     BarChart3, Activity, Link as LinkIcon, AlertTriangle, QrCode, Download, Calendar, GripHorizontal,
     TrendingUp, Sparkles, DollarSign, Wand2, ShoppingBag, Copy, Calculator, Trophy, Radio, Megaphone,
-    Map as MapIcon, ShieldAlert, Eye, Ghost, Ban, CreditCard, Maximize2, Minimize2, Smartphone, Globe
+    Map as MapIcon, ShieldAlert, Eye, Ghost, Ban, CreditCard, Maximize2, Minimize2, Smartphone, Globe, MessageSquare
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
     const [selectedUser, setSelectedUser] = useState<string | null>(null); // For User Mini-Dashboard
 
     // Agent E State (Pro Widgets) + Agent A (War Room, Security)
-    const [widgetOrder, setWidgetOrder] = useState(['black_box', 'system_terminal', 'panic_control', 'ai_analyst', 'total_chart', 'daily_chart', 'devices_pie', 'geo_map', 'linktree', 'gamification', 'pulse', 'godmode', 'simulator', 'inbox', 'security', 'vault', 'broadcast', 'warroom']);
+    const [widgetOrder, setWidgetOrder] = useState(['black_box', 'system_terminal', 'panic_control', 'ai_analyst', 'total_chart', 'daily_chart', 'devices_pie', 'geo_map', 'languages', 'linktree', 'gamification', 'pulse', 'godmode', 'simulator', 'inbox', 'security', 'vault', 'broadcast', 'warroom']);
     const [widgetSizes, setWidgetSizes] = useState<Record<string, string>>({
         map: 'big',
         pulse: 'wide',
@@ -87,6 +87,7 @@ export default function AdminDashboard() {
         daily_chart: 'wide',
         total_chart: 'small',
         devices_pie: 'small',
+        languages: 'small',
         geo_map: 'wide',
         linktree: 'tall',
         warroom: 'big',
@@ -1029,6 +1030,69 @@ export default function AdminDashboard() {
                                                     </div>
                                                 </div>
                                                 <PanicControl />
+                                            </div>
+                                        )}
+
+                                        {/* NEW: Languages Widget */}
+                                        {id === 'languages' && (
+                                            <div className="matte-card p-6 h-full flex flex-col bg-gradient-to-br from-card to-indigo-500/5 border-indigo-500/20">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <MessageSquare className="w-4 h-4 text-indigo-400" />
+                                                        <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400">Languages</h3>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="p-1.5 text-white/20 cursor-grab active:cursor-grabbing hover:text-white/60 transition-colors" title="Drag to move">
+                                                            <GripHorizontal className="w-4 h-4" />
+                                                        </div>
+                                                        <button
+                                                            onMouseDown={(e) => toggleWidgetSize(id, e)}
+                                                            className="w-3.5 h-3.5 rounded-full bg-green-500/20 hover:bg-green-500 text-transparent hover:text-black border border-green-500/50 flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                                                        >
+                                                            {(widgetSizes[id] || 'small') === 'big' ? <Minimize2 className="w-2 h-2" /> : <Maximize2 className="w-2 h-2" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 overflow-auto custom-scrollbar space-y-3">
+                                                    {(() => {
+                                                        const langMap: Record<string, string> = {
+                                                            US: 'English', GB: 'English', CA: 'English', AU: 'English', NZ: 'English', IE: 'English',
+                                                            FR: 'French', BE: 'French', CH: 'French', SN: 'French', QC: 'French',
+                                                            DE: 'German', AT: 'German',
+                                                            ES: 'Spanish', MX: 'Spanish', AR: 'Spanish', CO: 'Spanish', CL: 'Spanish',
+                                                            PT: 'Portuguese', BR: 'Portuguese',
+                                                            IT: 'Italian', JP: 'Japanese', CN: 'Chinese', IN: 'Hindi/English', RU: 'Russian'
+                                                        };
+
+                                                        const userLangs: Record<string, number> = {};
+                                                        const locations = data?.globalStats?.locations || {};
+
+                                                        Object.entries(locations).forEach(([country, count]) => {
+                                                            // @ts-ignore
+                                                            const l = langMap[country] || 'Other';
+                                                            userLangs[l] = (userLangs[l] || 0) + (count as number);
+                                                        });
+
+                                                        const sortedLangs = Object.entries(userLangs).sort((a, b) => b[1] - a[1]);
+
+                                                        if (sortedLangs.length === 0) return <div className="text-xs text-muted-foreground italic text-center py-6">No language data yet</div>;
+
+                                                        return sortedLangs.map(([lang, count], i) => (
+                                                            <div key={lang} className="flex items-center justify-between text-xs group hover:bg-white/5 p-1 rounded transition-colors">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-indigo-500' : 'bg-indigo-500/30'}`}></div>
+                                                                    <span className="font-medium text-zinc-300">{lang}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-16 h-1.5 bg-secondary rounded-full overflow-hidden">
+                                                                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min((count / (sortedLangs[0]?.[1] || 1)) * 100, 100)}%` }}></div>
+                                                                    </div>
+                                                                    <span className="font-mono text-muted-foreground w-6 text-right">{count}</span>
+                                                                </div>
+                                                            </div>
+                                                        ));
+                                                    })()}
+                                                </div>
                                             </div>
                                         )}
                                     </SortableItem>
