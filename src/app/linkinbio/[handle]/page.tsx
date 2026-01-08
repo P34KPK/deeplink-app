@@ -170,128 +170,130 @@ export default function UserBioPage() {
                     </p>
 
                     {/* Socials Row */}
-                    <div className="flex items-center gap-4 mt-6">
-                        {user?.socials?.instagram && (
-                            <a href={user.socials.instagram} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-pink-500 transition-colors`}><Instagram className="w-5 h-5" /></a>
-                        )}
-                        {user?.socials?.tiktok && (
-                            <a href={user.socials.tiktok} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-white transition-colors`}><Twitter className="w-5 h-5" /></a>
-                        )}
-                        {user?.socials?.youtube && (
-                            <a href={user.socials.youtube} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-red-500 transition-colors`}><Youtube className="w-5 h-5" /></a>
-                        )}
-                        {user?.socials?.facebook && (
-                            <a href={user.socials.facebook} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-blue-600 transition-colors`}><Facebook className="w-5 h-5" /></a>
-                        )}
-                    </div>
-
-                    {/* Custom Links (Dynamic) */}
-                    {user?.customLinks && user.customLinks.length > 0 && (
-                        <div className="w-full flex flex-col gap-2 mt-6 animate-in slide-in-from-bottom-2 fade-in duration-500">
-                            {user.customLinks.map((link: any) => (
-                                <a
-                                    key={link.id}
-                                    href={link.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`
-                                        w-full py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg
-                                        flex items-center justify-center gap-2
-                                        ${isDark
-                                            ? 'bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-white hover:border-pink-500/50 hover:shadow-pink-500/10'
-                                            : 'bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 hover:border-pink-500/30'
-                                        }
-                                    `}
-                                >
-                                    <span>{link.label}</span>
-                                    <ExternalLink className="w-3.5 h-3.5 opacity-50" />
-                                </a>
-                            ))}
-                        </div>
+                    {user?.socials?.website && (
+                        <a href={user.socials.website} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-cyan-400 transition-colors`}><ExternalLink className="w-5 h-5" /></a>
+                    )}
+                    {user?.socials?.instagram && (
+                        <a href={user.socials.instagram} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-pink-500 transition-colors`}><Instagram className="w-5 h-5" /></a>
+                    )}
+                    {user?.socials?.tiktok && (
+                        <a href={user.socials.tiktok} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-white transition-colors`}><Twitter className="w-5 h-5" /></a>
+                    )}
+                    {user?.socials?.youtube && (
+                        <a href={user.socials.youtube} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-red-500 transition-colors`}><Youtube className="w-5 h-5" /></a>
+                    )}
+                    {user?.socials?.facebook && (
+                        <a href={user.socials.facebook} target="_blank" rel="noopener noreferrer" className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'} hover:text-blue-600 transition-colors`}><Facebook className="w-5 h-5" /></a>
                     )}
                 </div>
 
-                {/* Search Bar */}
-                <div className="px-6 mb-6">
-                    <div className="relative group">
-                        <input
-                            type="text"
-                            placeholder="Search products..."
-                            className={`w-full text-sm px-10 py-3 rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-zinc-900/80 border border-white/10 text-white focus:border-white/20 focus:ring-white/20 placeholder:text-zinc-600' : 'bg-white border border-zinc-200 text-zinc-900 focus:border-zinc-300 focus:ring-zinc-300 placeholder:text-zinc-400 shadow-sm'}`}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <Search className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors ${isDark ? 'text-zinc-500 group-focus-within:text-white' : 'text-zinc-400 group-focus-within:text-zinc-600'}`} />
-                    </div>
-                </div>
-
-                {/* Links Feed */}
-                <div className="flex-1 px-4 pb-32 space-y-3">
-                    {filteredLinks.length === 0 ? (
-                        <div className="text-center py-12">
-                            <p className="text-zinc-500 text-sm">No products found.</p>
-                        </div>
-                    ) : (
-                        filteredLinks.map((link, idx) => (
+                {/* Custom Links (Dynamic) */}
+                {user?.customLinks && user.customLinks.length > 0 && (
+                    <div className="w-full flex flex-col gap-2 mt-6 animate-in slide-in-from-bottom-2 fade-in duration-500">
+                        {user.customLinks.map((link: any) => (
                             <a
                                 key={link.id}
-                                href={link.generated}
+                                href={link.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block group"
+                                className={`
+                                        w-full py-3 px-4 rounded-xl font-bold text-sm tracking-wide transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg
+                                        flex items-center justify-center gap-2
+                                        ${isDark
+                                        ? 'bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-white hover:border-pink-500/50 hover:shadow-pink-500/10'
+                                        : 'bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 hover:border-pink-500/30'
+                                    }
+                                    `}
                             >
-                                <div className={`
+                                <span>{link.label}</span>
+                                <ExternalLink className="w-3.5 h-3.5 opacity-50" />
+                            </a>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Search Bar */}
+            <div className="px-6 mb-6">
+                <div className="relative group">
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        className={`w-full text-sm px-10 py-3 rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-zinc-900/80 border border-white/10 text-white focus:border-white/20 focus:ring-white/20 placeholder:text-zinc-600' : 'bg-white border border-zinc-200 text-zinc-900 focus:border-zinc-300 focus:ring-zinc-300 placeholder:text-zinc-400 shadow-sm'}`}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <Search className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors ${isDark ? 'text-zinc-500 group-focus-within:text-white' : 'text-zinc-400 group-focus-within:text-zinc-600'}`} />
+                </div>
+            </div>
+
+            {/* Links Feed */}
+            <div className="flex-1 px-4 pb-32 space-y-3">
+                {filteredLinks.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-zinc-500 text-sm">No products found.</p>
+                    </div>
+                ) : (
+                    filteredLinks.map((link, idx) => (
+                        <a
+                            key={link.id}
+                            href={link.generated}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block group"
+                        >
+                            <div className={`
                                     relative overflow-hidden
                                     border rounded-[1.25rem] p-1.5 pr-4
                                     transition-all duration-300 ease-out
                                     hover:scale-[1.01] hover:shadow-xl
                                     flex items-center gap-3
                                     ${isDark
-                                        ? 'bg-zinc-900 hover:bg-zinc-800/80 border-white/5 hover:border-white/20 hover:shadow-purple-500/5'
-                                        : 'bg-white hover:bg-zinc-50 border-zinc-100 hover:border-zinc-200 hover:shadow-zinc-200/50 shadow-sm'}
+                                    ? 'bg-zinc-900 hover:bg-zinc-800/80 border-white/5 hover:border-white/20 hover:shadow-purple-500/5'
+                                    : 'bg-white hover:bg-zinc-50 border-zinc-100 hover:border-zinc-200 hover:shadow-zinc-200/50 shadow-sm'}
                                 `}>
-                                    {/* Thumbnail */}
-                                    <div className={`w-12 h-12 shrink-0 rounded-2xl overflow-hidden relative ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
-                                        {link.image ? (
-                                            <img src={link.image} alt="" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <ShoppingBag className={`w-5 h-5 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`} />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="flex-1 min-w-0 py-1">
-                                        <h3 className={`font-semibold text-sm truncate pr-2 transition-colors ${isDark ? 'text-zinc-200 group-hover:text-white' : 'text-zinc-800 group-hover:text-black'}`}>
-                                            {link.title || 'Amazon Product'}
-                                        </h3>
-                                        {link.tags && link.tags.length > 0 && (
-                                            <div className="text-[10px] text-zinc-500 mt-0.5 uppercase tracking-wider">
-                                                {link.tags[0]}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Action Icon */}
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-300">
-                                        <ExternalLink className={`w-4 h-4 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
-                                    </div>
+                                {/* Thumbnail */}
+                                <div className={`w-12 h-12 shrink-0 rounded-2xl overflow-hidden relative ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+                                    {link.image ? (
+                                        <img src={link.image} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                            <ShoppingBag className={`w-5 h-5 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`} />
+                                        </div>
+                                    )}
                                 </div>
-                            </a>
-                        ))
-                    )}
-                </div>
 
-                {/* Branding Footer */}
-                <div className="absolute bottom-6 left-0 w-full flex justify-center pointer-events-none">
-                    <Link href="/" className={`pointer-events-auto backdrop-blur border rounded-full px-4 py-1.5 flex items-center gap-2 transition-colors shadow-lg ${isDark ? 'bg-zinc-950/80 border-white/10 hover:bg-white/10' : 'bg-white/80 border-zinc-200 hover:bg-zinc-50'}`}>
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        <span className={`text-[10px] font-bold tracking-wide ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>Create your own DeepLinkrs</span>
-                    </Link>
-                </div>
+                                {/* Content */}
+                                <div className="flex-1 min-w-0 py-1">
+                                    <h3 className={`font-semibold text-sm truncate pr-2 transition-colors ${isDark ? 'text-zinc-200 group-hover:text-white' : 'text-zinc-800 group-hover:text-black'}`}>
+                                        {link.title || 'Amazon Product'}
+                                    </h3>
+                                    {link.tags && link.tags.length > 0 && (
+                                        <div className="text-[10px] text-zinc-500 mt-0.5 uppercase tracking-wider">
+                                            {link.tags[0]}
+                                        </div>
+                                    )}
+                                </div>
 
+                                {/* Action Icon */}
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-300">
+                                    <ExternalLink className={`w-4 h-4 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`} />
+                                </div>
+                            </div>
+                        </a>
+                    ))
+                )}
             </div>
+
+            {/* Branding Footer */}
+            <div className="absolute bottom-6 left-0 w-full flex justify-center pointer-events-none">
+                <Link href="/" className={`pointer-events-auto backdrop-blur border rounded-full px-4 py-1.5 flex items-center gap-2 transition-colors shadow-lg ${isDark ? 'bg-zinc-950/80 border-white/10 hover:bg-white/10' : 'bg-white/80 border-zinc-200 hover:bg-zinc-50'}`}>
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span className={`text-[10px] font-bold tracking-wide ${isDark ? 'text-zinc-300' : 'text-zinc-600'}`}>Create your own DeepLinkrs</span>
+                </Link>
+            </div>
+
         </div>
+        </div >
     );
 }
