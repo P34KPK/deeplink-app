@@ -96,9 +96,9 @@ export default function Dashboard() {
 
     // Load persisted layout
     useEffect(() => {
-        // Updated Order: Identity Top -> Money -> Stats (v6)
-        const defaultOrder = ['identity', 'gamification', 'affiliate', 'favorites', 'simulator', 'prime', 'trends', 'devices', 'locations', 'browsers', 'referrers', 'total', 'copywriter', 'viral_studio', 'linktree', 'daily'];
-        const saved = localStorage.getItem('dashboard_layout_v6');
+        // Updated Order: Identity -> Daily -> Total -> Linktree -> Rest
+        const defaultOrder = ['identity', 'daily', 'total', 'linktree', 'gamification', 'affiliate', 'favorites', 'simulator', 'prime', 'trends', 'devices', 'locations', 'browsers', 'referrers', 'copywriter', 'viral_studio'];
+        const saved = localStorage.getItem('dashboard_layout_v7');
         if (saved) {
             try {
                 let parsedOrder = JSON.parse(saved);
@@ -203,7 +203,7 @@ export default function Dashboard() {
                 const oldIndex = items.indexOf(active.id as string);
                 const newIndex = items.indexOf(over?.id as string);
                 const newOrder = arrayMove(items, oldIndex, newIndex);
-                localStorage.setItem('dashboard_layout_v5', JSON.stringify(newOrder));
+                localStorage.setItem('dashboard_layout_v7', JSON.stringify(newOrder));
                 return newOrder;
             });
         }

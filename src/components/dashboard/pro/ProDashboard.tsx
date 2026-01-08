@@ -234,7 +234,7 @@ export default function ProDashboard({
                 const old = items.indexOf(active.id as string);
                 const newI = items.indexOf(over?.id as string);
                 const newOrder = arrayMove(items, old, newI);
-                localStorage.setItem('dashboard_layout_v6', JSON.stringify(newOrder));
+                localStorage.setItem('dashboard_layout_v7', JSON.stringify(newOrder));
                 return newOrder;
             });
         }
