@@ -690,16 +690,7 @@ export default function AdminDashboard() {
                                         )}
 
                                         {/* Agent: LinkTree Preview */}
-                                        {id === 'linktree' && (
-                                            <div className="h-full relative group">
-                                                <div className="absolute top-2 right-14 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                                    <div className="p-1.5 text-white/20 cursor-grab active:cursor-grabbing hover:text-white/60 bg-black/50 rounded backdrop-blur" title="Drag to move">
-                                                        <GripHorizontal className="w-3 h-3" />
-                                                    </div>
-                                                </div>
-                                                <LinkTreeWidget userId="p34k" className="h-full" />
-                                            </div>
-                                        )}
+
 
                                         {/* Agent A: War Room Map */}
                                         {id === 'map' && (
