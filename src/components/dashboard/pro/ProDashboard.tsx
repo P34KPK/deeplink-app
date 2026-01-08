@@ -557,13 +557,13 @@ export default function ProDashboard({
 
 function SortableItem(props: any) {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: props.id });
-    const style = { transform: CSS.Transform.toString(transform), transition, touchAction: 'none' };
+    const style = { transform: CSS.Transform.toString(transform), transition };
     return (
         <div ref={setNodeRef} style={style} className={`${props.className} group`}>
             <div className="relative h-full">
                 <div className="absolute top-2 right-2 z-30 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-black/40 backdrop-blur rounded-lg border border-white/5">
                     {props.onToggleSize && (<button onClick={(e) => { e.stopPropagation(); props.onToggleSize(); }} className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#3add54] border border-[#27c93f] active:scale-90 transition-transform mb-[1px]" />)}
-                    <div {...attributes} {...listeners} className="p-0.5 cursor-grab active:cursor-grabbing text-white/50 hover:text-white transition-colors"><GripHorizontal className="w-4 h-4" /></div>
+                    <div {...attributes} {...listeners} style={{ touchAction: 'none' }} className="p-0.5 cursor-grab active:cursor-grabbing text-white/50 hover:text-white transition-colors"><GripHorizontal className="w-4 h-4" /></div>
                 </div>
                 {props.children}
             </div>
