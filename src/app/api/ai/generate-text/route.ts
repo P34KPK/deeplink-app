@@ -40,10 +40,19 @@ export async function POST(req: Request) {
         Include emojis and hashtags. 
         Format: Just the captions, separated by double newlines.`;
 
+        // Helper for timeout
+        const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 5000) => {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(id);
+            return response;
+        };
+
         // 1. Try OpenAI if Key exists
         if (process.env.OPENAI_API_KEY) {
             try {
-                const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                const res = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -61,27 +70,25 @@ export async function POST(req: Request) {
                     return NextResponse.json({ captions });
                 }
             } catch (error) {
-                console.error('OpenAI Error:', error);
+                console.error('OpenAI Error/Timeout:', error);
             }
         }
 
         // 2. Fallback to Pollinations.ai (Free)
-        // usage: https://text.pollinations.ai/prompt
-        // We need to encode the prompt safely.
         try {
             const safePrompt = encodeURIComponent(prompt + " Return valid JSON array of strings.");
-            // Pollinations text returns raw text usually.
-            const res = await fetch(`https://text.pollinations.ai/${safePrompt}`);
+            const res = await fetchWithTimeout(`https://text.pollinations.ai/${safePrompt}`);
             const text = await res.text();
 
             // Clean up the response
             const captions = text.split('\n').filter(line => line.trim().length > 10).slice(0, 3);
 
-            if (captions.length > 0) {
+            // Basic validation
+            if (captions.length > 0 && !text.includes('Error')) {
                 return NextResponse.json({ captions });
             }
         } catch (error) {
-            console.error('Pollinations Error:', error);
+            console.error('Pollinations Error/Timeout:', error);
         }
 
         // 3. Last Resort Fallback (Mock) if everything fails (offline/error)
@@ -93,6 +100,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ captions: mockCaptions, source: 'fallback' });
 
     } catch (error) {
-        return new NextResponse('Internal Error', { status: 500 });
+        return new NextResponse(JSON.stringify({ error: 'Internal Error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }
