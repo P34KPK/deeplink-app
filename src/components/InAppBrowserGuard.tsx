@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 
 export default function InAppBrowserGuard({ children }: { children: React.ReactNode }) {
     const [isInApp, setIsInApp] = useState(false);
+    const pathname = usePathname();
 
     useEffect(() => {
+        // Safe check for pathname - if it's a deep link, DO NOT BLOCK
+        if (pathname?.includes('/amzn/') || pathname?.includes('/go/')) return;
+
         // eslint-disable-next-line
         const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
         // Detect Facebook, Messenger, Instagram, LinkedIn, etc.
-        // FBAN/FBAV = Facebook/Messenger
-        // Instagram = Instagram
-        // Line, Twitter, etc. often have similar issues with Google OAuth.
         const isFacebook = /FBAN|FBAV/i.test(ua);
         const isInstagram = /Instagram/i.test(ua);
         const isLinkedin = /LinkedIn/i.test(ua);
@@ -21,7 +23,7 @@ export default function InAppBrowserGuard({ children }: { children: React.ReactN
         if (isFacebook || isInstagram || isLinkedin) {
             requestAnimationFrame(() => setIsInApp(true));
         }
-    }, []);
+    }, [pathname]);
 
     if (isInApp) {
         return (
