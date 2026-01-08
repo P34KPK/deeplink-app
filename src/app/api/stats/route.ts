@@ -26,8 +26,15 @@ export async function GET() {
 
     try {
         const storedPlan = await redis?.get(planKey);
-        if (storedPlan) plan = storedPlan;
-        if (isSuperUser) plan = 'pro';
+        if (storedPlan) plan = storedPlan as string;
+
+        // Force Persistence for SuperUsers
+        if (isSuperUser) {
+            if (plan !== 'pro') {
+                plan = 'pro';
+                await redis?.set(planKey, 'pro');
+            }
+        }
     } catch (e) {
         console.error("Plan check error", e);
     }
