@@ -84,7 +84,7 @@ export async function POST(req: Request) {
             const captions = text.split('\n').filter(line => line.trim().length > 10).slice(0, 3);
 
             // Basic validation
-            if (captions.length > 0 && !text.includes('Error')) {
+            if (captions.length > 0 && !text.toLowerCase().includes('error') && !text.includes('Queue full')) {
                 return NextResponse.json({ captions });
             }
         } catch (error) {
