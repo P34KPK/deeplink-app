@@ -1,71 +1,56 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-// Define public routes that don't require authentication
-// 1. /api/track (Analytics)
-// 2. /api/links (If needed public, but usually protected. Keeping protected for now)
-// 3. /go/... (If you used 'go' prefix)
-// 4. /sign-in, /sign-up
-// 5. Short links: We need to allow access to /[slug] which are short links.
-//    However, usually short links are at root.
-//    We can make the dashboard and root protected, but we must be careful not to block dynamic short links.
-//    STRATEGY: Protect specific routes (dashboard, admin, root generator) and leave others public, OR protect everything and exclude short links.
-//    Let's protect critical paths.
-
-const isProtectedRoute = createRouteMatcher([
-    '/dashboard(.*)',
-    // '/admin(.*)', // Custom Auth handled in page
-    '/api/links(.*)', // Protect link management API
+// Define public routes that do not require authentication
+const isPublicRoute = createRouteMatcher([
+    '/sign-in(.*)',
+    '/sign-up(.*)',
+    '/api/webhooks(.*)',
+    '/api/uploadthing(.*)',
+    '/api/public(.*)',
+    '/go/(.*)'
 ]);
 
-// Note: We leave the root '/' public -> Private later? 
-// The user wants a SaaS, so usually the landing page is public, but the "App" is private.
-// For now, let's protect the Dashboard and Admin, but keep the Generator public OR protect it to require login to CREATE links.
-// User said "membership", so creating links should be protected.
-
-
 export default clerkMiddleware(async (auth, req) => {
-    // Custom Domain Logic (Multi-Tenancy)
     const url = req.nextUrl;
 
-    // 🔴 BYPASS: Allow Stripe Webhooks to pass through without any checks or redirects
+    // 🔴 1. BYPASS: Explicitly allow Webhooks
     if (url.pathname.startsWith('/api/webhooks')) {
-        return;
+        return NextResponse.next();
     }
 
-    const hostname = req.headers.get("host"); // e.g. "promo.sebastien.com" or "localhost:3000"
-
-    // FORCE HTTPS (Production Only)
-    const proto = req.headers.get("x-forwarded-proto");
-    if (proto === "http" && hostname && !hostname.includes("localhost")) {
-        return Response.redirect(`https://${hostname}${url.pathname}${url.search}`, 301);
-    }
-
-    // Define your main domains
-    const mainDomains = ["localhost:3000", "deeplinkrs.app", "deeplinkrs.com", "www.deeplinkrs.com", "deeplink-app.vercel.app", "deeplink-app-seven.vercel.app"];
-    const isCustomDomain = hostname && !mainDomains.some(d => hostname.includes(d));
-
-    if (isCustomDomain) {
-        // SECURITY: Prevent accessing Dashboard/Admin via Custom Domain
-        // We only want to serve the Link (/[slug]) via custom domain.
-        if (url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/admin') || url.pathname.startsWith('/command-center') || url.pathname.startsWith('/sign-in')) {
-            const mainUrl = new URL(url.pathname, process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
-            return Response.redirect(mainUrl);
+    // 2. FORCE HTTPS (Production Only)
+    const hostname = req.headers.get("host");
+    if (process.env.NODE_ENV === "production" && hostname && !hostname.includes("localhost")) {
+        const proto = req.headers.get("x-forwarded-proto");
+        if (proto === "http") {
+            return NextResponse.redirect(`https://${hostname}${url.pathname}${url.search}`, 301);
         }
-
-        // Allow public access to everything else (likely the slug) on custom domain
-        return;
     }
+
+    // 3. Protected Routes
+    const isProtectedRoute = createRouteMatcher([
+        '/dashboard(.*)',
+        '/admin(.*)',
+        '/api/links(.*)',
+        '/api/user(.*)'
+    ]);
 
     if (isProtectedRoute(req)) {
-        await auth.protect();
+        const { userId, redirectToSignIn } = await auth();
+        if (!userId) {
+            return redirectToSignIn();
+        }
     }
+
+    return NextResponse.next();
 });
 
 export const config = {
     matcher: [
-        // Skip Next.js internals, static files, and api/webhooks
-        '/((?!_next|amzn|api/webhooks|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-        // Always run for API routes EXCEPT webhooks
-        '/(api|trpc)((?!/webhooks).*)',
+        // Skip Next.js internals and static files
+        '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+        // Always run for API routes
+        '/(api|trpc)(.*)',
     ],
 };
