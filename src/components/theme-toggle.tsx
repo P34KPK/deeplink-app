@@ -4,9 +4,11 @@ import * as React from "react"
 import { Moon, Sun, Monitor, Check } from "lucide-react"
 import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
+import { useUser } from "@clerk/nextjs"
 
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme()
+    const { isSignedIn, isLoaded } = useUser()
     const [mounted, setMounted] = React.useState(false)
     const [isOpen, setIsOpen] = React.useState(false)
     const pathname = usePathname();
@@ -24,13 +26,18 @@ export function ThemeToggle() {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
-    // Don't render the global toggle on Link in Bio pages (they have their own custom toggle)
+    // Don't render the global toggle on Link in Bio pages
     if (pathname?.startsWith('/linkinbio')) {
         return null;
     }
 
-    if (!mounted) {
+    if (!mounted || !isLoaded) {
         return <div className="w-9 h-9 bg-muted rounded-md animate-pulse" />
+    }
+
+    // Hide toggle if not signed in
+    if (!isSignedIn) {
+        return null;
     }
 
     // Determine which icon to show for the trigger

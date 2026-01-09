@@ -40,13 +40,23 @@ export function ThemeSync() {
     }, [isLoaded, user?.id]) // Run once per user session start
 
     // Save preference to DB when theme changes
+    // Enforce default Light theme for guests (signed out)
+    useEffect(() => {
+        if (!isLoaded) return;
+
+        // If user is not signed in, and we are not in light mode, force light.
+        // This ensures the "landing" experience is always white as requested.
+        if (!user && theme !== 'light') {
+            // We need to be careful not to fight with user intent if they JUST logged out.
+            // But the requirement is "starts white... only signed up can choose".
+            // So forcing light on signout is correct.
+            setTheme('light')
+        }
+    }, [isLoaded, user, theme, setTheme])
+
+    // Save preference to DB when theme changes (only if logged in)
     useEffect(() => {
         if (!isLoaded || !user || isFirstLoad.current) return
-
-        // Debounce or just save? 
-        // Given this event runs infrequently (manual toggle), direct save is likely fine.
-        // But we want to avoid saving if we just set it from the DB.
-        // isFirstLoad might help, but let's add a small timeout or just accept one redundant save.
 
         const savePreference = async () => {
             try {
@@ -60,17 +70,11 @@ export function ThemeSync() {
             }
         }
 
-        // We only save if isFirstLoad is false.
-        // But the fetch effect sets isFirstLoad to false AFTER setting the theme.
-        // Actually, if we set theme in the first effect, this effect will trigger.
-        // We need to differentiate "change by user" vs "change by sync".
-        // A simple way is to use a timestamp or just not worry too much about one extra POST on login.
-
-        // Let's us a simple debounce to avoid rapid toggling spam
         const timeoutId = setTimeout(savePreference, 1000)
         return () => clearTimeout(timeoutId)
 
-    }, [theme, isLoaded, user?.id])
+    }, [theme, isLoaded, user])
+
 
     return null
 }
