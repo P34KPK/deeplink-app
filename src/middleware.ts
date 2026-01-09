@@ -26,6 +26,12 @@ const isProtectedRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
     // Custom Domain Logic (Multi-Tenancy)
     const url = req.nextUrl;
+
+    // 🔴 BYPASS: Allow Stripe Webhooks to pass through without any checks or redirects
+    if (url.pathname.startsWith('/api/stripe/webhook')) {
+        return;
+    }
+
     const hostname = req.headers.get("host"); // e.g. "promo.sebastien.com" or "localhost:3000"
 
     // FORCE HTTPS (Production Only)

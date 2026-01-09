@@ -4,6 +4,12 @@ import { stripe } from '@/lib/stripe';
 import { clerkClient } from '@clerk/nextjs/server';
 import Stripe from 'stripe';
 
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+    return new NextResponse('Webhook endpoint is active', { status: 200 });
+}
+
 export async function POST(req: Request) {
     const body = await req.text();
     const signature = (await headers()).get('Stripe-Signature') as string;
