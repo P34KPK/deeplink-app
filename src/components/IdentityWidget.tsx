@@ -98,13 +98,17 @@ export default function IdentityWidget({ userId, onEditProfile }: IdentityWidget
                     <span className="text-lg font-bold">{socialCount}</span>
                     <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wide">Socials</span>
                 </div>
-                <div className="flex flex-col items-center bg-secondary/30 rounded-lg py-2 border border-white/5 opacity-50 relative overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px] z-10">
-                        <span className="text-[8px] font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">SOON</span>
+                <a
+                    href={`/u/${profile?.handle || userId}`}
+                    target="_blank"
+                    className="flex flex-col items-center bg-secondary/30 hover:bg-secondary/50 transition-colors rounded-lg py-2 border border-white/5 cursor-pointer relative overflow-hidden group/btn"
+                >
+                    <div className="absolute top-1 right-1 opacity-0 group-hover/btn:opacity-100 transition-opacity">
+                        <ExternalLink className="w-2.5 h-2.5 text-zinc-400" />
                     </div>
-                    <Globe className="w-4 h-4 mb-0.5 text-indigo-400" />
+                    <Globe className="w-4 h-4 mb-0.5 text-indigo-400 group-hover/btn:scale-110 transition-transform duration-300" />
                     <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wide">Page</span>
-                </div>
+                </a>
             </div>
         </div>
     );
