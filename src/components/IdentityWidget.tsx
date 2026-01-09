@@ -99,7 +99,7 @@ export default function IdentityWidget({ userId, onEditProfile }: IdentityWidget
                     <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-wide">Socials</span>
                 </div>
                 <a
-                    href={`/u/${profile?.handle || userId}`}
+                    href={`/linkinbio/${profile?.handle || userId}`}
                     target="_blank"
                     className="flex flex-col items-center bg-secondary/30 hover:bg-secondary/50 transition-colors rounded-lg py-2 border border-white/5 cursor-pointer relative overflow-hidden group/btn"
                 >
