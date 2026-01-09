@@ -1,18 +1,27 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Monitor, Check } from "lucide-react"
 import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
 
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme()
     const [mounted, setMounted] = React.useState(false)
+    const [isOpen, setIsOpen] = React.useState(false)
     const pathname = usePathname();
+    const dropdownRef = React.useRef<HTMLDivElement>(null)
 
-    // Avoid hydration mismatch
     React.useEffect(() => {
         setMounted(true)
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
     // Don't render the global toggle on Link in Bio pages (they have their own custom toggle)
@@ -21,36 +30,57 @@ export function ThemeToggle() {
     }
 
     if (!mounted) {
-        return (
-            <div className="w-14 h-8 bg-muted rounded-full animate-pulse" />
-        )
+        return <div className="w-9 h-9 bg-muted rounded-md animate-pulse" />
     }
 
-    const isDark = theme === "dark"
+    // Determine which icon to show for the trigger
+    const getTriggerIcon = () => {
+        if (theme === 'system') return <Monitor className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />
+        if (theme === 'dark') return <Moon className="w-4 h-4 text-zinc-100" />
+        return <Sun className="w-4 h-4 text-zinc-900" />
+    }
 
     return (
-        <label className="relative inline-flex items-center cursor-pointer group">
-            <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={isDark}
-                onChange={() => setTheme(isDark ? "light" : "dark")}
-            />
-            <div className="w-16 h-8 bg-zinc-200 dark:bg-zinc-800 rounded-full peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-zinc-400 dark:peer-focus:ring-zinc-600 transition-colors duration-300">
-                <div className={`absolute top-1 left-1 w-6 h-6 bg-white dark:bg-zinc-950 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center ${isDark ? 'translate-x-8' : 'translate-x-0'}`}>
-                    {isDark ? (
-                        <Moon className="w-3.5 h-3.5 text-zinc-100" />
-                    ) : (
-                        <Sun className="w-3.5 h-3.5 text-orange-400" />
-                    )}
-                </div>
+        <div className="relative" ref={dropdownRef}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center justify-center w-9 h-9 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                aria-label="Select theme"
+                title="Change Theme"
+            >
+                {getTriggerIcon()}
+            </button>
 
-                {/* Background Icons/Text for context */}
-                <div className="absolute inset-0 flex justify-between items-center px-2 pointer-events-none">
-                    <Sun className={`w-3 h-3 text-zinc-400 ${isDark ? 'opacity-100' : 'opacity-0'} transition-opacity delay-100`} />
-                    <Moon className={`w-3 h-3 text-zinc-500 ${isDark ? 'opacity-0' : 'opacity-100'} transition-opacity delay-100`} />
+            {isOpen && (
+                <div className="absolute right-0 top-full mt-2 w-36 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-1 shadow-lg z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="flex flex-col gap-0.5">
+                        <button
+                            onClick={() => { setTheme("light"); setIsOpen(false) }}
+                            className={`relative flex items-center gap-2 px-2.5 py-2 text-sm rounded-md transition-colors ${theme === 'light' ? 'bg-zinc-100 dark:bg-zinc-800 font-medium' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900'}`}
+                        >
+                            <Sun className="w-4 h-4" />
+                            <span>Light</span>
+                            {theme === 'light' && <span className="absolute right-2"><Check className="w-3.5 h-3.5" /></span>}
+                        </button>
+                        <button
+                            onClick={() => { setTheme("dark"); setIsOpen(false) }}
+                            className={`relative flex items-center gap-2 px-2.5 py-2 text-sm rounded-md transition-colors ${theme === 'dark' ? 'bg-zinc-100 dark:bg-zinc-800 font-medium' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900'}`}
+                        >
+                            <Moon className="w-4 h-4" />
+                            <span>Dark</span>
+                            {theme === 'dark' && <span className="absolute right-2"><Check className="w-3.5 h-3.5" /></span>}
+                        </button>
+                        <button
+                            onClick={() => { setTheme("system"); setIsOpen(false) }}
+                            className={`relative flex items-center gap-2 px-2.5 py-2 text-sm rounded-md transition-colors ${theme === 'system' ? 'bg-zinc-100 dark:bg-zinc-800 font-medium' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900'}`}
+                        >
+                            <Monitor className="w-4 h-4" />
+                            <span>System</span>
+                            {theme === 'system' && <span className="absolute right-2"><Check className="w-3.5 h-3.5" /></span>}
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </label>
+            )}
+        </div>
     )
 }

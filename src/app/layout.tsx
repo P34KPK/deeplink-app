@@ -9,6 +9,7 @@ import ErrorMonitor from "@/components/ErrorMonitor";
 import { LanguageProvider } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import OfflineStatus from "@/components/OfflineStatus";
+import { ThemeSync } from "@/components/theme-sync";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -112,10 +113,11 @@ export default function RootLayout({
           />
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="light"
             enableSystem
             disableTransitionOnChange
           >
+            <ThemeSync />
             <OfflineStatus />
             <ErrorMonitor />
             <LanguageProvider>
@@ -134,4 +136,3 @@ export default function RootLayout({
   );
 }
 // Force Rebuild v2
-

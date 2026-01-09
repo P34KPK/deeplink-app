@@ -16,6 +16,7 @@ export interface UserProfile {
         [key: string]: string | undefined;
     };
     theme?: string; // Hex code or gradient identifier
+    appAppearance?: 'light' | 'dark' | 'system';
     amazonTag?: string; // e.g. user-20
 }
 
