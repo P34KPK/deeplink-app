@@ -28,7 +28,7 @@ export default clerkMiddleware(async (auth, req) => {
     const url = req.nextUrl;
 
     // 🔴 BYPASS: Allow Stripe Webhooks to pass through without any checks or redirects
-    if (url.pathname.startsWith('/api/stripe/webhook')) {
+    if (url.pathname.startsWith('/api/webhooks')) {
         return;
     }
 
