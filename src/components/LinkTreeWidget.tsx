@@ -18,16 +18,17 @@ export default function LinkTreeWidget({ userId, username, className, onEditProf
     const [handle, setHandle] = useState<string | null>(null);
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
-    // Fetch handle
+    // Fetch handle from authenticated profile for consistency
     useEffect(() => {
-        if (!userId) return;
-        fetch(`/api/public/u/${userId}`)
+        fetch('/api/user/profile')
             .then(res => res.json())
             .then(data => {
-                if (data.user?.handle) setHandle(data.user.handle);
+                if (data && !data.error && data.handle) {
+                    setHandle(data.handle);
+                }
             })
             .catch(console.error);
-    }, [userId]);
+    }, []);
 
     const displayId = handle || userId;
     const bioUrl = `${origin}/linkinbio/${displayId}`;
