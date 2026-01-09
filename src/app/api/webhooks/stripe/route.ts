@@ -13,6 +13,12 @@ export async function GET() {
 export async function POST(req: Request) {
     const body = await req.text();
     const signature = (await headers()).get('Stripe-Signature') as string;
+    const secret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    console.log('[Webhook] Received request');
+    console.log('[Webhook] Secret exists:', !!secret);
+    if (secret) console.log('[Webhook] Secret starts with:', secret.substring(0, 5));
+    console.log('[Webhook] Signature received:', !!signature);
 
     let event: Stripe.Event;
 
@@ -20,9 +26,10 @@ export async function POST(req: Request) {
         event = stripe.webhooks.constructEvent(
             body,
             signature,
-            process.env.STRIPE_WEBHOOK_SECRET!
+            secret!
         );
     } catch (error: any) {
+        console.error(`[Webhook] Signature Verification Failed: ${error.message}`);
         return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
     }
 
