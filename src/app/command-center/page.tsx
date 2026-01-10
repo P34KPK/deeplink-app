@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
     BarChart3, Activity, Link as LinkIcon, AlertTriangle, QrCode, Download, Calendar, GripHorizontal,
     TrendingUp, Sparkles, DollarSign, Wand2, ShoppingBag, Copy, Calculator, Trophy, Radio, Megaphone,
-    Map as MapIcon, ShieldAlert, Eye, Ghost, Ban, CreditCard, Maximize2, Minimize2, Smartphone, Globe, MessageSquare
+    Map as MapIcon, ShieldAlert, Eye, Ghost, Ban, CreditCard, Maximize2, Minimize2, Smartphone, Globe, MessageSquare, Switch, Settings2
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -45,7 +45,7 @@ function SortableItem(props: any) {
         <div ref={setNodeRef} style={style} className={`h-full ${props.className || ''} group ${isDragging ? 'opacity-80' : ''}`}>
             <div className="h-full relative">
                 {/* Unified Pro-Style Drag Handle & Resize */}
-                <div className="absolute top-2 right-2 z-50 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-black/60 backdrop-blur rounded-lg border border-white/10 shadow-xl">
+                <div className={`absolute top-2 right-2 z-50 flex items-center gap-1 transition-opacity p-1 bg-black/60 backdrop-blur rounded-lg border border-white/10 shadow-xl ${props.isEditMode ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                     {props.onToggle && (
                         <button
                             onMouseDown={(e) => { e.stopPropagation(); props.onToggle(e); }}
@@ -78,6 +78,7 @@ export default function AdminDashboard() {
     // Stage 2: Data
     const [data, setData] = useState<any>(null);
     const [selectedUser, setSelectedUser] = useState<string | null>(null); // For User Mini-Dashboard
+    const [isEditMode, setIsEditMode] = useState(false); // Mobile Scroll Fix
 
     // Agent E State (Pro Widgets) + Agent A (War Room, Security)
     const [widgetOrder, setWidgetOrder] = useState(['black_box', 'system_terminal', 'redis_explorer', 'panic_control', 'ai_analyst', 'total_chart', 'daily_chart', 'devices_pie', 'geo_map', 'languages', 'linktree', 'gamification', 'pulse', 'godmode', 'simulator', 'inbox', 'security', 'vault', 'broadcast', 'warroom']);
@@ -432,6 +433,13 @@ export default function AdminDashboard() {
                         <p className="text-muted-foreground text-sm">System Status: <span className="text-green-500">Operational</span></p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsEditMode(!isEditMode)}
+                            className={`text-sm px-4 py-2 rounded transition-colors flex items-center gap-2 border ${isEditMode ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary hover:bg-secondary/80 border-transparent'}`}
+                        >
+                            {isEditMode ? <Settings2 className="w-4 h-4 animate-spin-slow" /> : <Settings2 className="w-4 h-4" />}
+                            {isEditMode ? 'Done Editing' : 'Customize Layout'}
+                        </button>
                         <Link href="/" target="_blank" className="text-sm px-4 py-2 rounded bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-2">
                             <Eye className="w-4 h-4" /> View Live App
                         </Link>
@@ -457,8 +465,9 @@ export default function AdminDashboard() {
                         sensors={sensors}
                         collisionDetection={closestCenter}
                         onDragEnd={handleDragEnd}
+                        autoScroll={isEditMode}
                     >
-                        <SortableContext items={widgetOrder} strategy={rectSortingStrategy}>
+                        <SortableContext items={widgetOrder} strategy={rectSortingStrategy} disabled={!isEditMode}>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                                 {widgetOrder.map((id) => (
                                     <SortableItem
@@ -467,6 +476,7 @@ export default function AdminDashboard() {
                                         className={getSizeClass(id)}
                                         onToggle={(e: any) => toggleWidgetSize(id, e)}
                                         size={widgetSizes[id] || 'small'}
+                                        isEditMode={isEditMode}
                                     >
 
                                         {/* NEW: Total Traffic (Pro Style) */}
