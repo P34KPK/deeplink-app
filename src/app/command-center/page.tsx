@@ -6,7 +6,7 @@ import Image from 'next/image';
 import {
     BarChart3, Activity, Link as LinkIcon, AlertTriangle, QrCode, Download, Calendar, GripHorizontal,
     TrendingUp, Sparkles, DollarSign, Wand2, ShoppingBag, Copy, Calculator, Trophy, Radio, Megaphone,
-    Map as MapIcon, ShieldAlert, Eye, Ghost, Ban, CreditCard, Maximize2, Minimize2, Smartphone, Globe, MessageSquare, Switch, Settings2, Download
+    Map as MapIcon, ShieldAlert, Eye, Ghost, Ban, CreditCard, Maximize2, Minimize2, Smartphone, Globe, MessageSquare, Switch, Settings2
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
