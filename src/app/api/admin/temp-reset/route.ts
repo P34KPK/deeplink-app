@@ -9,36 +9,15 @@ export async function GET(req: Request) {
     try {
         if (!redis) return NextResponse.json({ error: 'No Redis' }, { status: 500 });
 
-        // 1. Find User ID
-        // const targetEmail = '5kqvbrjjgr@privaterelay.appleid.com';
-        // Hardcoding scan for speed
-        const keys = await redis.keys('user:*:profile');
-        let targetId = null;
-
-        for (const key of keys) {
-            const data = await redis.get(key);
-            // Check if string contains email (Profile data is usually JSON)
-            if (data && typeof data === 'string' && data.includes('5kqvbrjjgr@privaterelay.appleid.com')) {
-                const parts = key.split(':');
-                if (parts.length >= 2) targetId = parts[1];
-                break;
-            }
-            // If object (from ioredis sometimes depending on config, but usually string)
-            if (data && typeof data === 'object') {
-                // @ts-ignore
-                if (data.email === '5kqvbrjjgr@privaterelay.appleid.com' || JSON.stringify(data).includes('5kqvbrjjgr@privaterelay.appleid.com')) {
-                    const parts = key.split(':');
-                    if (parts.length >= 2) targetId = parts[1];
-                    break;
-                }
-            }
-        }
+        const { searchParams } = new URL(req.url);
+        let targetId = searchParams.get('userId') || 'user_37ufk8Bl3z0KJUZWhq0a2Qgen7J'; // Default to user from chat
 
         if (targetId) {
-            await redis.del(`user:${targetId}:plan`);
+            await redis.del(`plan:${targetId}`); // New Key Storage Pattern? Or user:ID:plan?
+            await redis.del(`user:${targetId}:plan`); // Legacy Pattern
             return NextResponse.json({ success: true, message: `Reset plan for user ${targetId}` });
         } else {
-            return NextResponse.json({ error: 'User not found by email scan' }, { status: 404 });
+            return NextResponse.json({ error: 'No ID' }, { status: 404 });
         }
 
     } catch (e: any) {
