@@ -483,5 +483,6 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                     }}
                 />
             </div>
-            );
+        </div>
+    );
 }
