@@ -46,7 +46,7 @@ export default function RedisExplorer() {
     }, []);
 
     return (
-        <div className="matte-card p-0 flex flex-col h-full bg-[#050505] border border-zinc-800">
+        <div className="matte-card p-0 flex flex-col h-[300px] bg-[#050505] border border-zinc-800">
             {/* Header */}
             <div className="p-3 border-b border-white/5 flex items-center justify-between bg-zinc-900/50">
                 <div className="flex items-center gap-2">
