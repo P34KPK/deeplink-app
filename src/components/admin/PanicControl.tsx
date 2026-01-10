@@ -65,10 +65,9 @@ export default function PanicControl() {
                     onClick={async () => {
                         if (confirm("MIGRATE DATABASE TO V2?\n\nThis will restructure all data to the new scalable format. Ensure a backup exists.")) {
                             try {
-                                const res = await fetch('/api/admin/migrate', {
-                                    const res = await fetch('/api/admin/migrate');
-                                    const data = await res.json();
-                                    alert(data.message || 'Migration Complete');
+                                const res = await fetch('/api/admin/migrate');
+                                const data = await res.json();
+                                alert(data.message || 'Migration Complete');
                             } catch (e) {
                                 alert('Migration Failed');
                             }

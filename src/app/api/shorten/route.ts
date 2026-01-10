@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createShortLink } from '@/lib/shortener';
-import { addLink, getUserLinks, ArchivedLink } from '@/lib/storage'; // Import storage methods
+import { saveLink, getUserLinks, ArchivedLink } from '@/lib/storage'; // Import storage methods
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { isAdmin } from '@/lib/admin-auth';
 import { getUserProfile } from '@/lib/profile-service';
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
         // For now we just save it. if userId is undefined (Admin w/o Clerk), it saves as "Orphan" link.
         // Ideally Admin Dashboard should pass a dummy userId or we use the Master Key user.
 
-        await addLink(linkObj);
+        await saveLink(linkObj);
 
         return NextResponse.json({
             shortUrl,

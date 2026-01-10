@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getLinks, getUserLinks, getLinkById, addLink, addLinks, removeLink, deleteLink, updateLink, ArchivedLink } from '@/lib/storage';
+import { getLinks, getUserLinks, getLinkById, saveLink, addLinks, removeLink, deleteLink, updateLink, ArchivedLink } from '@/lib/storage';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { isAdmin } from '@/lib/admin-auth';
 import { rateLimit } from '@/lib/rate-limit';
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: 'Invalid link data' }, { status: 400 });
             }
             const linkWithUser = enrichLink(link);
-            await addLink(linkWithUser);
+            await saveLink(linkWithUser);
 
             // Return fresh list
             const freshList = await getUserLinks(user.id);

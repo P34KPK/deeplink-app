@@ -57,14 +57,14 @@ export async function generateMetadata({ params }: { params: Promise<{ handle: s
     const { handle } = await params;
     const data = await getBioData(handle);
 
-    if (!data || data.banned) {
+    if (!data || data.banned || !('user' in data)) {
         return {
             title: 'Profile Not Found',
             description: 'This profile does not exist or has been suspended.'
         };
     }
 
-    const { user } = data;
+    const { user } = data as any;
     const title = `${user.username} | My Amazon Picks`;
     const description = user.bio || `Check out ${user.username}'s favorite products and deals on Amazon.`;
 
@@ -113,8 +113,8 @@ export default async function UserBioPage({ params }: { params: Promise<{ handle
 
     return (
         <BioPageClient
-            initialUser={data.user}
-            initialLinks={data.links}
+            initialUser={(data as any).user}
+            initialLinks={(data as any).links}
         />
     );
 }

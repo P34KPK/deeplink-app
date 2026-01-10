@@ -47,7 +47,7 @@ export async function saveLink(link: ArchivedLink) {
     if (link.userId) {
         // Store as a Set (unique IDs) or List. Set is safer for duplicates.
         // We use a Sorted Set (zadd) using timestamp as score to keep order!
-        pipeline.zadd(kUserLinks(link.userId), { score: link.date, member: link.id });
+        pipeline.zadd(kUserLinks(link.userId), link.date, link.id);
     }
 
     // 3. Slug Mapping (for ultra-fast redirection lookups)
@@ -76,16 +76,19 @@ export async function getUserLinks(userId: string): Promise<ArchivedLink[]> {
     if (!redis) return [];
 
     // Get IDs from Sorted Set (Reverse order = newest first)
-    const linkIds = await redis.zrange(kUserLinks(userId), 0, -1, { rev: true });
+    const linkIds = await redis.zrevrange(kUserLinks(userId), 0, -1);
 
     if (!linkIds.length) return [];
 
     // Fetch all link objects in parallel
     // @ts-ignore
-    const links = await redis.mget(...linkIds.map(id => kLink(String(id))));
+    // @ts-ignore
+    const rawLinks = await redis.mget(...linkIds.map(id => kLink(String(id))));
 
-    // Filter out nulls (in case of data drift)
-    return links.filter(l => l !== null) as ArchivedLink[];
+    // Filter nulls and Parse JSON
+    return rawLinks
+        .filter((l: string | null) => l !== null)
+        .map((l: string) => JSON.parse(l)) as ArchivedLink[];
 }
 
 /**

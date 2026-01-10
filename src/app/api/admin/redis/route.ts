@@ -14,7 +14,7 @@ export async function GET(req: Request) {
         if (!redis) throw new Error("Redis not connected");
 
         // Scan keys
-        const [nextCursor, keys] = await redis.scan(cursor, { match: pattern, count: 100 });
+        const [nextCursor, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
 
         // Optionally fetch values (expensive, so limit to first 10 or make partial)
         const detailedKeys = [];
