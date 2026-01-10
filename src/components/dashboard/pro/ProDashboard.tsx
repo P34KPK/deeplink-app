@@ -334,8 +334,8 @@ export default function ProDashboard({
                                     // Dynamically construct the correct URL based on current environment
                                     // This fixes legacy 'localhost' links and enforces the new '/amz/' format
                                     const cleanUrl = typeof window !== 'undefined'
-                                        ? `${window.location.origin}/amz/${slug}`
-                                        : `https://deeplink.rs/amz/${slug}`;
+                                        ? `${window.location.origin}/amzn/${slug}`
+                                        : `https://deeplink.rs/amzn/${slug}`;
 
                                     return (
                                         <tr key={link.id} className="hover:bg-secondary/20 transition-colors">

@@ -15,8 +15,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     if (!data) return { title: 'Link Information' };
 
-    const baseUrl = 'https://deeplink-app-seven.vercel.app';
-    const socialCardUrl = `${baseUrl}/social-preview.png`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://deeplink.rs';
+    // Use the specific product image if saved, otherwise fallback to the generic app card
+    const imageUrl = data.image || `${baseUrl}/social-preview.png`;
 
     return {
         title: data.title || `View Deal on Amazon`,
@@ -26,19 +27,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             description: 'Tap to view exclusive price in App',
             images: [
                 {
-                    url: socialCardUrl,
+                    url: imageUrl,
                     width: 1200,
                     height: 630,
                     alt: 'View Deal'
                 }
             ],
             type: 'website',
+            url: `${baseUrl}/amz/${slug}`,
         },
         twitter: {
             card: 'summary_large_image',
-            title: `View Deal`,
+            title: data.title || `View Deal`,
             description: 'Tap to open in Amazon App',
-            images: [socialCardUrl],
+            images: [imageUrl],
         }
     };
 }
