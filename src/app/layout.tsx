@@ -77,8 +77,11 @@ export const metadata: Metadata = {
     google: "google-site-verification-code", // Placeholder for user to fill
   },
   icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
+    icon: [
+      { url: '/favicon.png', href: '/favicon.png' },
+      { url: '/icon.png', href: '/icon.png' },
+    ],
+    shortcut: '/favicon.png',
     apple: '/apple-icon.png',
     other: {
       rel: 'apple-touch-icon-precomposed',
