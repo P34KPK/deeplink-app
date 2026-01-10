@@ -229,6 +229,17 @@ export default function Dashboard() {
                 const historyData = await historyRes.json();
 
                 setStats(statsData);
+
+                // TEMP: Force Free Plan for test user to verify payment flow
+                // Remove this line after testing!
+                if (statsData && window.location.hostname !== 'localhost' && document.documentElement.innerHTML.includes('5kqvbrjjgr@privaterelay.appleid.com')) {
+                    // This is dirty but effective without adding `user` prop drill just for a quick test
+                    // Better way: check user email from clerk hook
+                    console.log("Forcing FREE plan for test user");
+                    statsData.plan = 'free';
+                    setStats({ ...statsData, plan: 'free' });
+                }
+
                 if (Array.isArray(historyData)) {
                     setHistory(historyData);
                 }
