@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     siteName: "DeepLinkrs",
     images: [
       {
-        url: 'https://deeplink-app-seven.vercel.app/social-preview.png',
+        url: 'https://deeplink-app-seven.vercel.app/social-preview.png?v=2',
         width: 1200,
         height: 630,
         alt: "DeepLinkrs Dashboard Preview",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "DeepLinkrs | Smart Deep Links for Creators",
     description: "Don't let browser logins kill your commissions. Use DeepLinkrs to open links in the Amazon App automatically.",
-    images: ['https://deeplink-app-seven.vercel.app/social-preview.png'],
+    images: ['https://deeplink-app-seven.vercel.app/social-preview.png?v=2'],
   },
   robots: {
     index: true,
@@ -78,14 +78,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.png', href: '/favicon.png' },
-      { url: '/icon.png', href: '/icon.png' },
+      { url: '/favicon.png?v=2', href: '/favicon.png?v=2' },
+      { url: '/icon.png?v=2', href: '/icon.png?v=2' },
     ],
-    shortcut: '/favicon.png',
-    apple: '/apple-icon.png',
+    shortcut: '/favicon.png?v=2',
+    apple: '/apple-icon.png?v=2',
     other: {
       rel: 'apple-touch-icon-precomposed',
-      url: '/apple-icon.png',
+      url: '/apple-icon.png?v=2',
     },
   },
   manifest: '/manifest.json',
@@ -93,7 +93,7 @@ export const metadata: Metadata = {
     capable: true,
     title: 'DeepLinkrs',
     statusBarStyle: 'black-translucent',
-    startupImage: ['/apple-icon.png'],
+    startupImage: ['/apple-icon.png?v=2'],
   },
 };
 
