@@ -472,7 +472,16 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                     Save Changes
                 </button>
             </div>
+            {/* Image Cropper */}
+            <ImageCropperModal
+                isOpen={!!rawFileImage}
+                imageSrc={rawFileImage}
+                onClose={() => setRawFileImage(null)}
+                onSave={(cropped) => {
+                    updateProfile('avatarUrl', cropped);
+                    setRawFileImage(null);
+                }}
+            />
         </div>
-        </div >
     );
 }
