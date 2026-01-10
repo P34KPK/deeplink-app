@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     siteName: "DeepLinkrs",
     images: [
       {
-        url: `${baseUrl}/og-image.jpg`, // Ensure this image exists or is generated
+        url: 'https://deeplink-app-seven.vercel.app/og-image.jpg',
         width: 1200,
         height: 630,
         alt: "DeepLinkrs Dashboard Preview",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "DeepLinkrs | Smart Deep Links for Creators",
     description: "Don't let browser logins kill your commissions. Use DeepLinkrs to open links in the Amazon App automatically.",
-    images: [`${baseUrl}/og-image.jpg`], // Reusing OG image
+    images: ['https://deeplink-app-seven.vercel.app/og-image.jpg'],
   },
   robots: {
     index: true,
