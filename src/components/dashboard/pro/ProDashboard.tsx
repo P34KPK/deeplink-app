@@ -22,6 +22,7 @@ import LinkTreeWidget from '@/components/LinkTreeWidget';
 import IdentityWidget from '@/components/IdentityWidget';
 import AffiliateWidget from '@/components/dashboard/shared/AffiliateWidget';
 import CheckoutButton from '@/components/CheckoutButton';
+import InstallAppWidget from '@/components/InstallAppWidget';
 import { useLanguage } from '@/lib/i18n';
 
 type ProDashboardProps = {
@@ -253,6 +254,8 @@ export default function ProDashboard({
                         <div className="flex-1 text-sm font-medium">{stats.broadcast.message}</div>
                     </div>
                 )}
+
+                <InstallAppWidget />
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
                     <div className="flex flex-col gap-2">
