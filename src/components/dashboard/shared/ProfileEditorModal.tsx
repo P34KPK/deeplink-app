@@ -121,20 +121,26 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
     if (!isOpen) return null;
 
     return (
+    return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-[#09090b] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
-                <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 transition-colors border border-zinc-700 shadow-sm">
-                    <X className="w-5 h-5" />
-                </button>
+            {/* Modal Container: Flex Column, Max Height ensures it fits in viewport */}
+            <div className="bg-[#09090b] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl relative flex flex-col h-[90vh] md:h-auto md:max-h-[85vh]">
 
-                <div className="flex items-center gap-2 mb-6">
-                    <div className="p-2 bg-pink-500/10 rounded-lg">
-                        <Settings className="w-5 h-5 text-pink-500" />
+                {/* Header - Fixed */}
+                <div className="p-6 pb-4 flex-shrink-0 flex items-center justify-between border-b border-white/10">
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 bg-pink-500/10 rounded-lg">
+                            <Settings className="w-5 h-5 text-pink-500" />
+                        </div>
+                        <h2 className="text-xl font-bold">Edit Profile</h2>
                     </div>
-                    <h2 className="text-xl font-bold">Edit Profile</h2>
+                    <button onClick={onClose} className="p-2 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 transition-colors border border-zinc-700 shadow-sm">
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2 -mr-2">
+                {/* Content - Scrollable */}
+                <div className="flex-1 overflow-y-auto px-6 py-4 custom-scrollbar space-y-5">
                     {loading ? (
                         <div className="text-center py-10 text-muted-foreground">Loading profile...</div>
                     ) : (
@@ -456,27 +462,18 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                     </div>
                 </div>
 
-                <div className="pt-4 mt-2 border-t border-white/10 flex gap-3 flex-shrink-0">
-                    <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 transition-colors">
-                        Cancel
-                    </button>
-                    <button onClick={saveProfile} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-500/20 transition-all hover:scale-[1.02]">
-                        Save Changes
-                    </button>
-                </div>
             </div>
 
-
-            {/* Image Cropper */}
-            <ImageCropperModal
-                isOpen={!!rawFileImage}
-                imageSrc={rawFileImage}
-                onClose={() => setRawFileImage(null)}
-                onSave={(cropped) => {
-                    updateProfile('avatarUrl', cropped);
-                    setRawFileImage(null);
-                }}
-            />
+            {/* Footer - Fixed */}
+            <div className="p-4 border-t border-white/10 bg-[#09090b] rounded-b-2xl flex gap-3 flex-shrink-0 z-10">
+                <button onClick={onClose} className="flex-1 py-3 rounded-lg text-sm font-bold bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-300 transition-colors">
+                    Cancel
+                </button>
+                <button onClick={saveProfile} className="flex-1 py-3 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-500/20 transition-all hover:scale-[1.02]">
+                    Save Changes
+                </button>
+            </div>
+        </div>
         </div >
     );
 }
