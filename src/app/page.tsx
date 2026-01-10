@@ -322,7 +322,7 @@ export default function Home() {
               alt="DeepLinkrs Logo"
               width={173}
               height={86}
-              className="object-contain dark:invert transition-all duration-300"
+              className="object-contain invert dark:invert-0 transition-all duration-300"
               priority
             />
           </div>
@@ -730,7 +730,7 @@ export default function Home() {
             src="/p34k-logo.png"
             alt="P34K Logo"
             fill
-            className="object-contain dark:invert opacity-70"
+            className="object-contain dark:invert"
           />
         </a>
         <div className="flex gap-4 text-xs text-muted-foreground">
