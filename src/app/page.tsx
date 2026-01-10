@@ -20,15 +20,17 @@ type ArchivedLink = {
 };
 
 import { SignedIn, SignedOut, UserButton, useAuth, SignOutButton } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs"; // Added this import, assuming it was missing
 
 import { useLanguage } from '@/lib/i18n';
 
 export default function Home() {
+  const { user } = useUser();
   const { isSignedIn, isLoaded } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
-  const [inputUrl, setInputUrl] = useState('');
 
+  const [inputUrl, setInputUrl] = useState('');
   const [inputTitle, setInputTitle] = useState('');
   const [inputDesc, setInputDesc] = useState('');
   const [inputSlug, setInputSlug] = useState(''); // Custom Alias
@@ -53,6 +55,13 @@ export default function Home() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
   const [sendingReport, setSendingReport] = useState(false);
+
+  // Force PRO for Admin Owner
+  useEffect(() => {
+    if (user?.primaryEmailAddress?.emailAddress === 'p34k.productions@gmail.com') {
+      setIsPro(true);
+    }
+  }, [user]);
 
   const fetchMetadata = async () => {
     if (!inputUrl) return;
@@ -721,8 +730,7 @@ export default function Home() {
             src="/p34k-logo.png"
             alt="P34K Logo"
             fill
-            className="object-contain"
-            style={{ filter: 'var(--logo-filter)' }}
+            className="object-contain dark:invert opacity-70"
           />
         </a>
         <div className="flex gap-4 text-xs text-muted-foreground">
