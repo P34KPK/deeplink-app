@@ -72,23 +72,39 @@ export async function getLinkById(id: string): Promise<ArchivedLink | null> {
 /**
  * Get all links for a specific user
  */
-export async function getUserLinks(userId: string): Promise<ArchivedLink[]> {
+export async function getUserLinks(userId: string, userEmail?: string): Promise<ArchivedLink[]> {
     if (!redis) return [];
 
-    // Get IDs from Sorted Set (Reverse order = newest first)
+    // 1. Try NEW Granular System
     const linkIds = await redis.zrevrange(kUserLinks(userId), 0, -1);
 
-    if (!linkIds.length) return [];
+    if (linkIds.length > 0) {
+        // @ts-ignore
+        const rawLinks = await redis.mget(...linkIds.map(id => kLink(String(id))));
+        return rawLinks
+            .filter((l: string | null) => l !== null)
+            .map((l: string) => JSON.parse(l)) as ArchivedLink[];
+    }
 
-    // Fetch all link objects in parallel
-    // @ts-ignore
-    // @ts-ignore
-    const rawLinks = await redis.mget(...linkIds.map(id => kLink(String(id))));
+    // 2. Fallback to LEGACY Monolith (Slow but Safe)
+    // Only if nothing found in new system
+    console.log(`[Storage] No links found for ${userId} in V2. Checking Legacy DB...`);
+    const allLegacy = await getLegacyDB();
 
-    // Filter nulls and Parse JSON
-    return rawLinks
-        .filter((l: string | null) => l !== null)
-        .map((l: string) => JSON.parse(l)) as ArchivedLink[];
+    const userLegacyLinks = allLegacy.filter(l =>
+        l.userId === userId || (userEmail && l.userEmail === userEmail)
+    );
+
+    if (userLegacyLinks.length > 0) {
+        console.log(`[Storage] ♻️ Found ${userLegacyLinks.length} legacy links. Migrating in background...`);
+        // Trigger migration asynchronously (fire and forget)
+        // We ensure we add the userId if it was missing (e.g. matched by email)
+        addLinks(userLegacyLinks.map(l => ({ ...l, userId: l.userId || userId }))).catch(e => console.error("Migration fatal error", e));
+
+        return userLegacyLinks;
+    }
+
+    return [];
 }
 
 /**

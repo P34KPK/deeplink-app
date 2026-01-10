@@ -9,8 +9,8 @@ export async function GET() {
 
     if (!user) return NextResponse.json([]);
 
-    // 🚀 SCALABLE: Fetch ONLY this user's links
-    const userLinks = await getUserLinks(user.id);
+    // 🚀 SCALABLE: Fetch ONLY this user's links (with email fallback)
+    const userLinks = await getUserLinks(user.id, user.primaryEmailAddress?.emailAddress);
 
     console.log(`[API/Links] Fetched ${userLinks.length} links for ${user.id}`);
 
