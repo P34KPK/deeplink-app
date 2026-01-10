@@ -384,8 +384,7 @@ export default function Home() {
               alt="DeepLinkrs Logo"
               width={173}
               height={86}
-              className="object-contain transition-all duration-300"
-              style={{ filter: 'var(--logo-filter)' }}
+              className="object-contain dark:invert transition-all duration-300"
               priority
             />
           </div>
