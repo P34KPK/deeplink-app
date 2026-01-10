@@ -37,24 +37,9 @@ export default function InstallAppWidget() {
 
     const handleInstallClick = async () => {
         if (isIOS) {
-            // Try native share sheet first (best UX)
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'DeepLinkrs',
-                        text: 'Check out DeepLinkrs - The #1 Amazon Deep Linking Tool',
-                        url: window.location.href,
-                    });
-                    // If share successful/opened, we can show a hint or just let them proceed
-                    return;
-                } catch (err) {
-                    // User cancelled or failed, show manual instructions
-                    console.log("Share failed/cancelled", err);
-                    setShowIOSInstructions(true);
-                }
-            } else {
-                setShowIOSInstructions(true);
-            }
+            // Native navigator.share often misses "Add to Home Screen" option on iOS.
+            // Reliability is better with manual instructions pointing to Safari toolbar.
+            setShowIOSInstructions(true);
         } else if (installPrompt) {
             installPrompt.prompt();
             const { outcome } = await installPrompt.userChoice;
