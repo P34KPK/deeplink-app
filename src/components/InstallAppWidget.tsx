@@ -37,7 +37,24 @@ export default function InstallAppWidget() {
 
     const handleInstallClick = async () => {
         if (isIOS) {
-            setShowIOSInstructions(true);
+            // Try native share sheet first (best UX)
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'DeepLinkrs',
+                        text: 'Check out DeepLinkrs - The #1 Amazon Deep Linking Tool',
+                        url: window.location.href,
+                    });
+                    // If share successful/opened, we can show a hint or just let them proceed
+                    return;
+                } catch (err) {
+                    // User cancelled or failed, show manual instructions
+                    console.log("Share failed/cancelled", err);
+                    setShowIOSInstructions(true);
+                }
+            } else {
+                setShowIOSInstructions(true);
+            }
         } else if (installPrompt) {
             installPrompt.prompt();
             const { outcome } = await installPrompt.userChoice;
@@ -115,6 +132,12 @@ export default function InstallAppWidget() {
 
                             <button onClick={() => setShowIOSInstructions(false)} className="w-full py-3.5 bg-white text-black font-bold rounded-xl active:scale-95 transition-transform">Close</button>
                         </div>
+                    </div>
+
+                    {/* Bouncing Arrow Pointing to Bottom Browser Bar */}
+                    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 text-white flex flex-col items-center animate-bounce z-[10000] pointer-events-none">
+                        <span className="text-sm font-medium mb-2 drop-shadow-md">Tap here</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 drop-shadow-md"><path d="M12 5v14M19 12l-7 7-7-7" /></svg>
                     </div>
                 </div>,
                 document.body
