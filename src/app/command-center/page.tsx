@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
     BarChart3, Activity, Link as LinkIcon, AlertTriangle, QrCode, Download, Calendar, GripHorizontal,
     TrendingUp, Sparkles, DollarSign, Wand2, ShoppingBag, Copy, Calculator, Trophy, Radio, Megaphone,
-    Map as MapIcon, ShieldAlert, Eye, Ghost, Ban, CreditCard, Maximize2, Minimize2, Smartphone, Globe, MessageSquare, Switch, Settings2
+    Map as MapIcon, ShieldAlert, Eye, Ghost, Ban, CreditCard, Maximize2, Minimize2, Smartphone, Globe, MessageSquare, Switch, Settings2, Download
 } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -428,11 +429,35 @@ export default function AdminDashboard() {
         <main className="min-h-screen bg-background text-foreground p-6 md:p-12">
             <div className="max-w-6xl mx-auto space-y-8 animate-fade">
                 <div className="flex flex-col md:flex-row items-center justify-between border-b border-border pb-6 gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold">Command Center</h1>
-                        <p className="text-muted-foreground text-sm">System Status: <span className="text-green-500">Operational</span></p>
+                    <div className="flex items-center gap-4">
+                        <div className="relative w-12 h-12">
+                            <Image
+                                src="/admin-logo.png"
+                                alt="Admin Logo"
+                                fill
+                                className="object-contain"
+                                priority
+                            />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold">Command Center</h1>
+                            <p className="text-muted-foreground text-sm">System Status: <span className="text-green-500">Operational</span></p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => {
+                                if ('BeforeInstallPromptEvent' in window || (navigator as any).standalone !== undefined) {
+                                    // Trigger PWA install
+                                    alert('Tap Share > Add to Home Screen');
+                                }
+                            }}
+                            className="text-xs px-2 py-1.5 rounded bg-blue-600 hover:bg-blue-700 transition-colors flex items-center gap-1.5 text-white"
+                            title="Add to Home Screen"
+                        >
+                            <Download className="w-3 h-3" />
+                            <span className="hidden sm:inline">Install</span>
+                        </button>
                         <button
                             onClick={() => setIsEditMode(!isEditMode)}
                             className={`text-sm px-4 py-2 rounded transition-colors flex items-center gap-2 border ${isEditMode ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary hover:bg-secondary/80 border-transparent'}`}
