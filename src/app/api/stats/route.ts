@@ -3,7 +3,7 @@ import { getStats, getAffiliateStats, getSlugDailyHistory, getUserDeviceStats, g
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { redis } from '@/lib/redis';
 // Use dynamic import for storage to avoid circular dependency issues if any, or standard import
-import { getLinks } from '@/lib/storage';
+import { getLinks, getUserLinks } from '@/lib/storage';
 import { getUserProfile } from '@/lib/profile-service';
 
 export const dynamic = 'force-dynamic';
@@ -41,10 +41,10 @@ export async function GET() {
 
     // 2. Fetch Data
     const globalStats = await getStats();
+    // Use the robust getUserLinks with email fallback
+    const userLinks = await getUserLinks(userId, email);
+    // Legacy fetch for global trends naming (fallback)
     const allLinks = await getLinks();
-
-    // 3. Filter for User
-    const userLinks = allLinks.filter(l => l.userId === userId);
 
     // Identify user's resources
     const userSlugs = new Set<string>();
