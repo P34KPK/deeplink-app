@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { migrateToGranular } from '@/lib/storage';
 
-export async function POST(req: Request) {
-    try {
-        const key = req.headers.get('x-admin-key');
-        // Simple security check using ENV or fallback to current Master Key for immediate utility
-        const SECRET = process.env.ADMIN_SECRET || 'P34k_Titanium!X9#LinkR$2025';
+import { isAdmin } from '@/lib/admin-auth';
 
-        if (key !== SECRET) {
+export async function GET(req: Request) {
+    try {
+        if (!(await isAdmin(req))) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
