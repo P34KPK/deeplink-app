@@ -121,8 +121,8 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-10 md:pt-20 p-4 animate-in fade-in duration-200">
-            <div className="bg-[#09090b] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-[#09090b] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
                 <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 transition-colors border border-zinc-700 shadow-sm">
                     <X className="w-5 h-5" />
                 </button>
@@ -134,7 +134,7 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                     <h2 className="text-xl font-bold">Edit Profile</h2>
                 </div>
 
-                <div className="space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
+                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2 -mr-2">
                     {loading ? (
                         <div className="text-center py-10 text-muted-foreground">Loading profile...</div>
                     ) : (
@@ -456,11 +456,11 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                     </div>
                 </div>
 
-                <div className="pt-4 flex gap-3">
-                    <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-transparent border border-zinc-700 hover:bg-zinc-800 transition-colors">
+                <div className="pt-4 mt-2 border-t border-white/10 flex gap-3 flex-shrink-0">
+                    <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 transition-colors">
                         Cancel
                     </button>
-                    <button onClick={saveProfile} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-500/20 transition-colors">
+                    <button onClick={saveProfile} className="flex-1 py-2.5 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-500/20 transition-all hover:scale-[1.02]">
                         Save Changes
                     </button>
                 </div>
