@@ -231,14 +231,7 @@ export default function Dashboard() {
 
                 setStats(statsData);
 
-                // TEMP: Force Free Plan for test user to verify payment flow
-                // Remove this line after testing!
-                // TEMP: Force Free Plan for test user
-                if (user?.primaryEmailAddress?.emailAddress === '5kqvbrjjgr@privaterelay.appleid.com') {
-                    console.log("FORCE RESET: Detected Test User via Clerk. Switching to FREE mode.");
-                    statsData.plan = 'free';
-                    setStats((prev: any) => ({ ...prev, plan: 'free' }));
-                }
+
 
                 if (Array.isArray(historyData)) {
                     setHistory(historyData);
