@@ -88,8 +88,8 @@ export async function POST(req: Request) {
 
         // Use configured domain if available, otherwise fallback to request origin (localhost)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
-        // Inject 'amzn' prefix for trust, e.g., domain.com/amzn/slug
-        const shortUrl = `${baseUrl}/amzn/${newSlug}`;
+        // Inject 'amz' prefix for trust, e.g., domain.com/amz/slug
+        const shortUrl = `${baseUrl}/amz/${newSlug}`;
 
         // --- AUTO SAVE TO HISTORY ---
         // We now save immediately so it's counted next time
