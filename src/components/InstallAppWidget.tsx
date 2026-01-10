@@ -94,23 +94,51 @@ export default function InstallAppWidget() {
                 </div>
             </div>
 
-            {/* iOS Instructions Modal/Overlay INSIDE the widget or fixed */}
+            {/* iOS Instructions Modal/Overlay - Fixed to screen for better visibility */}
             {showIOSInstructions && (
-                <div className="absolute inset-0 z-20 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center text-center p-4 animate-in fade-in zoom-in-95 duration-200">
-                    <button
-                        onClick={() => setShowIOSInstructions(false)}
-                        className="absolute top-2 right-2 p-1 hover:bg-muted rounded-full text-muted-foreground"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                    <div className="space-y-3 max-w-[90%]">
-                        <p className="font-medium text-foreground">Tap the Share button</p>
-                        <div className="flex justify-center text-blue-500">
-                            <Share className="w-6 h-6" />
+                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowIOSInstructions(false)}>
+                    <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-2xl max-w-sm w-full relative mb-8 md:mb-0" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={() => setShowIOSInstructions(false)}
+                            className="absolute top-4 right-4 p-2 hover:bg-zinc-800 rounded-full text-zinc-400 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="text-center space-y-4 pt-2">
+                            <div className="w-16 h-16 bg-zinc-800 rounded-2xl mx-auto flex items-center justify-center shadow-inner">
+                                <Share className="w-8 h-8 text-blue-500" />
+                            </div>
+
+                            <div>
+                                <h3 className="text-lg font-bold text-white mb-2">Install for iOS</h3>
+                                <p className="text-sm text-zinc-400 leading-relaxed">
+                                    To install this app, tap the <span className="text-blue-400 font-bold">Share</span> button in your browser menu bar.
+                                </p>
+                            </div>
+
+                            <div className="bg-black/40 rounded-lg p-4 text-left space-y-3">
+                                <div className="flex items-center gap-3 text-zinc-300 text-sm">
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-800 text-xs font-bold">1</span>
+                                    <span>Tap the <Share className="w-4 h-4 inline mx-1 text-blue-500" /> Share icon</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-zinc-300 text-sm">
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-800 text-xs font-bold">2</span>
+                                    <span>Scroll down and select <br /><span className="font-bold text-white">"Add to Home Screen"</span> <PlusSquare className="w-4 h-4 inline mx-1" /></span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setShowIOSInstructions(false)}
+                                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-colors mt-2"
+                            >
+                                Got it
+                            </button>
                         </div>
-                        <p className="text-sm text-foreground">Then select <span className="font-bold">"Add to Home Screen"</span></p>
-                        <div className="flex justify-center text-foreground">
-                            <PlusSquare className="w-6 h-6" />
+
+                        {/* Pointing Arrow Animation for bottom bar */}
+                        <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-white animate-bounce md:hidden">
+                            ⬇
                         </div>
                     </div>
                 </div>
