@@ -63,7 +63,11 @@ export function ThemeToggle() {
                     <div className="flex flex-col gap-0.5">
                         <button
                             onClick={() => { setTheme("light"); setIsOpen(false) }}
-                            className={`relative flex items-center gap-2 px-2.5 py-2 text-sm rounded-md transition-colors ${theme === 'light' ? 'bg-zinc-100 dark:bg-zinc-800 font-medium' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900'}`}
+                            className={`relative flex items-center gap-2 px-2.5 py-2 text-sm rounded-md transition-colors w-full text-left
+                                ${theme === 'light'
+                                    ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50 font-medium'
+                                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-50'
+                                }`}
                         >
                             <Sun className="w-4 h-4" />
                             <span>Light</span>
@@ -71,7 +75,11 @@ export function ThemeToggle() {
                         </button>
                         <button
                             onClick={() => { setTheme("dark"); setIsOpen(false) }}
-                            className={`relative flex items-center gap-2 px-2.5 py-2 text-sm rounded-md transition-colors ${theme === 'dark' ? 'bg-zinc-100 dark:bg-zinc-800 font-medium' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900'}`}
+                            className={`relative flex items-center gap-2 px-2.5 py-2 text-sm rounded-md transition-colors w-full text-left
+                                ${theme === 'dark'
+                                    ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50 font-medium'
+                                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-50'
+                                }`}
                         >
                             <Moon className="w-4 h-4" />
                             <span>Dark</span>
@@ -79,7 +87,11 @@ export function ThemeToggle() {
                         </button>
                         <button
                             onClick={() => { setTheme("system"); setIsOpen(false) }}
-                            className={`relative flex items-center gap-2 px-2.5 py-2 text-sm rounded-md transition-colors ${theme === 'system' ? 'bg-zinc-100 dark:bg-zinc-800 font-medium' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900'}`}
+                            className={`relative flex items-center gap-2 px-2.5 py-2 text-sm rounded-md transition-colors w-full text-left
+                                ${theme === 'system'
+                                    ? 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50 font-medium'
+                                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-50'
+                                }`}
                         >
                             <Monitor className="w-4 h-4" />
                             <span>System</span>
