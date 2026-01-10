@@ -76,7 +76,7 @@ export default function GamificationWidget({ totalClicks }: { totalClicks: numbe
                 <span className="font-bold text-foreground/80 flex items-center gap-1">
                     <span className="opacity-50">Reward:</span>
                     <span className={color}>
-                        {nextLevel === 'Pro' ? 'Verified Badge' : nextLevel === 'Influencer' ? 'Custom Themes' : 'Monetization Access'}
+                        {nextLevel === 'Pro' ? 'Verified Badge' : nextLevel === 'Influencer' ? 'Custom Themes' : 'Affiliate Program Access'}
                     </span>
                 </span>
             </div>
