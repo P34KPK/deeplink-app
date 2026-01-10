@@ -380,7 +380,7 @@ export default function Home() {
           <div className="relative w-[173px] h-[86px] mb-8">
             {/* Dynamic Logo Strategy: Single White Logo with CSS Inversion Filter */}
             <Image
-              src="/logo.png?v=2"
+              src="/logo.png"
               alt="DeepLinkrs Logo"
               width={173}
               height={86}
