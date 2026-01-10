@@ -78,14 +78,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.png?v=2', href: '/favicon.png?v=2' },
-      { url: '/icon.png?v=2', href: '/icon.png?v=2' },
+      { url: '/favicon.png?v=3', href: '/favicon.png?v=3' },
+      { url: '/icon.png?v=3', href: '/icon.png?v=3' },
     ],
-    shortcut: '/favicon.png?v=2',
-    apple: '/apple-icon.png?v=2',
+    shortcut: '/favicon.png?v=3',
+    apple: '/apple-icon.png?v=3',
     other: {
       rel: 'apple-touch-icon-precomposed',
-      url: '/apple-icon.png?v=2',
+      url: '/apple-icon.png?v=3',
     },
   },
   manifest: '/manifest.json',
@@ -93,7 +93,7 @@ export const metadata: Metadata = {
     capable: true,
     title: 'DeepLinkrs',
     statusBarStyle: 'black-translucent',
-    startupImage: ['/apple-icon.png?v=2'],
+    startupImage: ['/apple-icon.png?v=3'],
   },
 };
 
