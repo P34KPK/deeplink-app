@@ -330,6 +330,13 @@ export default function ProDashboard({
                                 {history.slice().reverse().map((link) => {
                                     const slug = (link.generated || '').split('/').pop() || '';
                                     const hits = stats?.statsBySlug?.[slug] || 0;
+
+                                    // Dynamically construct the correct URL based on current environment
+                                    // This fixes legacy 'localhost' links and enforces the new '/amz/' format
+                                    const cleanUrl = typeof window !== 'undefined'
+                                        ? `${window.location.origin}/amz/${slug}`
+                                        : `https://deeplink.rs/amz/${slug}`;
+
                                     return (
                                         <tr key={link.id} className="hover:bg-secondary/20 transition-colors">
                                             <td className="px-6 py-4"><button onClick={() => toggleFavorite(link.id, link.favorite || false)}><Heart className={`w-4 h-4 ${link.favorite ? 'text-white fill-white' : 'text-muted-foreground'}`} /></button></td>
@@ -337,12 +344,12 @@ export default function ProDashboard({
                                             <td className="px-6 py-4 font-medium">{link.title}</td>
                                             <td className="px-6 py-4 text-right"><span className={`px-2 py-1 rounded text-xs font-bold ${hits > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>{hits}</span></td>
                                             <td className="px-6 py-4 text-right flex justify-end gap-2">
-                                                <button onClick={() => setAiModal({ open: true, title: link.title, link: link.generated || '' })} className="p-1.5 bg-purple-500/10 text-purple-400 rounded"><Sparkles className="w-3.5 h-3.5" /></button>
+                                                <button onClick={() => setAiModal({ open: true, title: link.title, link: cleanUrl })} className="p-1.5 bg-purple-500/10 text-purple-400 rounded"><Sparkles className="w-3.5 h-3.5" /></button>
                                                 <button onClick={() => setMockupModal({ open: true, linkId: link.id, url: link.original, title: link.title, image: link.image })} className="p-1.5 bg-pink-500/10 text-pink-400 rounded"><Camera className="w-3.5 h-3.5" /></button>
                                                 <button onClick={() => handleDeleteLink(link.id)} className="p-1.5 bg-red-500/10 text-red-400 rounded"><Trash className="w-3.5 h-3.5" /></button>
                                                 <button onClick={() => checkLink(link.id, link.original)} className={`p-1.5 rounded ${health[link.id] === 'ok' ? 'text-green-500 bg-green-500/10' : 'text-muted-foreground'}`}><Activity className="w-3 h-3" /></button>
-                                                <button onClick={() => setQrLink(link.generated)} className="p-1.5 text-muted-foreground rounded hover:bg-secondary"><QrCode className="w-3 h-3" /></button>
-                                                <button onClick={() => handleCopy(link.id, link.generated)} className={`text-xs border px-3 py-1.5 rounded ${copiedId === link.id ? 'bg-green-500 text-white' : ''}`}>{copiedId === link.id ? 'Copied!' : 'Copy'}</button>
+                                                <button onClick={() => setQrLink(cleanUrl)} className="p-1.5 text-muted-foreground rounded hover:bg-secondary"><QrCode className="w-3 h-3" /></button>
+                                                <button onClick={() => handleCopy(link.id, cleanUrl)} className={`text-xs border px-3 py-1.5 rounded ${copiedId === link.id ? 'bg-green-500 text-white' : ''}`}>{copiedId === link.id ? 'Copied!' : 'Copy'}</button>
                                             </td>
                                         </tr>
                                     );
