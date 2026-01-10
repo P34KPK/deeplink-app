@@ -74,13 +74,14 @@ type ArchivedLink = {
 // Colors for Pie Chart
 const COLORS = ['#FFFFFF', '#666666', '#333333', '#999999'];
 
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 // ... imports
 
 import LinkTreeWidget from '@/components/LinkTreeWidget';
 
 export default function Dashboard() {
     const { isSignedIn, isLoaded, userId } = useAuth();
+    const { user } = useUser();
     const [stats, setStats] = useState<any | null>(null); // Relaxed type for free/pro structure
     const [history, setHistory] = useState<ArchivedLink[]>([]);
     const [loading, setLoading] = useState(true);
@@ -232,12 +233,11 @@ export default function Dashboard() {
 
                 // TEMP: Force Free Plan for test user to verify payment flow
                 // Remove this line after testing!
-                if (statsData && window.location.hostname !== 'localhost' && document.documentElement.innerHTML.includes('5kqvbrjjgr@privaterelay.appleid.com')) {
-                    // This is dirty but effective without adding `user` prop drill just for a quick test
-                    // Better way: check user email from clerk hook
-                    console.log("Forcing FREE plan for test user");
+                // TEMP: Force Free Plan for test user
+                if (user?.primaryEmailAddress?.emailAddress === '5kqvbrjjgr@privaterelay.appleid.com') {
+                    console.log("FORCE RESET: Detected Test User via Clerk. Switching to FREE mode.");
                     statsData.plan = 'free';
-                    setStats({ ...statsData, plan: 'free' });
+                    setStats((prev: any) => ({ ...prev, plan: 'free' }));
                 }
 
                 if (Array.isArray(historyData)) {
