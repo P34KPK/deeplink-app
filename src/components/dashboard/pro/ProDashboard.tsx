@@ -357,7 +357,7 @@ export default function ProDashboard({
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {widgetOrder.map((id) => {
                                 // Define Pro Widgets
-                                const PRO_WIDGETS = ['gamification', 'affiliate', 'favorites', 'simulator', 'prime', 'trends', 'copywriter', 'viral_studio', 'daily', 'devices', 'locations', 'browsers', 'referrers'];
+                                const PRO_WIDGETS = ['gamification', 'favorites', 'simulator', 'prime', 'trends', 'copywriter', 'viral_studio', 'daily', 'devices', 'locations', 'browsers', 'referrers'];
                                 const isLocked = !bypassLock && stats.plan === 'free' && PRO_WIDGETS.includes(id);
 
                                 return (
