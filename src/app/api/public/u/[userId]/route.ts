@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getLinks } from '@/lib/storage'; // Standardized Storage
+import { getUserLinks } from '@/lib/storage'; // Optimized Storage
 import { getUserProfile, getUserIdByHandle } from '@/lib/profile-service';
 import { isBanned } from '@/lib/ban-system';
 
@@ -42,21 +42,20 @@ export async function GET(
             avatar: profileData?.avatarUrl || null
         };
 
-        // 2. Fetch Links from Main Storage (JSON Blob)
-        // This ensures compatibility with the Dashboard and Link Generator
-        const allLinks = await getLinks();
+        // 2. Fetch Links using Optimized Granular Lookup (O(1))
+        // This is now instant and scalable
+        const userLinks = await getUserLinks(userId);
 
-        const userLinks = allLinks
-            .filter((l) => l.userId === userId && l.active !== false)
-            .sort((a, b) => b.date - a.date);
+        // Filter out inactive links if necessary (handled by frontend usually, but good to have)
+        const activeLinks = userLinks.filter(l => l.active !== false);
 
         return NextResponse.json({
             user: userProfile,
-            links: userLinks
+            links: activeLinks
         });
 
     } catch (error) {
         console.error("Profile Fetch Error:", error);
-        return new NextResponse("Internal Server Error", { status: 500 }); // Fix JSON validity
+        return new NextResponse("Internal Server Error", { status: 500 });
     }
 }

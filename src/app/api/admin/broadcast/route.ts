@@ -3,7 +3,7 @@ import { isAdmin } from '@/lib/admin-auth';
 import { redis } from '@/lib/redis';
 
 export async function POST(req: Request) {
-    if (!isAdmin(req)) {
+    if (!(await isAdmin(req))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-    if (!isAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!(await isAdmin(req))) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (redis) await redis.del('system:broadcast');
     return NextResponse.json({ success: true });
 }

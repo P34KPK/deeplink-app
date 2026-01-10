@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createShortLink } from '@/lib/shortener';
-import { addLink, getLinks, ArchivedLink } from '@/lib/storage'; // Import storage methods
+import { addLink, getUserLinks, ArchivedLink } from '@/lib/storage'; // Import storage methods
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { isAdmin } from '@/lib/admin-auth';
 import { getUserProfile } from '@/lib/profile-service';
-import Redis from 'ioredis';
-
-const redis = new Redis(process.env.REDIS_URL || '');
+import { redis } from '@/lib/redis';
 
 export async function POST(req: Request) {
     try {
@@ -23,11 +21,11 @@ export async function POST(req: Request) {
         let userEmail = user?.primaryEmailAddress?.emailAddress;
 
         // SECURITY FIX: Only allow "isManualAdmin" status if the request has the Admin Key Headers
-        const isVerifiedAdmin = isManualAdmin && isAdmin(req);
+        const isVerifiedAdmin = isManualAdmin && (await isAdmin(req));
 
         // Retrieve Plan
         let plan = 'free';
-        if (userId) {
+        if (userId && redis) {
             const planKey = `user:${userId}:plan`;
             const storedPlan = await redis.get(planKey);
             if (storedPlan) plan = storedPlan;
@@ -53,9 +51,9 @@ export async function POST(req: Request) {
                 }, { status: 403 });
             }
 
-            // Count existing links
-            const allLinks = await getLinks();
-            const userLinkCount = allLinks.filter(l => l.userId === userId).length;
+            // Count existing links using optimized O(1) fetch
+            const userLinks = await getUserLinks(userId);
+            const userLinkCount = userLinks.length;
 
             if (userLinkCount >= 20) {
                 return NextResponse.json({

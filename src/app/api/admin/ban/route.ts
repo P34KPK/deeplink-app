@@ -3,7 +3,7 @@ import { isAdmin } from '@/lib/admin-auth';
 import { banUser } from '@/lib/ban-system';
 
 export async function POST(req: Request) {
-    if (!isAdmin(req)) {
+    if (!(await isAdmin(req))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

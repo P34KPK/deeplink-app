@@ -7,7 +7,7 @@ import { redis } from '@/lib/redis';
 
 export async function GET(req: Request) {
     // Secure Admin Check
-    if (!isAdmin(req)) {
+    if (!(await isAdmin(req))) {
         return NextResponse.json({ error: 'Unauthorized: Admin Key Required' }, { status: 401 });
     }
 

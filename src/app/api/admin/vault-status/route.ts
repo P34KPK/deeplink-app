@@ -12,7 +12,7 @@ const redis = (redisUrl && redisToken)
     : null;
 
 export async function GET(req: Request) {
-    if (!isAdmin(req)) {
+    if (!(await isAdmin(req))) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
 

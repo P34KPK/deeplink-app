@@ -30,7 +30,7 @@ function encrypt(text: string) {
 }
 
 export async function POST(req: Request) {
-    if (!isAdmin(req)) {
+    if (!(await isAdmin(req))) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
 

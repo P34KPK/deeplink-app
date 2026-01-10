@@ -58,6 +58,29 @@ export default function PanicControl() {
                 {locked && <span className="text-[10px] text-orange-500 font-mono blink">READ_ONLY MODE ACTIVE</span>}
                 {confirming && !locked && <span className="text-[10px] text-red-500 font-bold">CLICK AGAIN TO LOCK</span>}
             </div>
+
+            <div className="mt-6 pt-4 border-t border-white/5 w-full">
+                <p className="text-[9px] text-zinc-500 uppercase tracking-widest text-center mb-2">Maintenance Ops</p>
+                <button
+                    onClick={async () => {
+                        if (confirm("MIGRATE DATABASE TO V2?\n\nThis will restructure all data to the new scalable format. Ensure a backup exists.")) {
+                            try {
+                                const res = await fetch('/api/admin/migrate', {
+                                    method: 'POST',
+                                    headers: { 'x-admin-key': localStorage.getItem('admin_session') || '' }
+                                });
+                                const data = await res.json();
+                                alert(data.message || 'Migration Complete');
+                            } catch (e) {
+                                alert('Migration Failed');
+                            }
+                        }
+                    }}
+                    className="w-full py-2 bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 hover:bg-blue-900/10 text-zinc-400 hover:text-blue-400 text-[10px] font-mono transition-colors rounded"
+                >
+                    RUN_DB_MIGRATION_V2
+                </button>
+            </div>
         </div>
     );
 }

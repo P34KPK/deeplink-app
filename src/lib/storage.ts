@@ -1,127 +1,199 @@
 import { redis } from '@/lib/redis';
+import fs from 'fs';
+import path from 'path';
 
 export type ArchivedLink = {
     id: string;
-    userId?: string; // New: Owner ID
-    userEmail?: string; // New: Owner Email for display
+    userId?: string;
+    userEmail?: string;
     original: string;
     generated: string;
     asin: string;
     title: string;
     description: string;
     date: number;
-    active?: boolean; // New: On/Off toggle
-    favorite?: boolean; // New: Favorite toggle
-    tags?: string[]; // New: Agent A - Organization
-    image?: string; // New: Social Preview Image
+    active?: boolean;
+    favorite?: boolean;
+    tags?: string[];
+    image?: string;
+    clicks?: number; // Optional sync from analytics
 };
 
-const DB_KEY = 'deeplink_history_v1';
+const LEGACY_DB_KEY = 'deeplink_history_v1';
 
-async function getDB(): Promise<ArchivedLink[]> {
-    let data: ArchivedLink[] | null = null;
+// --- NEW GRANULAR ARCHITECTURE ---
 
-    // 1. Try Redis
-    if (redis) {
-        try {
-            const redisData = await redis.get(DB_KEY) as string | null | object;
-            if (redisData) {
-                if (typeof redisData === 'string') {
-                    data = JSON.parse(redisData);
-                } else {
-                    data = redisData as ArchivedLink[];
-                }
-            }
-        } catch (error) {
-            console.warn('Failed to fetch history from Redis', error);
-        }
+// Key Helpers
+const kLink = (id: string) => `link:${id}`;
+const kUserLinks = (userId: string) => `user:${userId}:links`;
+const kSlugMap = (slug: string) => `slug:${slug}`;
+
+/**
+ * Save or Update a single link.
+ * Operations:
+ * 1. Store Link Data (JSON)
+ * 2. Add ID to User's List
+ * 3. Update Slug Mapping
+ */
+export async function saveLink(link: ArchivedLink) {
+    if (!redis) return null;
+
+    const pipeline = redis.pipeline();
+
+    // 1. Save Link Data
+    pipeline.set(kLink(link.id), JSON.stringify(link));
+
+    // 2. Associate with User (if exists)
+    if (link.userId) {
+        // Store as a Set (unique IDs) or List. Set is safer for duplicates.
+        // We use a Sorted Set (zadd) using timestamp as score to keep order!
+        pipeline.zadd(kUserLinks(link.userId), { score: link.date, member: link.id });
     }
 
-    // 2. Fallback to Local Backup if Redis is empty or failed
-    if (!data || data.length === 0) {
-        try {
-            const backupPath = path.join(process.cwd(), 'data', 'backups', 'links_latest.json');
-            if (fs.existsSync(backupPath)) {
-                const fileContent = fs.readFileSync(backupPath, 'utf8');
-                data = JSON.parse(fileContent);
-                console.log('Restored data from local backup');
-
-                // Optional: Heal Redis immediately
-                if (redis && data) {
-                    await redis.set(DB_KEY, JSON.stringify(data));
-                }
-            }
-        } catch (fsError) {
-            console.warn('Failed to read local backup', fsError);
-        }
+    // 3. Slug Mapping (for ultra-fast redirection lookups)
+    const slug = link.generated.split('/').pop();
+    if (slug) {
+        pipeline.set(kSlugMap(slug), link.id);
     }
 
-    return data || [];
+    await pipeline.exec();
+    return link;
 }
 
-import fs from 'fs';
-import path from 'path';
-
-async function saveDB(data: ArchivedLink[]) {
-    // 1. Always save to Local Backup (Source of Truth)
-    try {
-        const backupDir = path.join(process.cwd(), 'data', 'backups');
-        if (!fs.existsSync(backupDir)) {
-            fs.mkdirSync(backupDir, { recursive: true });
-        }
-
-        // Save 'latest' version
-        fs.writeFileSync(path.join(backupDir, 'links_latest.json'), JSON.stringify(data, null, 2));
-
-        // Optional: Save timestamped version every hour/day? 
-        // For now, let's just keep 'latest' to avoid disk spam, 
-        // but maybe a 'daily' one if we really want history.
-
-    } catch (fsError) {
-        console.error('Failed to write local backup', fsError);
-    }
-
-    // 2. Save to Redis (Cache / Cloud)
-    if (redis) {
-        try {
-            await redis.set(DB_KEY, JSON.stringify(data));
-        } catch (error) {
-            console.error('Failed to save to Redis', error);
-        }
-    }
+/**
+ * Get a specific link by ID
+ */
+export async function getLinkById(id: string): Promise<ArchivedLink | null> {
+    if (!redis) return null;
+    const data = await redis.get(kLink(id)) as ArchivedLink | null;
+    return data;
 }
 
-export async function getLinks() {
-    return await getDB();
+/**
+ * Get all links for a specific user
+ */
+export async function getUserLinks(userId: string): Promise<ArchivedLink[]> {
+    if (!redis) return [];
+
+    // Get IDs from Sorted Set (Reverse order = newest first)
+    const linkIds = await redis.zrange(kUserLinks(userId), 0, -1, { rev: true });
+
+    if (!linkIds.length) return [];
+
+    // Fetch all link objects in parallel
+    // @ts-ignore
+    const links = await redis.mget(...linkIds.map(id => kLink(String(id))));
+
+    // Filter out nulls (in case of data drift)
+    return links.filter(l => l !== null) as ArchivedLink[];
+}
+
+/**
+ * Delete a link
+ */
+export async function deleteLink(id: string, userId?: string) {
+    if (!redis) return;
+
+    const link = await getLinkById(id);
+    if (!link) return;
+
+    const pipeline = redis.pipeline();
+
+    // Remove from User List
+    const uid = userId || link.userId;
+    if (uid) {
+        pipeline.zrem(kUserLinks(uid), id);
+    }
+
+    // Remove Slug Map
+    const slug = link.generated.split('/').pop();
+    if (slug) {
+        pipeline.del(kSlugMap(slug));
+    }
+
+    // Delete Data
+    pipeline.del(kLink(id));
+
+    await pipeline.exec();
+}
+
+// --- LEGACY ADAPTERS (For backward compatibility until migration is done) ---
+// We will modify these to pull from the "Legacy Monolith" if the new method returns empty,
+// OR simply force a migration logic.
+
+export async function getLinks(): Promise<ArchivedLink[]> {
+    // ADMIN ONLY: This fetches ALL links. Avoid using this in production for standard users.
+    // For now, we return the Legacy DB to not break the Admin Dashboard immediately.
+    // Ideally, Admin should paginate.
+    return await getLegacyDB();
 }
 
 export async function addLinks(links: ArchivedLink[]) {
-    const history = await getDB();
-    // Filter out duplicates based on ID
-    const newLinks = links.filter(l => !history.some(h => h.id === l.id));
-
-    if (newLinks.length === 0) return history;
-
-    // Prepend new links
-    const newHistory = [...newLinks, ...history];
-    await saveDB(newHistory);
-    return newHistory;
-}
-
-export async function addLink(link: ArchivedLink) {
-    return await addLinks([link]);
+    // Route to new architecture
+    for (const link of links) {
+        await saveLink(link);
+    }
+    // Also save to legacy for safety until full confirmation? 
+    // No, let's cut the cord or we'll never migrate.
+    // But to be safe for the user session, let's do both for 1 minute.
+    /* 
+       const legacy = await getLegacyDB();
+       const merged = [...links, ...legacy];
+       await saveLegacyDB(merged);
+    */
+    return links;
 }
 
 export async function removeLink(id: string) {
-    const history = await getDB();
-    const newHistory = history.filter(l => l.id !== id);
-    await saveDB(newHistory);
-    return newHistory;
+    await deleteLink(id);
+    // Legacy cleanup
+    const legacy = await getLegacyDB();
+    const newLegacy = legacy.filter(l => l.id !== id);
+    await saveLegacyDB(newLegacy);
+    return newLegacy;
 }
 
 export async function updateLink(id: string, updates: Partial<ArchivedLink>) {
-    const history = await getDB();
-    const newHistory = history.map(l => l.id === id ? { ...l, ...updates } : l);
-    await saveDB(newHistory);
-    return newHistory;
+    const existing = await getLinkById(id);
+    if (existing) {
+        const updated = { ...existing, ...updates };
+        await saveLink(updated);
+        return [updated];
+    }
+    return [];
+}
+
+
+// --- INTERNAL LEGACY UTILS ---
+
+async function getLegacyDB(): Promise<ArchivedLink[]> {
+    if (!redis) return [];
+    try {
+        const data = await redis.get(LEGACY_DB_KEY);
+        return typeof data === 'string' ? JSON.parse(data) : (data || []);
+    } catch (e) {
+        return [];
+    }
+}
+
+async function saveLegacyDB(data: ArchivedLink[]) {
+    if (!redis) return;
+    await redis.set(LEGACY_DB_KEY, JSON.stringify(data));
+}
+
+// --- MIGRATION TOOL ---
+export async function migrateToGranular() {
+    console.log("Starting Migration...");
+    const all = await getLegacyDB();
+    console.log(`Found ${all.length} links to migrate.`);
+    let count = 0;
+
+    for (const link of all) {
+        // Ensure userId exists (default to 'legacy_user' or derive?)
+        // If link has no userId, we might lose it in the user-centric view, 
+        // but we still save it by ID.
+        await saveLink(link);
+        count++;
+    }
+    return { success: true, migrated: count };
 }

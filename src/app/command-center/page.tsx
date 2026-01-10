@@ -21,6 +21,8 @@ import GlobeWidget from '@/components/GlobeWidget';
 import SystemTerminal from '@/components/admin/SystemTerminal';
 import BlackBoxWidget from '@/components/admin/BlackBoxWidget';
 import PanicControl from '@/components/admin/PanicControl';
+import RedisExplorer from '@/components/admin/RedisExplorer';
+
 
 function SortableItem(props: any) {
     const {
@@ -78,7 +80,7 @@ export default function AdminDashboard() {
     const [selectedUser, setSelectedUser] = useState<string | null>(null); // For User Mini-Dashboard
 
     // Agent E State (Pro Widgets) + Agent A (War Room, Security)
-    const [widgetOrder, setWidgetOrder] = useState(['black_box', 'system_terminal', 'panic_control', 'ai_analyst', 'total_chart', 'daily_chart', 'devices_pie', 'geo_map', 'languages', 'linktree', 'gamification', 'pulse', 'godmode', 'simulator', 'inbox', 'security', 'vault', 'broadcast', 'warroom']);
+    const [widgetOrder, setWidgetOrder] = useState(['black_box', 'system_terminal', 'redis_explorer', 'panic_control', 'ai_analyst', 'total_chart', 'daily_chart', 'devices_pie', 'geo_map', 'languages', 'linktree', 'gamification', 'pulse', 'godmode', 'simulator', 'inbox', 'security', 'vault', 'broadcast', 'warroom']);
     const [widgetSizes, setWidgetSizes] = useState<Record<string, string>>({
         map: 'big',
         pulse: 'wide',
@@ -246,14 +248,26 @@ export default function AdminDashboard() {
         }
     }, []);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (password === MASTER_KEY) {
-            localStorage.setItem('admin_session', MASTER_KEY);
-            setIsAuthenticated(true);
-            fetchData();
-        } else {
-            setError('Access Denied: Invalid Key Protocol');
+        try {
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                body: JSON.stringify({ password }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (res.ok) {
+                // Keep local storage for legacy components/headers that might still need it in this session
+                // But the primary auth is now the HttpOnly cookie set by the server.
+                localStorage.setItem('admin_session', password);
+                setIsAuthenticated(true);
+                fetchData();
+            } else {
+                setError('Access Denied: Invalid Key Protocol');
+            }
+        } catch (e) {
+            setError('System Error: Login Service Unreachable');
         }
     };
 
@@ -785,6 +799,10 @@ export default function AdminDashboard() {
                                                     </table>
                                                 </div>
                                             </div>
+                                        )}
+
+                                        {id === 'redis_explorer' && (
+                                            <RedisExplorer />
                                         )}
 
                                         {/* Agent A: God Mode Leaderboard */}

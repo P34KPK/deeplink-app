@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
     // 1. Admin Security Check
-    if (!isAdmin(req)) {
+    if (!(await isAdmin(req))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

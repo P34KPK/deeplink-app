@@ -1,36 +1,23 @@
 import { NextResponse } from 'next/server';
-import { getLinks, addLink, addLinks, removeLink, updateLink, ArchivedLink } from '@/lib/storage';
+import { getLinks, getUserLinks, getLinkById, addLink, addLinks, removeLink, deleteLink, updateLink, ArchivedLink } from '@/lib/storage';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { isAdmin } from '@/lib/admin-auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET() {
     const user = await currentUser();
 
-    // If user is not logged in, return empty
     if (!user) return NextResponse.json([]);
 
-    const links = await getLinks();
+    // 🚀 SCALABLE: Fetch ONLY this user's links
+    const userLinks = await getUserLinks(user.id);
 
-    // Filter links to only show those owned by the user (ID or Email match)
-    const userEmail = user.emailAddresses[0]?.emailAddress;
-
-    const userLinks = links.filter(l => {
-        const idMatch = l.userId === user.id;
-        const emailMatch = userEmail && l.userEmail && l.userEmail.toLowerCase() === userEmail.toLowerCase();
-        return idMatch || emailMatch;
-    });
-
-    console.log(`[API/Links] User: ${user.id} (${userEmail})`);
-    console.log(`[API/Links] Total Links in DB: ${links.length}`);
-    console.log(`[API/Links] Links found for user: ${userLinks.length}`);
+    console.log(`[API/Links] Fetched ${userLinks.length} links for ${user.id}`);
 
     return NextResponse.json(userLinks);
 }
 
-import { rateLimit } from '@/lib/rate-limit';
-
 export async function POST(req: Request) {
-    // 🛡️ Rate Limit: 30 creations per minute
     const limiter = await rateLimit(req, { limit: 30, windowMs: 60 * 1000 });
     if (!limiter.success) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
 
@@ -50,18 +37,22 @@ export async function POST(req: Request) {
 
         if (Array.isArray(body)) {
             const enrichedLinks = body.map(enrichLink);
-            // Note: addLinks simply appends. Filtering is done on GET.
-            const updatedHistory = await addLinks(enrichedLinks);
-            // We return ONLY the user's links to update their view immediately
-            return NextResponse.json(updatedHistory.filter(l => l.userId === user.id));
+            await addLinks(enrichedLinks);
+
+            // Return fresh list
+            const freshList = await getUserLinks(user.id);
+            return NextResponse.json(freshList);
         } else {
             const link: ArchivedLink = body;
             if (!link.id || !link.generated) {
                 return NextResponse.json({ error: 'Invalid link data' }, { status: 400 });
             }
             const linkWithUser = enrichLink(link);
-            const updatedHistory = await addLink(linkWithUser);
-            return NextResponse.json(updatedHistory.filter(l => l.userId === user.id));
+            await addLink(linkWithUser);
+
+            // Return fresh list
+            const freshList = await getUserLinks(user.id);
+            return NextResponse.json(freshList);
         }
     } catch (error) {
         console.error("API Error", error);
@@ -79,22 +70,26 @@ export async function DELETE(req: Request) {
         }
 
         const { userId } = await auth();
+        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        // Security Check: Verify ownership or Admin Status
-        const allLinks = await getLinks();
-        const targetLink = allLinks.find(l => l.id === id);
+        // Security Check
+        const targetLink = await getLinkById(id);
 
         if (!targetLink) {
             return NextResponse.json({ error: 'Link not found' }, { status: 404 });
         }
 
         // Allow if owner OR Admin
-        if (targetLink.userId !== userId && !isAdmin(req)) {
-            return NextResponse.json({ error: 'Unauthorized: You do not own this link' }, { status: 403 });
+        if (targetLink.userId !== userId && !(await isAdmin(req))) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const updatedHistory = await removeLink(id);
-        return NextResponse.json(updatedHistory);
+        // Use new optimized delete
+        await deleteLink(id, targetLink.userId || userId);
+
+        // Return updated list
+        const remaining = await getUserLinks(userId);
+        return NextResponse.json(remaining);
     } catch (error) {
         return NextResponse.json({ error: 'Failed to delete link' }, { status: 500 });
     }
@@ -107,23 +102,20 @@ export async function PATCH(req: Request) {
 
         if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 });
 
-        // Update in DB (imported from storage)
-        // We need to import updateLink first! Added to imports.
         const { userId } = await auth();
+        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        // Security Check
-        const allLinks = await getLinks();
-        const targetLink = allLinks.find(l => l.id === id);
+        const targetLink = await getLinkById(id);
 
         if (!targetLink) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-        if (targetLink.userId !== userId && !isAdmin(req)) {
+        if (targetLink.userId !== userId && !(await isAdmin(req))) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const updatedHistory = await updateLink(id, updates);
+        await updateLink(id, updates);
 
-        return NextResponse.json({ success: true, link: updatedHistory.find((l: any) => l.id === id) });
+        return NextResponse.json({ success: true });
     } catch (e) {
         return NextResponse.json({ error: 'Update failed' }, { status: 500 });
     }

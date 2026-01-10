@@ -7,7 +7,7 @@ const redis = new Redis(process.env.REDIS_URL || '');
 
 export async function GET(req: Request) {
     // Security Check
-    if (!isAdmin(req)) {
+    if (!(await isAdmin(req))) {
         return NextResponse.json({ error: 'Unauthorized Admin Access' }, { status: 401 });
     }
 

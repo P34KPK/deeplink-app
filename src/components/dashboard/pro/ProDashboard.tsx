@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import {
     Activity, TrendingUp, Calendar, GripHorizontal, DollarSign,
-    Download, Heart, Trash, Camera, QrCode, Lock, Sparkles, Megaphone
+    Download, Heart, Trash, Camera, QrCode, Lock, Sparkles, Megaphone, Check, Settings2
 } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { jsPDF } from 'jspdf';
@@ -57,6 +57,7 @@ export default function ProDashboard({
 
     const { t } = useLanguage();
     const [expandedWidgets, setExpandedWidgets] = useState<string[]>(['daily', 'trends']);
+    const [isEditMode, setIsEditMode] = useState(false);
     const [qrLink, setQrLink] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('overview');
     const [qrColor, setQrColor] = useState('#000000');
@@ -273,7 +274,11 @@ export default function ProDashboard({
                         <p className="text-muted-foreground mt-1">Real-time performance metrics for <span className='text-zinc-300'>@{userId}</span></p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button onClick={handleExportPDF} className="flex items-center gap-2 text-xs border border-border bg-card hover:bg-secondary px-3 py-2 rounded transition-colors"><Download className="w-4 h-4" /><span>{t('save')}</span></button>
+                        <button onClick={() => setIsEditMode(!isEditMode)} className={`flex items-center gap-2 text-xs border border-border px-3 py-2 rounded transition-colors ${isEditMode ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-secondary text-muted-foreground'}`}>
+                            {isEditMode ? <Check className="w-4 h-4" /> : <Settings2 className="w-4 h-4" />}
+                            <span>{isEditMode ? 'Done' : 'Layout'}</span>
+                        </button>
+                        <button onClick={handleExportPDF} className="flex items-center gap-2 text-xs border border-border bg-card hover:bg-secondary px-3 py-2 rounded transition-colors"><Download className="w-4 h-4" /><span className="hidden md:inline">{t('save')}</span></button>
                         <div className="text-right hidden md:block mr-4"><p className="text-xs text-muted-foreground uppercase font-semibold">{t('last_activity')}</p><p className="text-sm font-mono text-primary">{getLastActivity()}</p></div>
                     </div>
                 </div>
@@ -356,7 +361,7 @@ export default function ProDashboard({
                                 const isLocked = !bypassLock && stats.plan === 'free' && PRO_WIDGETS.includes(id);
 
                                 return (
-                                    <SortableItem key={id} id={id} className={`${expandedWidgets.includes(id) ? 'col-span-1 md:col-span-2' : ''}`} onToggleSize={['total', 'linktree', 'daily'].includes(id) ? undefined : () => toggleWidgetSize(id)} isExpanded={expandedWidgets.includes(id)}>
+                                    <SortableItem key={id} id={id} isEditMode={isEditMode} className={`${expandedWidgets.includes(id) ? 'col-span-1 md:col-span-2' : ''}`} onToggleSize={['total', 'linktree', 'daily'].includes(id) ? undefined : () => toggleWidgetSize(id)} isExpanded={expandedWidgets.includes(id)}>
                                         {isLocked ? (
                                             <div className="matte-card p-6 h-full min-h-[250px] flex flex-col items-center justify-center relative overflow-hidden group">
 
@@ -563,15 +568,17 @@ export default function ProDashboard({
 }
 
 function SortableItem(props: any) {
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: props.id });
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: props.id, disabled: !props.isEditMode });
     const style = { transform: CSS.Transform.toString(transform), transition };
     return (
         <div ref={setNodeRef} style={style} className={`${props.className} group`}>
             <div className="relative h-full">
-                <div className="absolute top-2 right-2 z-30 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-black/40 backdrop-blur rounded-lg border border-white/5">
-                    {props.onToggleSize && (<button onClick={(e) => { e.stopPropagation(); props.onToggleSize(); }} className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#3add54] border border-[#27c93f] active:scale-90 transition-transform mb-[1px]" />)}
-                    <div {...attributes} {...listeners} style={{ touchAction: 'none' }} className="p-0.5 cursor-grab active:cursor-grabbing text-white/50 hover:text-white transition-colors"><GripHorizontal className="w-4 h-4" /></div>
-                </div>
+                {props.isEditMode && (
+                    <div className="absolute top-2 right-2 z-30 flex items-center gap-1 opacity-100 transition-opacity p-1 bg-black/60 backdrop-blur rounded-lg border border-white/20 animate-in fade-in zoom-in duration-200">
+                        {props.onToggleSize && (<button onClick={(e) => { e.stopPropagation(); props.onToggleSize(); }} className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#3add54] border border-[#27c93f] active:scale-90 transition-transform mb-[1px]" />)}
+                        <div {...attributes} {...listeners} style={{ touchAction: 'none' }} className="p-0.5 cursor-grab active:cursor-grabbing text-white/70 hover:text-white transition-colors"><GripHorizontal className="w-4 h-4" /></div>
+                    </div>
+                )}
                 {props.children}
             </div>
         </div>
