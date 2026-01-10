@@ -159,7 +159,8 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug, skip
                 userAgent: navigator.userAgent,
                 slug,
                 geo: countryCode || 'US', // Best effort
-                referrer: document.referrer || ''
+                referrer: document.referrer || '',
+                redirected: true
             }),
             headers: { 'Content-Type': 'application/json' },
             keepalive: true
