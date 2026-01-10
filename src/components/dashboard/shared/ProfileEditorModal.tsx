@@ -461,27 +461,27 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
                     </div>
                 </div>
 
-            </div>
 
-            {/* Footer - Fixed */}
-            <div className="p-4 border-t border-white/10 bg-[#09090b] rounded-b-2xl flex gap-3 flex-shrink-0 z-10">
-                <button onClick={onClose} className="flex-1 py-3 rounded-lg text-sm font-bold bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-300 transition-colors">
-                    Cancel
-                </button>
-                <button onClick={saveProfile} className="flex-1 py-3 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-500/20 transition-all hover:scale-[1.02]">
-                    Save Changes
-                </button>
+
+                {/* Footer - Fixed */}
+                <div className="p-4 border-t border-white/10 bg-[#09090b] rounded-b-2xl flex gap-3 flex-shrink-0 z-10">
+                    <button onClick={onClose} className="flex-1 py-3 rounded-lg text-sm font-bold bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-300 transition-colors">
+                        Cancel
+                    </button>
+                    <button onClick={saveProfile} className="flex-1 py-3 rounded-lg text-sm font-bold bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-500/20 transition-all hover:scale-[1.02]">
+                        Save Changes
+                    </button>
+                </div>
+                {/* Image Cropper */}
+                <ImageCropperModal
+                    isOpen={!!rawFileImage}
+                    imageSrc={rawFileImage}
+                    onClose={() => setRawFileImage(null)}
+                    onSave={(cropped) => {
+                        updateProfile('avatarUrl', cropped);
+                        setRawFileImage(null);
+                    }}
+                />
             </div>
-            {/* Image Cropper */}
-            <ImageCropperModal
-                isOpen={!!rawFileImage}
-                imageSrc={rawFileImage}
-                onClose={() => setRawFileImage(null)}
-                onSave={(cropped) => {
-                    updateProfile('avatarUrl', cropped);
-                    setRawFileImage(null);
-                }}
-            />
-        </div>
-    );
+            );
 }
