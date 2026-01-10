@@ -76,6 +76,22 @@ export const metadata: Metadata = {
   verification: {
     google: "google-site-verification-code", // Placeholder for user to fill
   },
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/apple-icon.png',
+    other: {
+      rel: 'apple-touch-icon-precomposed',
+      url: '/apple-icon.png',
+    },
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'DeepLinkrs',
+    statusBarStyle: 'black-translucent',
+    startupImage: ['/apple-icon.png'],
+  },
 };
 
 
