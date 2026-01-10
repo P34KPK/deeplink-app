@@ -121,7 +121,6 @@ export default function ProfileEditorModal({ isOpen, onClose, userId, onSaveSucc
     if (!isOpen) return null;
 
     return (
-    return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
             {/* Modal Container: Flex Column, Max Height ensures it fits in viewport */}
             <div className="bg-[#09090b] border border-white/10 w-full max-w-md rounded-2xl shadow-2xl relative flex flex-col h-[90vh] md:h-auto md:max-h-[85vh]">

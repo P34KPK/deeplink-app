@@ -1,4 +1,6 @@
 import type { NextConfig } from "next";
+
+// Trigger Rebuild v3 - Layout Fixes
 // restart dev server
 
 const nextConfig: NextConfig = {
