@@ -532,19 +532,30 @@ export default function ProDashboard({
                                                     </div>
                                                 )}
                                                 {id === 'daily' && (
-                                                    <div className="matte-card p-6 h-full bg-gradient-to-br from-card to-zinc-900/50 flex flex-col">
-                                                        <div className="text-xs text-muted-foreground font-bold uppercase mb-4">{timeRange === 'all' ? 'Traffic Trend' : `Trend (${clicksLabel.replace('Clicks ', '')})`}</div>
+                                                    <div className="matte-card p-6 h-full flex flex-col bg-gradient-to-br from-card to-zinc-100 dark:to-zinc-900/50">
+                                                        <div className="text-xs text-muted-foreground font-bold uppercase mb-4 tracking-wider">{timeRange === 'all' ? 'Traffic Trend' : `Trend (${clicksLabel.replace(/Clicks\s*\(?|\)?/g, '')})`}</div>
                                                         <div className="flex-1 min-h-[100px]">
                                                             <ResponsiveContainer width="100%" height="100%">
                                                                 <AreaChart data={displayChart}>
                                                                     <defs>
                                                                         <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
-                                                                            <stop offset="5%" stopColor="#fff" stopOpacity={0.8} />
-                                                                            <stop offset="95%" stopColor="#fff" stopOpacity={0} />
+                                                                            <stop offset="5%" stopColor="currentColor" stopOpacity={0.3} className="text-black dark:text-white" />
+                                                                            <stop offset="95%" stopColor="currentColor" stopOpacity={0} className="text-black dark:text-white" />
                                                                         </linearGradient>
                                                                     </defs>
-                                                                    <RechartsTooltip contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', color: '#fff', borderRadius: '8px' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff' }} />
-                                                                    <Area type="monotone" dataKey="clicks" stroke="#fff" fill="url(#colorClicks)" strokeWidth={2} />
+                                                                    <XAxis dataKey="name" hide />
+                                                                    <RechartsTooltip
+                                                                        contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--foreground)' }}
+                                                                        itemStyle={{ color: 'var(--foreground)' }}
+                                                                    />
+                                                                    <Area
+                                                                        type="monotone"
+                                                                        dataKey="clicks"
+                                                                        stroke="currentColor"
+                                                                        fill="url(#colorClicks)"
+                                                                        strokeWidth={2}
+                                                                        className="text-black dark:text-white stroke-black dark:stroke-white fill-black dark:fill-white"
+                                                                    />
                                                                 </AreaChart>
                                                             </ResponsiveContainer>
                                                         </div>
