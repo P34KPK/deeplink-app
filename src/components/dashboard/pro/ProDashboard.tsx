@@ -227,7 +227,7 @@ export default function ProDashboard({
                 const old = items.indexOf(active.id as string);
                 const newI = items.indexOf(over?.id as string);
                 const newOrder = arrayMove(items, old, newI);
-                localStorage.setItem('dashboard_layout_v7', JSON.stringify(newOrder));
+                localStorage.setItem('dashboard_layout_v8', JSON.stringify(newOrder));
                 return newOrder;
             });
         }
@@ -362,7 +362,7 @@ export default function ProDashboard({
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {widgetOrder.map((id) => {
                                 // Define Pro Widgets
-                                const PRO_WIDGETS = ['gamification', 'favorites', 'simulator', 'prime', 'trends', 'copywriter', 'viral_studio', 'daily', 'devices', 'locations', 'browsers', 'referrers'];
+                                const PRO_WIDGETS = ['gamification', 'favorites', 'simulator', 'prime', 'trends', 'copywriter', 'viral_studio', 'daily', 'devices', 'locations', 'browsers', 'referrers', 'marketplace'];
                                 const isLocked = !bypassLock && stats.plan === 'free' && PRO_WIDGETS.includes(id);
 
                                 return (
@@ -505,6 +505,57 @@ export default function ProDashboard({
                                                             </ResponsiveContainer>
                                                         </div>
                                                         {deviceData[0].name === 'No Data' && <div className="text-[10px] text-muted-foreground mt-2">No device data yet</div>}
+                                                    </div>
+                                                )}
+                                                {id === 'marketplace' && (
+                                                    <div className="matte-card p-6 h-full flex flex-col bg-gradient-to-br from-card to-emerald-500/5 border-emerald-500/10">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-md">
+                                                                    <Sparkles className="w-4 h-4" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-xs text-muted-foreground font-bold uppercase">AI Marketplace</div>
+                                                                </div>
+                                                            </div>
+                                                            <span className="text-[10px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">Recommended for you</span>
+                                                        </div>
+
+                                                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                                                            {[
+                                                                { title: "Sony WH-1000XM5 Wireless", price: 348.00, comm: 13.92, img: "https://m.media-amazon.com/images/I/61+ySfS46TL._AC_SL1500_.jpg", rating: 4.8 },
+                                                                { title: "Ninja AF101 Air Fryer", price: 89.95, comm: 3.60, img: "https://m.media-amazon.com/images/I/71+8uT5eF+L._AC_SL1500_.jpg", rating: 4.7 },
+                                                                { title: "Stanley Quencher H2.0", price: 45.00, comm: 1.80, img: "https://m.media-amazon.com/images/I/61s+iFmM1ML._AC_SL1500_.jpg", rating: 4.9 }
+                                                            ].map((prod, i) => (
+                                                                <div key={i} className="flex gap-3 p-3 bg-secondary/30 rounded-lg border border-white/5 hover:border-emerald-500/30 transition-all group">
+                                                                    <div className="w-16 h-16 bg-white rounded-md shrink-0 flex items-center justify-center p-1 overflow-hidden">
+                                                                        <img src={prod.img} alt={prod.title} className="object-contain max-h-full" />
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                                                        <div>
+                                                                            <h4 className="text-xs font-bold truncate text-foreground">{prod.title}</h4>
+                                                                            <div className="flex items-center gap-1 mt-0.5">
+                                                                                <span className="text-[10px] text-muted-foreground">${prod.price}</span>
+                                                                                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 rounded ml-2">Earn ${prod.comm.toFixed(2)}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex justify-between items-end mt-2">
+                                                                            <div className="flex text-orange-400 text-[10px] gap-0.5">
+                                                                                {[...Array(5)].map((_, star) => (
+                                                                                    <svg key={star} className={`w-3 h-3 ${star < Math.floor(prod.rating) ? 'fill-current' : 'text-gray-600'}`} viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                                                                                ))}
+                                                                            </div>
+                                                                            <button
+                                                                                onClick={() => setMockupModal({ open: true, linkId: 'new', url: 'https://amazon.com', title: prod.title, image: prod.img })}
+                                                                                className="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded font-bold transition-colors shadow-lg shadow-emerald-500/20"
+                                                                            >
+                                                                                Promote
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 )}
                                                 {id === 'locations' && (<div className="matte-card h-full relative group overflow-hidden"><div className="absolute inset-0 opacity-60"><GlobeWidget /></div><div className="relative z-10 p-6 h-full bg-gradient-to-b from-transparent to-black pointer-events-none flex flex-col justify-end"><div className="absolute top-6 left-6 text-xs text-muted-foreground font-bold uppercase">Top Locations</div><div className="space-y-2 pointer-events-auto">{locationData.slice(0, 3).map((l, i) => (<div key={i} className="flex justify-between text-xs backdrop-blur bg-white/5 p-2 rounded"><span>{l.name}</span><span className="text-indigo-300">{l.value}</span></div>))}</div></div></div>)}

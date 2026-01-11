@@ -97,9 +97,9 @@ export default function Dashboard() {
 
     // Load persisted layout
     useEffect(() => {
-        // Updated Order: Identity -> Daily -> Total -> Linktree -> Rest
-        const defaultOrder = ['identity', 'daily', 'total', 'linktree', 'gamification', 'affiliate', 'favorites', 'simulator', 'prime', 'trends', 'devices', 'locations', 'browsers', 'referrers', 'copywriter', 'viral_studio'];
-        const saved = localStorage.getItem('dashboard_layout_v7');
+        // Updated Order: Identity -> Daily -> Marketplace -> Total -> Linktree -> Rest
+        const defaultOrder = ['identity', 'daily', 'marketplace', 'total', 'linktree', 'gamification', 'affiliate', 'favorites', 'simulator', 'prime', 'trends', 'devices', 'locations', 'browsers', 'referrers', 'copywriter', 'viral_studio'];
+        const saved = localStorage.getItem('dashboard_layout_v8');
         if (saved) {
             try {
                 let parsedOrder = JSON.parse(saved);
