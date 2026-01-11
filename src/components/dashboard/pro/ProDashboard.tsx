@@ -734,6 +734,14 @@ function SortableItem(props: any) {
     return (
         <div ref={setNodeRef} style={style} className={`${props.className} group`}>
             <div className="relative h-full">
+                {/* Resize Button (Visible on Hover) */}
+                {props.onToggleSize && !props.isEditMode && (
+                    <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-black/60 backdrop-blur rounded-lg border border-white/10">
+                        <button onClick={(e) => { e.stopPropagation(); props.onToggleSize(); }} className="w-3 h-3 block rounded-full bg-[#27c93f] hover:bg-[#3add54] border border-[#27c93f] active:scale-90 transition-transform" title="Resize" />
+                    </div>
+                )}
+
+                {/* Edit Mode Controls (Drag + Resize) */}
                 {props.isEditMode && (
                     <div className="absolute top-2 right-2 z-30 flex items-center gap-1 opacity-100 transition-opacity p-1 bg-black/60 backdrop-blur rounded-lg border border-white/20 animate-in fade-in zoom-in duration-200">
                         {props.onToggleSize && (<button onClick={(e) => { e.stopPropagation(); props.onToggleSize(); }} className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#3add54] border border-[#27c93f] active:scale-90 transition-transform mb-[1px]" />)}
