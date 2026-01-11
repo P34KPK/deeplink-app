@@ -76,6 +76,15 @@ export const metadata: Metadata = {
   verification: {
     google: "google-site-verification-code",
   },
+  icons: {
+    icon: '/logo-final.png',
+    shortcut: '/logo-final.png',
+    apple: '/logo-final.png',
+    other: {
+      rel: 'apple-touch-icon-precomposed',
+      url: '/logo-final.png',
+    },
+  },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
