@@ -78,11 +78,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.png?v=3', href: '/favicon.png?v=3' },
-      { url: '/icon.png?v=3', href: '/icon.png?v=3' },
+      { url: '/app_icon.png?v=4', href: '/app_icon.png?v=4' },
     ],
-    shortcut: '/favicon.png?v=3',
-    apple: '/apple-icon.png?v=3',
+    shortcut: '/app_icon.png?v=4',
+    apple: '/app_icon.png?v=4',
     other: {
       rel: 'apple-touch-icon-precomposed',
       url: '/apple-icon.png?v=3',
