@@ -77,7 +77,10 @@ export const metadata: Metadata = {
     google: "google-site-verification-code",
   },
   icons: {
-    icon: '/favicon-official.jpg',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-official.jpg', type: 'image/jpeg' },
+    ],
     shortcut: '/favicon-official.jpg',
     apple: '/favicon-official.jpg',
     other: {
