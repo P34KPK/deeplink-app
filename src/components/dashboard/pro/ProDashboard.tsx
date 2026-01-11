@@ -71,6 +71,56 @@ export default function ProDashboard({
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [health, setHealth] = useState<Record<string, 'loading' | 'ok' | 'dead'>>({});
 
+    // --- TIME MACHINE ANALYTICS START ---
+    const [timeRange, setTimeRange] = useState<'today' | '7d' | '30d' | 'all'>('7d');
+
+    const getFilteredData = () => {
+        if (!stats?.dailyClicks) return { clicks: 0, chart: [], label: 'Total Clicks' };
+
+        const now = new Date();
+        const dates = Object.keys(stats.dailyClicks).sort();
+        let filteredDates = dates;
+        let Label = 'Total Clicks';
+
+        if (timeRange === 'today') {
+            const todayStr = now.toISOString().split('T')[0];
+            filteredDates = dates.filter(d => d === todayStr);
+            Label = 'Clicks Today';
+        } else if (timeRange === '7d') {
+            const cutoff = new Date(now.setDate(now.getDate() - 7));
+            filteredDates = dates.filter(d => new Date(d) >= cutoff);
+            Label = 'Clicks (7d)';
+        } else if (timeRange === '30d') {
+            const cutoff = new Date(now.setDate(now.getDate() - 30));
+            filteredDates = dates.filter(d => new Date(d) >= cutoff);
+            Label = 'Clicks (30d)';
+        }
+
+        const filteredClicks = filteredDates.reduce((sum, date) => sum + (stats.dailyClicks[date] || 0), 0);
+
+        // Build Chart Data for Range
+        const chartData = filteredDates.map(date => ({
+            name: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+            clicks: stats.dailyClicks[date] || 0
+        }));
+
+        return { clicks: filteredClicks, chart: chartData, label: Label };
+    };
+
+    const periodData = getFilteredData();
+    // Fallback logic in case stats structure is simple
+    const displayClicks = timeRange === 'all' ? (stats.totalClicks || 0) : periodData.clicks;
+
+    // For 'all' chart, we need full history. If dailyClicks is huge, maybe slice last 90 days? Let's take all.
+    const fullChart = Object.keys(stats.dailyClicks || {}).sort().map(date => ({
+        name: new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        clicks: stats.dailyClicks[date] || 0
+    }));
+
+    const displayChart = timeRange === 'all' ? fullChart : periodData.chart;
+    const clicksLabel = timeRange === 'all' ? 'Total Clicks' : periodData.label;
+    // --- TIME MACHINE ANALYTICS END ---
+
     const toggleWidgetSize = (id: string) => {
         setExpandedWidgets(prev =>
             prev.includes(id) ? prev.filter(w => w !== id) : [...prev, id]
@@ -262,6 +312,15 @@ export default function ProDashboard({
                         </h1>
                         <p className="text-muted-foreground mt-1">Real-time performance metrics for <span className='text-zinc-300'>@{userId}</span></p>
                     </div>
+
+                    {/* TIME MACHINE CONTROLS */}
+                    <div className="flex items-center gap-2 bg-secondary/30 p-1 rounded-lg border border-white/5 overflow-x-auto max-w-full">
+                        <button onClick={() => setTimeRange('today')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${timeRange === 'today' ? 'bg-white text-black shadow-lg' : 'text-muted-foreground hover:text-white'}`}>Today</button>
+                        <button onClick={() => setTimeRange('7d')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${timeRange === '7d' ? 'bg-white text-black shadow-lg' : 'text-muted-foreground hover:text-white'}`}>7d</button>
+                        <button onClick={() => setTimeRange('30d')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${timeRange === '30d' ? 'bg-white text-black shadow-lg' : 'text-muted-foreground hover:text-white'}`}>30d</button>
+                        <button onClick={() => setTimeRange('all')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${timeRange === 'all' ? 'bg-white text-black shadow-lg' : 'text-muted-foreground hover:text-white'}`}>All</button>
+                    </div>
+
                     <div className="flex items-center gap-3">
                         <button onClick={() => setIsEditMode(!isEditMode)} className={`flex items-center gap-2 text-xs border border-border px-3 py-2 rounded transition-colors ${isEditMode ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-secondary text-muted-foreground'}`}>
                             {isEditMode ? <Check className="w-4 h-4" /> : <Settings2 className="w-4 h-4" />}
