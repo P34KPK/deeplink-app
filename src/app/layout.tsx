@@ -77,12 +77,12 @@ export const metadata: Metadata = {
     google: "google-site-verification-code",
   },
   icons: {
-    icon: '/logo-final.png',
-    shortcut: '/logo-final.png',
-    apple: '/logo-final.png',
+    icon: '/favicon-official.jpg',
+    shortcut: '/favicon-official.jpg',
+    apple: '/favicon-official.jpg',
     other: {
       rel: 'apple-touch-icon-precomposed',
-      url: '/logo-final.png',
+      url: '/favicon-official.jpg',
     },
   },
   manifest: '/manifest.json',
