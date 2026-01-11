@@ -134,6 +134,10 @@ export async function GET() {
         // Agent B: Real Trends
         trends: platformTrends,
         broadcast,
-        affiliate: await getAffiliateStats(userId)
+        affiliate: await getAffiliateStats(userId),
+        // Return filtered statsBySlug for the user's links
+        statsBySlug: userSlugs.size > 0
+            ? Object.fromEntries(Array.from(userSlugs).map(slug => [slug, globalStats.statsBySlug[slug] || 0]))
+            : {}
     });
 }
