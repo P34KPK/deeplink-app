@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import {
     Activity, TrendingUp, Calendar, GripHorizontal, DollarSign,
-    Download, Heart, Trash, Camera, QrCode, Lock, Sparkles, Megaphone, Check, Settings2
+    Download, Heart, Trash, Camera, QrCode, Lock, Sparkles, Megaphone, Check, Settings2, Image as ImageIcon
 } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { jsPDF } from 'jspdf';
