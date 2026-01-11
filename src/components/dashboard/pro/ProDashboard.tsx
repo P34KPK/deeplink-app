@@ -325,7 +325,7 @@ export default function ProDashboard({
                     <div className="p-6 border-b border-border bg-card/50"><h3 className="text-lg font-semibold">{t('my_links')}</h3></div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-secondary/30 text-xs text-muted-foreground uppercase tracking-wider"><tr><th className="px-6 py-4"></th><th className="px-6 py-4">Date</th><th className="px-6 py-4">Title</th><th className="px-6 py-4 text-right">Hits</th><th className="px-6 py-4 text-right">Action</th></tr></thead>
+                            <thead className="bg-secondary/30 text-xs text-muted-foreground uppercase tracking-wider"><tr><th className="px-6 py-4"></th><th className="px-6 py-4 w-16">Image</th><th className="px-6 py-4">Date</th><th className="px-6 py-4">Title</th><th className="px-6 py-4 text-right">Hits</th><th className="px-6 py-4 text-right">Action</th></tr></thead>
                             <tbody className="text-sm divide-y divide-border">
                                 {history.slice().reverse().map((link) => {
                                     const slug = (link.generated || '').split('/').pop() || '';
@@ -340,6 +340,15 @@ export default function ProDashboard({
                                     return (
                                         <tr key={link.id} className="hover:bg-secondary/20 transition-colors">
                                             <td className="px-6 py-4"><button onClick={() => toggleFavorite(link.id, link.favorite || false)}><Heart className={`w-4 h-4 ${link.favorite ? 'text-white fill-white' : 'text-muted-foreground'}`} /></button></td>
+                                            <td className="px-6 py-4">
+                                                <div className="w-10 h-10 bg-secondary rounded overflow-hidden flex items-center justify-center border border-white/10">
+                                                    {link.image ? (
+                                                        <img src={link.image} alt={link.title} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className="px-6 py-4 text-muted-foreground text-xs">{new Date(link.date).toLocaleDateString()}</td>
                                             <td className="px-6 py-4 font-medium">{link.title}</td>
                                             <td className="px-6 py-4 text-right"><span className={`px-2 py-1 rounded text-xs font-bold ${hits > 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>{hits}</span></td>
