@@ -322,7 +322,7 @@ export default function Home() {
               alt="DeepLinkrs Logo"
               width={173}
               height={86}
-              className="object-contain adaptive-logo transition-all duration-300"
+              className="object-contain adaptive-logo-white-source transition-all duration-300"
               priority
             />
           </div>
@@ -725,9 +725,16 @@ export default function Home() {
       </div>
       {/*FAIL-SAFE LOGO CONTRAST STYLES*/}
       <style jsx global>{`
-        .adaptive-logo { filter: brightness(0) !important; transition: filter 0.3s; }
+        /* Header Logo (Source: WHITE) */
+        .adaptive-logo-white-source { filter: invert(1) !important; transition: filter 0.3s; }
         @media (prefers-color-scheme: dark) {
-          .adaptive-logo { filter: brightness(0) invert(1) !important; }
+          .adaptive-logo-white-source { filter: none !important; }
+        }
+
+        /* Footer Logo (Source: BLACK) */
+        .adaptive-logo-black-source { filter: none !important; transition: filter 0.3s; }
+        @media (prefers-color-scheme: dark) {
+          .adaptive-logo-black-source { filter: invert(1) !important; }
         }
       `}</style>
 
@@ -738,7 +745,7 @@ export default function Home() {
             src="/p34k-logo.png"
             alt="P34K Logo"
             fill
-            className="object-contain adaptive-logo"
+            className="object-contain adaptive-logo-black-source"
           />
         </a>
         <div className="flex gap-4 text-xs text-muted-foreground">
