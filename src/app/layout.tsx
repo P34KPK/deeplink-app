@@ -73,8 +73,9 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  google: "google-site-verification-code", // Placeholder for user to fill
-},
+  verification: {
+    google: "google-site-verification-code",
+  },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
