@@ -73,20 +73,8 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: "google-site-verification-code", // Placeholder for user to fill
-  },
-  icons: {
-    icon: [
-      { url: '/brand-icon.png', href: '/brand-icon.png' },
-    ],
-    shortcut: '/brand-icon.png',
-    apple: '/brand-icon.png',
-    other: {
-      rel: 'apple-touch-icon-precomposed',
-      url: '/brand-icon.png',
-    },
-  },
+  google: "google-site-verification-code", // Placeholder for user to fill
+},
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
