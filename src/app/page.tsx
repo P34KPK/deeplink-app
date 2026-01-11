@@ -322,7 +322,7 @@ export default function Home() {
               alt="DeepLinkrs Logo"
               width={173}
               height={86}
-              className="object-contain !invert dark:!invert-0"
+              className="object-contain adaptive-logo transition-all duration-300"
               priority
             />
           </div>
@@ -723,6 +723,14 @@ export default function Home() {
           </>
         )}
       </div>
+      {/*FAIL-SAFE LOGO CONTRAST STYLES*/}
+      <style jsx global>{`
+        .adaptive-logo { filter: brightness(0) !important; transition: filter 0.3s; }
+        @media (prefers-color-scheme: dark) {
+          .adaptive-logo { filter: brightness(0) invert(1) !important; }
+        }
+      `}</style>
+
       {/* Footer Branding */}
       <div className="mt-12 flex flex-col items-center gap-4 opacity-50 hover:opacity-100 transition-opacity">
         <a href="https://www.p34k.com" target="_blank" rel="noopener noreferrer" className="relative w-24 h-8 hover:scale-105 transition-transform">
@@ -730,7 +738,7 @@ export default function Home() {
             src="/p34k-logo.png"
             alt="P34K Logo"
             fill
-            className="object-contain dark:!invert"
+            className="object-contain adaptive-logo"
           />
         </a>
         <div className="flex gap-4 text-xs text-muted-foreground">
