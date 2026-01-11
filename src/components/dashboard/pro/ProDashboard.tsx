@@ -491,23 +491,22 @@ export default function ProDashboard({
                                                     </div>
                                                 )}
                                                 {id === 'favorites' && (
-                                                    { id === 'favorites' && (
-                                                        <div className="matte-card p-6 h-full flex flex-col">
-                                                            <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground font-bold uppercase">
-                                                                <Heart className="w-4 h-4 text-red-500 fill-red-500" /> Favorites
-                                                            </div>
-                                                            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[200px]">
-                                                                {favoriteLinks.length > 0 ? favoriteLinks.map(link => (
-                                                                    <div key={link.id} className="bg-secondary/20 border border-border rounded-lg p-3 flex justify-between items-center group hover:bg-secondary/40 transition-colors">
-                                                                        <div className="truncate text-sm font-medium pr-2 max-w-[80%]">{link.title}</div>
-                                                                        <button onClick={() => toggleFavorite(link.id, true)} className="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash className="w-3 h-3" /></button>
-                                                                    </div>
-                                                                )) : (
-                                                                    <div className="text-center text-xs text-muted-foreground py-8 italic h-full flex items-center justify-center">No favorites yet</div>
-                                                                )}
-                                                            </div>
+                                                    <div className="matte-card p-6 h-full flex flex-col">
+                                                        <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground font-bold uppercase">
+                                                            <Heart className="w-4 h-4 text-red-500 fill-red-500" /> Favorites
                                                         </div>
-                                                    )}
+                                                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[200px]">
+                                                            {favoriteLinks.length > 0 ? favoriteLinks.map(link => (
+                                                                <div key={link.id} className="bg-secondary/20 border border-border rounded-lg p-3 flex justify-between items-center group hover:bg-secondary/40 transition-colors">
+                                                                    <div className="truncate text-sm font-medium pr-2 max-w-[80%]">{link.title}</div>
+                                                                    <button onClick={() => toggleFavorite(link.id, true)} className="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash className="w-3 h-3" /></button>
+                                                                </div>
+                                                            )) : (
+                                                                <div className="text-center text-xs text-muted-foreground py-8 italic h-full flex items-center justify-center">No favorites yet</div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 {id === 'simulator' && (
                                                     <div className="matte-card p-6 h-full border-l-4 border-l-green-500/50">
                                                         <div className="flex gap-2 mb-4"><input type="number" value={simPrice} onChange={(e) => setSimPrice(Number(e.target.value))} className="w-full bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground" /><input type="number" value={simRate} onChange={(e) => setSimRate(Number(e.target.value))} className="w-full bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground" /></div>
@@ -700,7 +699,7 @@ export default function ProDashboard({
                             })}
                         </div>
                     </SortableContext>
-                </DndContext>
+                </DndContext >
 
 
 
@@ -712,18 +711,20 @@ export default function ProDashboard({
                     </button>
                 </div>
 
-                {qrLink && (
-                    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setQrLink(null)}>
-                        <div className="matte-card p-8 bg-white text-black flex flex-col items-center max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-                            <h3 className="text-lg font-bold mb-4">QR Studio</h3>
-                            <div className="p-4 rounded-xl shadow-inner mb-6" style={{ backgroundColor: qrBg }}><QRCode value={qrLink} size={200} fgColor={qrColor} bgColor={qrBg} /></div>
-                            <div className="flex gap-4 w-full mb-4"><input type="color" value={qrColor} onChange={(e) => setQrColor(e.target.value)} className="flex-1 h-8 cursor-pointer" /><input type="color" value={qrBg} onChange={(e) => setQrBg(e.target.value)} className="flex-1 h-8 cursor-pointer" /></div>
-                            <button onClick={() => setQrLink(null)} className="py-2 text-sm font-bold border rounded w-full">Close</button>
+                {
+                    qrLink && (
+                        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setQrLink(null)}>
+                            <div className="matte-card p-8 bg-white text-black flex flex-col items-center max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+                                <h3 className="text-lg font-bold mb-4">QR Studio</h3>
+                                <div className="p-4 rounded-xl shadow-inner mb-6" style={{ backgroundColor: qrBg }}><QRCode value={qrLink} size={200} fgColor={qrColor} bgColor={qrBg} /></div>
+                                <div className="flex gap-4 w-full mb-4"><input type="color" value={qrColor} onChange={(e) => setQrColor(e.target.value)} className="flex-1 h-8 cursor-pointer" /><input type="color" value={qrBg} onChange={(e) => setQrBg(e.target.value)} className="flex-1 h-8 cursor-pointer" /></div>
+                                <button onClick={() => setQrLink(null)} className="py-2 text-sm font-bold border rounded w-full">Close</button>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
-        </main>
+                    )
+                }
+            </div >
+        </main >
     );
 }
 
