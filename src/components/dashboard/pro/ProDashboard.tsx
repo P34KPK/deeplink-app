@@ -127,21 +127,10 @@ export default function ProDashboard({
         doc.save('report.pdf');
     };
 
-    const getLast7Days = () => {
-        const days = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(); d.setDate(d.getDate() - i);
-            days.push(d.toISOString().split('T')[0]);
-        }
-        return days;
-    };
-
     // Fallback for daily clicks if missing
     const safeDailyClicks = stats.dailyClicks || {};
-    const chartData = getLast7Days().map(date => ({
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        clicks: safeDailyClicks[date] || 0
-    }));
+    // Legacy chartData removed, using displayChart from Time Machine Analytics above
+
 
     // Fallback for devices if missing or all zero
     const deviceStats = stats.devices || { android: 0, ios: 0, desktop: 0, other: 0 };
@@ -403,7 +392,7 @@ export default function ProDashboard({
                                         ) : (
                                             <>
                                                 {id === 'identity' && (<div className="h-full"><IdentityWidget key={`identity-${profileVersion}`} userId={userId} onEditProfile={onEditProfile} /></div>)}
-                                                {id === 'total' && (<div className="matte-card p-6 flex flex-col justify-between h-full bg-gradient-to-br from-card to-blue-500/5"><div className="text-3xl font-bold">{stats.totalClicks.toLocaleString()}</div><div className="text-xs text-muted-foreground font-bold uppercase">Total Clicks</div></div>)}
+                                                {id === 'total' && (<div className="matte-card p-6 flex flex-col justify-between h-full bg-gradient-to-br from-card to-blue-500/5"><div className="text-3xl font-bold">{displayClicks.toLocaleString()}</div><div className="text-xs text-muted-foreground font-bold uppercase">{clicksLabel}</div></div>)}
                                                 {id === 'linktree' && (<div className="h-full relative group"><LinkTreeWidget userId={userId || 'guest'} className="h-full" onEditProfile={onEditProfile} /></div>)}
                                                 {id === 'gamification' && (<div className="h-full"><GamificationWidget totalClicks={stats.totalClicks || 0} /></div>)}
                                                 {id === 'affiliate' && (<div className="h-full"><AffiliateWidget userId={userId} stats={stats.affiliate} /></div>)}
@@ -485,10 +474,10 @@ export default function ProDashboard({
                                                 )}
                                                 {id === 'daily' && (
                                                     <div className="matte-card p-6 h-full bg-gradient-to-br from-card to-zinc-900/50 flex flex-col">
-                                                        <div className="text-xs text-muted-foreground font-bold uppercase mb-4">Traffic Trend (7 Days)</div>
+                                                        <div className="text-xs text-muted-foreground font-bold uppercase mb-4">{timeRange === 'all' ? 'Traffic Trend' : `Trend (${clicksLabel.replace('Clicks ', '')})`}</div>
                                                         <div className="flex-1 min-h-[100px]">
                                                             <ResponsiveContainer width="100%" height="100%">
-                                                                <AreaChart data={chartData}>
+                                                                <AreaChart data={displayChart}>
                                                                     <defs>
                                                                         <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
                                                                             <stop offset="5%" stopColor="#fff" stopOpacity={0.8} />
