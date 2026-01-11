@@ -100,12 +100,26 @@ export default async function AmznShortLinkPage({ params }: { params: Promise<{ 
         }
     }
 
+
+    // --- RETARGETING PIXELS ---
+    let pixels = {};
+    if (data.userId) {
+        // We might have already fetched plan, but let's grab the full profile for pixels
+        // Optimization: Could cache profile or fetch only once if we refactor, but strict separation for now is safer.
+        const { getUserProfile } = await import('@/lib/profile-service');
+        const profile = await getUserProfile(data.userId);
+        if (profile?.pixels) {
+            pixels = profile.pixels;
+        }
+    }
+
     return (
         <DeepLinkRedirect
             asin={data.asin}
             tag={data.tag}
             domain={data.domain}
             slug={slug}
+            pixels={pixels}
         />
     );
 }

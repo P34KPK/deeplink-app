@@ -9,9 +9,10 @@ interface DeepLinkRedirectProps {
     domain?: string | null;
     slug: string;
     skipTracking?: boolean;
+    pixels?: { fbPixelId?: string; tiktokPixelId?: string; googleAdsId?: string };
 }
 
-export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug, skipTracking = false }: DeepLinkRedirectProps) {
+export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug, skipTracking = false, pixels }: DeepLinkRedirectProps) {
     // Intelligent Geo-Redirect (Agent B)
     const [effectiveDomain, setEffectiveDomain] = useState(domain || 'com');
     const [flag, setFlag] = useState('🇺🇸'); // Default US
@@ -92,6 +93,55 @@ export default function DeepLinkRedirect({ asin, tag, domain = 'com', slug, skip
         // But to keep it React-clean, we'll let the re-render handle the updated URLs.
 
     }, [asin, domain]); // Run once on mount to detect
+
+    // --- PIXEL INJECTION ---
+    useEffect(() => {
+        if (!pixels) return;
+
+        // 1. Meta / Facebook Pixel
+        if (pixels.fbPixelId) {
+            // @ts-ignore
+            if (!window.fbq) {
+                // @ts-ignore
+                !function (f, b, e, v, n, t, s) { if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) }; if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s) }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+            }
+            // @ts-ignore
+            window.fbq('init', pixels.fbPixelId);
+            // @ts-ignore
+            window.fbq('track', 'PageView');
+        }
+
+        // 2. TikTok Pixel
+        if (pixels.tiktokPixelId) {
+            // @ts-ignore
+            if (!window.ttq) {
+                // @ts-ignore
+                !function (w, d, t) { w.ttq = w.ttq || []; var n = function () { return new Promise(function (e, t) { w.ttq._q.push([e, t]) }) }; w.ttq._q = w.ttq._q || []; w.ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"], w.ttq.setAndDefer = function (t, e) { t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } }; for (var i = 0; i < w.ttq.methods.length; i++)w.ttq.setAndDefer(w.ttq, w.ttq.methods[i]); w.ttq.instance = function (t) { for (var e = w.ttq._q.slice(), n = 0; n < w.ttq.methods.length; n++)w.ttq.setAndDefer(e, w.ttq.methods[n]); return e }, w.ttq.load = function (e, n) { var i = "https://analytics.tiktok.com/i18n/pixel/events.js"; w.ttq._i = w.ttq._i || {}, w.ttq._i[e] = [], w.ttq._i[e]._u = i, w.ttq._t = w.ttq._t || {}, w.ttq._t[e] = +new Date, w.ttq._o = w.ttq._o || {}, w.ttq._o[e] = n || {}; var o = document.createElement("script"); o.type = "text/javascript", o.async = !0, o.src = i + "?sdkid=" + e + "&lib=" + t; var a = document.getElementsByTagName("script")[0]; a.parentNode.insertBefore(o, a) } }(window, document, 'ttq');
+            }
+            // @ts-ignore
+            window.ttq.load(pixels.tiktokPixelId);
+            // @ts-ignore
+            window.ttq.page();
+        }
+
+        // 3. Google Ads
+        if (pixels.googleAdsId) {
+            const script = document.createElement('script');
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${pixels.googleAdsId}`;
+            script.async = true;
+            document.head.appendChild(script);
+
+            // @ts-ignore
+            window.dataLayer = window.dataLayer || [];
+            // @ts-ignore
+            function gtag() { dataLayer.push(arguments); }
+            // @ts-ignore
+            gtag('js', new Date());
+            // @ts-ignore
+            gtag('config', pixels.googleAdsId);
+        }
+
+    }, [pixels]);
 
     // 3. Construct URLs based on dynamic domain
     const tagValue = tag || 'deeplink0d-20'; // Fallback tag
