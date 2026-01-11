@@ -78,13 +78,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/app_icon.png?v=4', href: '/app_icon.png?v=4' },
+      { url: '/brand-icon.png', href: '/brand-icon.png' },
     ],
-    shortcut: '/app_icon.png?v=4',
-    apple: '/app_icon.png?v=4',
+    shortcut: '/brand-icon.png',
+    apple: '/brand-icon.png',
     other: {
       rel: 'apple-touch-icon-precomposed',
-      url: '/apple-icon.png?v=3',
+      url: '/brand-icon.png',
     },
   },
   manifest: '/manifest.json',
