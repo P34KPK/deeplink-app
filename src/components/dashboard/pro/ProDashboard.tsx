@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import Link from 'next/link';
 import {
     AreaChart, Area, XAxis, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -23,6 +23,7 @@ import IdentityWidget from '@/components/IdentityWidget';
 import AffiliateWidget from '@/components/dashboard/shared/AffiliateWidget';
 import CheckoutButton from '@/components/CheckoutButton';
 import InstallAppWidget from '@/components/InstallAppWidget';
+import PixelWidget from '@/components/dashboard/shared/PixelWidget'; // New Import
 import { useLanguage } from '@/lib/i18n';
 
 type ProDashboardProps = {
@@ -56,6 +57,35 @@ export default function ProDashboard({
 }: ProDashboardProps) {
 
     const { t } = useLanguage();
+
+    // --- PIXEL RETARGETING LOGIC START ---
+    const [userPixels, setUserPixels] = useState<any>({});
+
+    useEffect(() => {
+        // Fetch user profile to get pixels configuration on mount
+        fetch('/api/user/profile').then(res => res.json()).then(data => {
+            if (data.pixels) setUserPixels(data.pixels);
+        }).catch(err => console.error("Failed to load pixels", err));
+    }, []);
+
+    const handleSavePixels = async (config: any) => {
+        try {
+            const res = await fetch('/api/user/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pixels: config })
+            });
+            if (res.ok) {
+                setUserPixels(config);
+            } else {
+                throw new Error('Failed to save');
+            }
+        } catch (e) {
+            console.error(e);
+            throw e; // Propagate to widget for error state
+        }
+    };
+    // --- PIXEL RETARGETING LOGIC END ---
     const [expandedWidgets, setExpandedWidgets] = useState<string[]>(['daily', 'trends']);
     const [isEditMode, setIsEditMode] = useState(false);
     const [qrLink, setQrLink] = useState<string | null>(null);
@@ -277,7 +307,7 @@ export default function ProDashboard({
                 const old = items.indexOf(active.id as string);
                 const newI = items.indexOf(over?.id as string);
                 const newOrder = arrayMove(items, old, newI);
-                localStorage.setItem('dashboard_layout_v8', JSON.stringify(newOrder));
+                localStorage.setItem('dashboard_layout_v9', JSON.stringify(newOrder));
                 return newOrder;
             });
         }
@@ -421,11 +451,11 @@ export default function ProDashboard({
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {widgetOrder.map((id) => {
                                 // Define Pro Widgets
-                                const PRO_WIDGETS = ['gamification', 'favorites', 'simulator', 'prime', 'trends', 'copywriter', 'viral_studio', 'daily', 'devices', 'locations', 'browsers', 'referrers', 'marketplace'];
+                                const PRO_WIDGETS = ['gamification', 'favorites', 'simulator', 'prime', 'trends', 'copywriter', 'viral_studio', 'daily', 'devices', 'locations', 'browsers', 'referrers', 'marketplace', 'pixels'];
                                 const isLocked = !bypassLock && stats.plan === 'free' && PRO_WIDGETS.includes(id);
 
                                 return (
-                                    <SortableItem key={id} id={id} isEditMode={isEditMode} className={`${expandedWidgets.includes(id) ? 'col-span-1 md:col-span-2' : ''}`} onToggleSize={['total', 'linktree', 'daily'].includes(id) ? undefined : () => toggleWidgetSize(id)} isExpanded={expandedWidgets.includes(id)}>
+                                    <SortableItem key={id} id={id} isEditMode={isEditMode} className={`${expandedWidgets.includes(id) ? 'col-span-1 md:col-span-2' : ''}`} onToggleSize={['total', 'linktree', 'daily', 'pixels'].includes(id) ? undefined : () => toggleWidgetSize(id)} isExpanded={expandedWidgets.includes(id)}>
                                         {isLocked ? (
                                             <div className="matte-card p-6 h-full min-h-[250px] flex flex-col items-center justify-center relative overflow-hidden group">
 
@@ -455,23 +485,29 @@ export default function ProDashboard({
                                                 {id === 'linktree' && (<div className="h-full relative group"><LinkTreeWidget userId={userId || 'guest'} className="h-full" onEditProfile={onEditProfile} /></div>)}
                                                 {id === 'gamification' && (<div className="h-full"><GamificationWidget totalClicks={stats.totalClicks || 0} /></div>)}
                                                 {id === 'affiliate' && (<div className="h-full"><AffiliateWidget userId={userId} stats={stats.affiliate} /></div>)}
-                                                {id === 'favorites' && (
-                                                    <div className="matte-card p-6 h-full flex flex-col">
-                                                        <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground font-bold uppercase">
-                                                            <Heart className="w-4 h-4 text-red-500 fill-red-500" /> Favorites
-                                                        </div>
-                                                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[200px]">
-                                                            {favoriteLinks.length > 0 ? favoriteLinks.map(link => (
-                                                                <div key={link.id} className="bg-secondary/20 border border-border rounded-lg p-3 flex justify-between items-center group hover:bg-secondary/40 transition-colors">
-                                                                    <div className="truncate text-sm font-medium pr-2 max-w-[80%]">{link.title}</div>
-                                                                    <button onClick={() => toggleFavorite(link.id, true)} className="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash className="w-3 h-3" /></button>
-                                                                </div>
-                                                            )) : (
-                                                                <div className="text-center text-xs text-muted-foreground py-8 italic h-full flex items-center justify-center">No favorites yet</div>
-                                                            )}
-                                                        </div>
+                                                {id === 'pixels' && (
+                                                    <div className="h-full">
+                                                        <PixelWidget initialConfig={userPixels} onSave={handleSavePixels} />
                                                     </div>
                                                 )}
+                                                {id === 'favorites' && (
+                                                    { id === 'favorites' && (
+                                                        <div className="matte-card p-6 h-full flex flex-col">
+                                                            <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground font-bold uppercase">
+                                                                <Heart className="w-4 h-4 text-red-500 fill-red-500" /> Favorites
+                                                            </div>
+                                                            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[200px]">
+                                                                {favoriteLinks.length > 0 ? favoriteLinks.map(link => (
+                                                                    <div key={link.id} className="bg-secondary/20 border border-border rounded-lg p-3 flex justify-between items-center group hover:bg-secondary/40 transition-colors">
+                                                                        <div className="truncate text-sm font-medium pr-2 max-w-[80%]">{link.title}</div>
+                                                                        <button onClick={() => toggleFavorite(link.id, true)} className="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash className="w-3 h-3" /></button>
+                                                                    </div>
+                                                                )) : (
+                                                                    <div className="text-center text-xs text-muted-foreground py-8 italic h-full flex items-center justify-center">No favorites yet</div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 {id === 'simulator' && (
                                                     <div className="matte-card p-6 h-full border-l-4 border-l-green-500/50">
                                                         <div className="flex gap-2 mb-4"><input type="number" value={simPrice} onChange={(e) => setSimPrice(Number(e.target.value))} className="w-full bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground" /><input type="number" value={simRate} onChange={(e) => setSimRate(Number(e.target.value))} className="w-full bg-secondary border border-border rounded px-2 py-1 text-sm text-foreground" /></div>

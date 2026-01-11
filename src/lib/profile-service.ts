@@ -18,6 +18,11 @@ export interface UserProfile {
     theme?: string; // Hex code or gradient identifier
     appAppearance?: 'light' | 'dark' | 'system';
     amazonTag?: string; // e.g. user-20
+    pixels?: {
+        fbPixelId?: string;
+        tiktokPixelId?: string;
+        googleAdsId?: string;
+    };
 }
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
@@ -54,6 +59,10 @@ export async function saveUserProfile(userId: string, data: Partial<UserProfile>
         socials: {
             ...existing.socials,
             ...(data.socials || {})
+        },
+        pixels: {
+            ...(existing.pixels || {}),
+            ...(data.pixels || {})
         },
         userId // Ensure ID is immutable match
     };
