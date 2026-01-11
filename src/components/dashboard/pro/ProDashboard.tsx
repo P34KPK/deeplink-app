@@ -567,46 +567,44 @@ export default function ProDashboard({
                                                     </div>
                                                 )}
                                                 {id === 'marketplace' && (
-                                                    <div className="matte-card p-6 h-full flex flex-col bg-gradient-to-br from-card to-emerald-500/5 border-emerald-500/10">
-                                                        <div className="flex justify-between items-center mb-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-md">
+                                                    <div className="matte-card p-5 h-full flex flex-col bg-gradient-to-br from-card to-emerald-950/20 border-emerald-500/10 dark:to-emerald-900/10">
+                                                        <div className="flex justify-between items-start mb-4 border-b border-border/50 pb-3">
+                                                            <div className="flex gap-3 items-center">
+                                                                <div className="p-2 bg-emerald-500/20 text-emerald-500 rounded-lg shadow-sm">
                                                                     <Sparkles className="w-4 h-4" />
                                                                 </div>
-                                                                <div>
-                                                                    <div className="text-xs text-muted-foreground font-bold uppercase">AI Marketplace</div>
+                                                                <div className="leading-tight">
+                                                                    <div className="text-[10px] text-emerald-500 font-bold tracking-wider uppercase">Beta</div>
+                                                                    <div className="text-sm font-bold tracking-tight">AI Marketplace</div>
                                                                 </div>
                                                             </div>
-                                                            <span className="text-[10px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">Recommended for you</span>
+                                                            <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-full font-semibold self-center">
+                                                                Recommended
+                                                            </span>
                                                         </div>
 
-                                                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
+                                                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-3">
                                                             {[
-                                                                { title: "Sony WH-1000XM5 Wireless", price: 348.00, comm: 13.92, img: "https://m.media-amazon.com/images/I/61+ySfS46TL._AC_SL1500_.jpg", rating: 4.8 },
-                                                                { title: "Ninja AF101 Air Fryer", price: 89.95, comm: 3.60, img: "https://m.media-amazon.com/images/I/71+8uT5eF+L._AC_SL1500_.jpg", rating: 4.7 },
-                                                                { title: "Stanley Quencher H2.0", price: 45.00, comm: 1.80, img: "https://m.media-amazon.com/images/I/61s+iFmM1ML._AC_SL1500_.jpg", rating: 4.9 }
+                                                                { title: "Sony WH-1000XM5", price: 348.00, comm: 13.92, img: "https://m.media-amazon.com/images/I/61+ySfS46TL._AC_SL1500_.jpg", rating: 4.8 },
+                                                                { title: "Ninja Air Fryer Pro", price: 89.95, comm: 3.60, img: "https://m.media-amazon.com/images/I/71+8uT5eF+L._AC_SL1500_.jpg", rating: 4.7 },
+                                                                { title: "Stanley Quencher", price: 45.00, comm: 1.80, img: "https://m.media-amazon.com/images/I/61s+iFmM1ML._AC_SL1500_.jpg", rating: 4.9 }
                                                             ].map((prod, i) => (
-                                                                <div key={i} className="flex gap-3 p-3 bg-secondary/30 rounded-lg border border-white/5 hover:border-emerald-500/30 transition-all group">
-                                                                    <div className="w-16 h-16 bg-white rounded-md shrink-0 flex items-center justify-center p-1 overflow-hidden">
-                                                                        <img src={prod.img} alt={prod.title} className="object-contain max-h-full" />
+                                                                <div key={i} className="flex items-center gap-3 p-2 bg-secondary/20 rounded-lg border border-transparent hover:border-emerald-500/30 hover:bg-secondary/40 transition-all group">
+                                                                    <div className="w-12 h-12 bg-white rounded-md shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-sm">
+                                                                        <img src={prod.img} alt={prod.title} className="w-full h-full object-contain" />
                                                                     </div>
-                                                                    <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                                                        <div>
-                                                                            <h4 className="text-xs font-bold truncate text-foreground">{prod.title}</h4>
-                                                                            <div className="flex items-center gap-1 mt-0.5">
-                                                                                <span className="text-[10px] text-muted-foreground">${prod.price}</span>
-                                                                                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 rounded ml-2">Earn ${prod.comm.toFixed(2)}</span>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex justify-between items-start">
+                                                                            <h4 className="text-xs font-semibold truncate text-foreground pr-2">{prod.title}</h4>
+                                                                            <div className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded whitespace-nowrap">
+                                                                                +${prod.comm.toFixed(2)}
                                                                             </div>
                                                                         </div>
-                                                                        <div className="flex justify-between items-end mt-2">
-                                                                            <div className="flex text-orange-400 text-[10px] gap-0.5">
-                                                                                {[...Array(5)].map((_, star) => (
-                                                                                    <svg key={star} className={`w-3 h-3 ${star < Math.floor(prod.rating) ? 'fill-current' : 'text-gray-600'}`} viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                                                                ))}
-                                                                            </div>
+                                                                        <div className="flex justify-between items-center mt-1">
+                                                                            <span className="text-[10px] text-muted-foreground">${prod.price}</span>
                                                                             <button
                                                                                 onClick={() => setMockupModal({ open: true, linkId: 'new', url: 'https://amazon.com', title: prod.title, image: prod.img })}
-                                                                                className="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded font-bold transition-colors shadow-lg shadow-emerald-500/20"
+                                                                                className="text-[10px] bg-foreground text-background font-bold px-2 py-1 rounded hover:opacity-90 transition-opacity"
                                                                             >
                                                                                 Promote
                                                                             </button>
